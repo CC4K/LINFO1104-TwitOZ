@@ -41,6 +41,86 @@ define
 	in
 		{GetLine {New TextFile init(name:Filename flags:[read])}}
 	end
+	
+	fun {ParseAllLines List}
+		case List
+		of nil then nil
+		[] H|T then {ParseLine H} | {ParseAllLines T}
+		end
+	end
+
+	fun {ParseLine Line}
+		case Line
+		of 46|T then % If it's a dot ('.')
+			skip
+			%TODO
+		[] 32|T then % If it's a space (' ')
+			skip
+			%TODO
+		[] 44|T then % If it's a comma (',')
+			skip
+			%TODO
+		[] 45|T then % If it's a hyphen-minus ('-')
+			skip
+			%TODO
+		[] 58|T then % If it's a colon (':')
+			skip
+			%TODO
+		[] 59|T then % If it's a semicolon (';')
+			skip
+			%TODO
+		[] 63|T then % If it's a question mark ('?')
+			skip
+			%TODO
+		[] 33|T then % If it's a exclamation mark ('!')
+			skip
+			%TODO
+		[] 95|T then % If it's an underscore ('_')
+			skip
+			%TODO
+		[] 35|T then % If it's an hashtag ('#')
+			skip
+			%TODO
+		[] 36|T then % If it's an dollar ('$')
+			skip
+			%TODO
+		[] 37|T then % If it's an per cent sign ('%')
+			skip
+			%TODO
+		[] 38|T then % If it's an ampersand ('&')
+			skip
+			%TODO
+		[] 39|T then % If it's a single quote (''')
+			skip
+			%TODO
+		[] 34|T then % If it's a double quotes ('"')
+			skip
+			%TODO
+		[] 10|T then % If it's a line Feed ('"')
+			skip
+			%TODO
+		[] 13|T then % If it's a carriage return ('\n') # NOT SURE
+			skip
+			%TODO
+
+		%%%%%% % CAN ADD MORE % %%%%%%
+		%%%%%% % CAN ADD MORE % %%%%%%
+		%%%%%% % CAN ADD MORE % %%%%%%
+
+		[] H|T then % If it's a normal letter
+			local New_H in
+				if H < 97 then % If it's a capital letter
+					New_H = H + (97 - 65)
+				else
+					New_H = H
+				end
+				%TODO
+			end
+		[] nil then
+			skip
+			%TODO
+		end
+	end
 
 	%%% /!\ Fonction testee /!\
 	%%% @pre : les threads sont "ready"
@@ -127,8 +207,9 @@ define
 	end
 	% Appelle la procedure principale
 	local List in
-		List = {Reader {GetFilename 1}}
-		{Browse List}
+		ListLine = {Reader {GetFilename 1}}
+		{ParseAllLines ListLine}
+		% {Browse ListLine}
 	end
 	{Main}
 end
