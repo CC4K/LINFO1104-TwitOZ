@@ -17,7 +17,7 @@ define
 		{Browser.browse Buf}
 	end
 
-	% Create the filename "tweets/part_N.txt" where N is given in argument
+	% Create the filename "tweets/part_N.txt" where N is given in argument.
 	fun {GetFilename N}
 		local F1 F2 in
 			F1 = "tweets/part_"
@@ -26,10 +26,10 @@ define
 		end
 	end
 
-	% Create a list of all line of the file named "Filename"
+	% Create a list with all line of the file named "Filename"
 	fun {Reader Filename}
 		fun {GetLine TextFile}
-			Line = {TextFile getS($)} % ERROR HERE ?
+			Line = {TextFile getS($)}
 		in
 			if Line == false then
 				{TextFile close}
@@ -39,7 +39,7 @@ define
 			end
 		end
 	in
-		{GetLine {New Open.file init(name:Filename flags:[read])}}
+		{GetLine {New TextFile init(name:Filename flags:[read])}}
 	end
 
 	%%% /!\ Fonction testee /!\
