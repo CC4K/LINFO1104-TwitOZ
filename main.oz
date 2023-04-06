@@ -17,6 +17,30 @@ define
 		{Browser.browse Buf}
 	end
 
+	fun {GetFilename N}
+		local F1 F2 in
+			F1 = "tweets/part_"
+			F2 = {Append F1 N}
+			{Append F2 ".txt"}
+		end
+	end
+
+	% Create a list of all line of the file named "Filename"
+	fun {Reader Filename}
+		fun {GetLine TextFile}
+			Line = {TextFile getS($)} % ERROR HERE ?
+		in
+			if Line == false then
+				{TextFile close}
+				nil
+			else
+				Line | {GetLine TextFile}
+			end
+		end
+	in
+		{GetLine {New Open.file init(name:Filename flags:[read])}}
+	end
+
 	%%% /!\ Fonction testee /!\
 	%%% @pre : les threads sont "ready"
 	%%% @post: Fonction appellee lorsqu on appuie sur le bouton de prediction
@@ -52,11 +76,13 @@ define
 	end
 
 	%%% Decomnentez moi si besoin
-	%proc {ListAllFiles L}
-	%	case L of nil then skip
-	%   [] H|T then {Browse {String.toAtom H}} {ListAllFiles T}
-	%   end
-	%end
+	% proc {ListAllFiles L}
+	% 	case L of nil then skip
+	% 	[] H|T then
+	% 		{Browse {String.toAtom H}}
+	% 		{ListAllFiles T}
+	% 	end
+	% end
 
 	%%% Procedure principale qui cree la fenetre et appelle les differentes procedures et fonctions
 	proc {Main}
@@ -73,9 +99,9 @@ define
 		local NbThreads InputText OutputText Description Window SeparatedWordsStream SeparatedWordsPort in
 		{Property.put print foo(width:1000 depth:1000)}  % for stdout siz
 		
-			% TODO
+		% TODO
 		
-			% Creation de l interface graphique
+		% Creation de l interface graphique
 		Description=td(
 			title: "Text predictor"
 			lr(text(handle:InputText width:50 height:10 background:white foreground:black wrap:word) button(text:"Predict" width:15 action:Press))
@@ -83,14 +109,14 @@ define
 			action:proc{$}{Application.exit 0} end % quitte le programme quand la fenetre est fermee
 			)
 		
-			% Creation de la fenetre
+		% Creation de la fenetre
 		Window={QTk.build Description}
 		{Window show}
 		
 		{InputText tk(insert 'end' "Loading... Please wait.")}
 		{InputText bind(event:"<Control-s>" action:Press)} % You can also bind events
 		
-			% On lance les threads de lecture et de parsing
+		% On lance les threads de lecture et de parsing
 		SeparatedWordsPort = {NewPort SeparatedWordsStream}
 		NbThreads = 4
 		{LaunchThreads SeparatedWordsPort NbThreads}
@@ -99,5 +125,9 @@ define
 		end
 	end
 	% Appelle la procedure principale
+	local List in
+		List = {Reader "tweets/part_1.txt"}
+		{Browse List}
+	end
 	{Main}
 end
