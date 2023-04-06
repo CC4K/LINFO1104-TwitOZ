@@ -17,10 +17,11 @@ define
 		{Browser.browse Buf}
 	end
 
+	% Create the filename "tweets/part_N.txt" where N is given in argument
 	fun {GetFilename N}
 		local F1 F2 in
 			F1 = "tweets/part_"
-			F2 = {Append F1 N}
+			F2 = {Append F1 {Int.toString N}}
 			{Append F2 ".txt"}
 		end
 	end
@@ -126,7 +127,7 @@ define
 	end
 	% Appelle la procedure principale
 	local List in
-		List = {Reader "tweets/part_1.txt"}
+		List = {Reader {GetFilename 1}}
 		{Browse List}
 	end
 	{Main}
