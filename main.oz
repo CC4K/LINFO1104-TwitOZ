@@ -8,21 +8,127 @@ import
 	Property
 	Browser
 define
-	% declare % for testing purposes
 	
-	%%%===================================================================%%%
-	%%% Pour ouvrir les fichiers
+	%%% Class used to open the files
 	class TextFile
 		from Open.file Open.text
 	end
 
-	%%%===================================================================%%%
 	proc {Browse Buf}
 		{Browser.browse Buf}
 	end
 
-	%%%===================================================================%%%
-	% Create the filename "tweets/part_N.txt" where N is given in argument
+
+	%%% Use a dictionnary because we don't remove any node in the process so a tree is not as usefull as usual.
+	%%% Structure of the dict : 
+	%%% Dict = {Key1 : {Value1 : Frequence1},
+	%%%			Key2 : {Value2 : Frequence2, Value3 : Frequence3},
+	%%%			Key3 : {Value4 : Frequence4}, ...}
+	
+
+	%%% Add element (Key : {Value : Frequence}) to the Dict and return the new Dict with the element added.
+	%%% If the Key already exist :
+	%%%     - If the Value exist too : Increase of 1 the Frequence of this (Key : {Value : Frequence+1})
+	%%%     - If the Value doesn't exist : Add the pair (Key : {Value : 1})
+	proc {AddElementToDict Dict Key Value ?NewDict}
+
+		if {Dictionary.is Dict} then
+			if {Atom.is Key} then
+
+				local Frequence SubDict in
+					if {Dictionary.member Dict Key} then
+						SubDict = {Dictionary.get Dict Key}
+						if {Dictionary.member SubDict Value} then
+							Frequence = {Dictionary.get SubDict Value}
+							{Dictionary.put SubDict Value Frequence+1}
+						else
+							Frequence = 1
+							{Dictionary.put SubDict Value Frequence}
+						end
+					else
+						Frequence = 1
+						SubDict = {Dictionary.new}
+						{Dictionary.put SubDict Value Frequence}
+						{Dictionary.put Dict Key SubDict}
+					end
+				end
+			else
+                {Browse "Error : Key is not an Atom."}
+            end
+		else
+            {Browse "Error : Dict is not a dictionary."}
+        end
+		NewDict = Dict
+	end
+
+	%%% Pre : List is a list of words with no special characters and all letters are lowercase
+	%%% Example : ['this' 'is' 'a' 'list' 'of' 'words'])     (Warning : In reality, it's a list of ASCII characters)
+	%%% Post : Return a List of Bi-Gramme
+	%%% Example : ['this is' 'is a' 'a list' 'list of' 'of words']
+	fun {BiGramme List}
+		case List
+		of nil then nil
+		[] H|T then
+			if T.1 == nil then nil
+			else 
+				{Append {Append H 32} T.1} | {BiGramme T}
+			end
+		end
+	end
+
+	fun {SplitList L Delimiter}
+		local
+			SubList = nil
+		   	ResultList = nil
+		in
+			for X in L do
+				if X == Delimiter then
+					ResultList = ResultList | SubList
+					SubList = nil
+			 	else
+					SubList = SubList | X
+				end
+		  	end
+		 	ResultList = ResultList | SubList
+		 	{List.filter ResultList (fun {$ X} X \= nil end)}
+		end
+	end		  
+
+	%%% Add to the Dict some pairs Key : Value
+	%%% Pre : Dict is the dictionary
+	%%%		  L is a list (returns by BiGramme function)
+	%%% Post : Return the new Dict with all the pairs added.
+	%%% Example : L = ['i am' 'am the' 'the boss']    (Warning : In reality, it's a list of ASCII characters)
+	%%%           Dict = {'i am' : {'the' : 1}}
+	%%% => Return : Dict = {'i am' : {'the' : 2}, 'am the' : {'boss' : 1}}
+	fun {AddToDict Dict L}
+		case L
+		of nil then Dict
+		[] H|T then
+			if T.1 == nil then Dict
+			else
+				{AddToDict {AddElementToDict Dict H {String.tokens T.1 & }.2.1} T}
+			end
+		end
+	end
+
+	%%% Create all the Dict
+	%%% Pre : Dict is the dictionary
+	%%%		  L is a list of lists
+	%%% Post : 
+	%%% Example : L = [['i am the boss'] ['no problem sir']]   (Warning : In reality, it's a list of ASCII characters)
+	%%% 		  Dict = {}
+	%%% => Return : Dict = {'i am' : {'the' : 1}, 'am the' : {'boss' : 1}, 'no problem' : {'sir' : 1}}
+	fun {CreateDict Dict L}
+		case L
+		of nil then Dict
+		[] H|T then
+			{CreateDict {AddToDict Dict {BiGramme {SplitList H 32}}} T}
+		end
+	end
+
+
+	%%% Create the filename "tweets/part_N.txt" where N is given in argument
 	fun {GetFilename N}
 		local F1 F2 in
 			F1 = "tweets/part_"
@@ -32,8 +138,8 @@ define
 	end
 	% {Browse {GetFilename 1}} % "tweets/part_1.txt"
 
-	%%%===================================================================%%%
-	% Create a list with all line of the file named "Filename"
+
+	%%% Create a list with all line of the file named "Filename"
 	fun {Reader Filename}
 		fun {GetLine TextFile}
 			Line = {TextFile getS($)}
@@ -51,15 +157,15 @@ define
 	% {Browse {Reader {GetFilename 1}}} % une liste avec ttes les lignes du fichier 1
 
 
-	%%%===================================================================%%%
 	fun {ParseAllLines List}
 		case List
 		of nil then nil
-		[] H|T then {ParseLine H}|{ParseAllLines T}
+		[] H|T then
+			{ParseLine H} | {ParseAllLines T}
 		end
 	end
 
-	%%%===================================================================%%%
+
 	% Replaces special caracters by a space (== 32 in ASCII) and letters to lowercase
 	fun {ParseLine Line}
 		case Line
@@ -89,7 +195,6 @@ define
 		[]124|T then 32|{ParseLine T} % if |
 		[]125|T then 32|{ParseLine T} % if }
 		[]126|T then 32|{ParseLine T} % if ~
-
 		[] 33|T then 32|{ParseLine T} % if !
 		[] 44|T then 32|{ParseLine T} % if ,
 		[] 46|T then 32|{ParseLine T} % if .
@@ -108,7 +213,7 @@ define
 				else					% else
 					New_H = H			% keep the already lowercase letter
 				end
-				New_H|{ParseLine T}
+				New_H | {ParseLine T}
 			end
 		
 		[] nil then nil
@@ -133,7 +238,7 @@ define
 		0
 	end
 
-	%%%===================================================================%%%
+
 	%%% Lance les N threads de lecture et de parsing qui liront et traiteront tous les fichiers
 	%%% Les threads de parsing envoient leur resultat au port Port
 	proc {LaunchThreads Port N}
@@ -141,10 +246,7 @@ define
 		skip
 	end
 
-	%%% Ajouter vos fonctions et procédures auxiliaires ici
 
-
-	%%%===================================================================%%%
 	%%% Fetch Tweets Folder from CLI Arguments
 	%%% See the Makefile for an example of how it is called
 	fun {GetSentenceFolder}
@@ -154,15 +256,16 @@ define
 	end
 
 	%%% Decomnentez moi si besoin
-	% proc {ListAllFiles L}
-	% 	case L of nil then skip
-	% 	[] H|T then
-	% 		{Browse {String.toAtom H}}
-	% 		{ListAllFiles T}
-	% 	end
-	% end
+	proc {ListAllFiles L}
+		case L of nil then skip
+		[] H|T then
+			{Browse {String.toAtom H}}
+			{ListAllFiles T}
+		end
+	end
 
-	%%%===================================================================%%%
+	
+
 	%%% Procedure principale qui cree la fenetre et appelle les differentes procedures et fonctions
 	proc {Main}
 		TweetsFolder = {GetSentenceFolder}
@@ -204,10 +307,12 @@ define
 		end
 	end
 	% Appelle la procedure principale
-	local List in
+	local ListLine ListParsed Dict in
 		ListLine = {Reader {GetFilename 1}}
-		{ParseAllLines ListLine}
-		% {Browse ListLine}
+		ListParsed = {ParseAllLines ListLine}
+		{ListAllFiles ListParsed}
+		Dict = {CreateDict {Dictionary.new} ListParsed}
+		{Browse Dict}
 	end
 	{Main}
 end
