@@ -90,7 +90,8 @@ define
 		[] H|T then
 			if T == nil then Dict
 			else
-				{AddToDict {AddElementToDict Dict H {String.tokens T.1 32}.2} T}
+				% {Browse {String.toAtom {String.tokens T.1 32}.2.1}}
+				{AddToDict {AddElementToDict Dict {String.toAtom H} {String.toAtom {String.tokens T.1 32}.2.1}} T}
 			end
 		end
 	end
@@ -144,7 +145,29 @@ define
 		case List
 		of nil then nil
 		[] H|T then
-			{ParseLine H} | {ParseAllLines T}
+			{RemoveEmptySpace {ParseLine H}} | {ParseAllLines T}
+		end
+	end
+
+	fun {RemoveEmptySpace Line}
+		local
+			fun {RemoveEmptySpaceAux Line PreviousSpace}
+				case Line
+				of nil then nil
+				[] H|T then
+					if H == 32 andthen PreviousSpace then
+						{RemoveEmptySpaceAux T true}
+					else
+						if H == 32 then
+							H | {RemoveEmptySpaceAux T true}
+						else
+							H | {RemoveEmptySpaceAux T false}
+						end
+					end
+				end
+			end
+		in
+			{RemoveEmptySpaceAux Line false}
 		end
 	end
 
@@ -239,13 +262,13 @@ define
 	end
 
 	%%% Decomnentez moi si besoin
-	proc {ListAllFiles L}
-		case L of nil then skip
-		[] H|T then
-			{Browse {String.toAtom H}}
-			{ListAllFiles T}
-		end
-	end
+	% proc {ListAllFiles L}
+	% 	case L of nil then skip
+	% 	[] H|T then
+	% 		{Browse {String.toAtom H}}
+	% 		{ListAllFiles T}
+	% 	end
+	% end
 
 	
 
@@ -293,9 +316,9 @@ define
 	local ListLine ListParsed Dict in
 		ListLine = {Reader {GetFilename 1}}
 		ListParsed = {ParseAllLines ListLine}
-		{ListAllFiles ListParsed}
+		% {ListAllFiles ListParsed}
 		Dict = {CreateDict {Dictionary.new} ListParsed}
-		{Browse Dict}
+		% {Browse {Dictionary.keys {Dictionary.get Dict 'republicans should'}}}
 	end
 	{Main}
 end
