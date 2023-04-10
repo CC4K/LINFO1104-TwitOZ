@@ -65,34 +65,17 @@ define
 	%%% Example : ['this' 'is' 'a' 'list' 'of' 'words'])     (Warning : In reality, it's a list of ASCII characters)
 	%%% Post : Return a List of Bi-Gramme
 	%%% Example : ['this is' 'is a' 'a list' 'list of' 'of words']
-	fun {BiGramme List}
-		case List
+	fun {BiGramme L}
+		case L
 		of nil then nil
 		[] H|T then
-			if T.1 == nil then nil
-			else 
-				{Append {Append H 32} T.1} | {BiGramme T}
+			if T == nil then nil
+			else
+				{Append {Append H [32]} T.1} | {BiGramme T}
 			end
 		end
 	end
 
-	fun {SplitList L Delimiter}
-		local
-			SubList = nil
-		   	ResultList = nil
-		in
-			for X in L do
-				if X == Delimiter then
-					ResultList = ResultList | SubList
-					SubList = nil
-			 	else
-					SubList = SubList | X
-				end
-		  	end
-		 	ResultList = ResultList | SubList
-		 	{List.filter ResultList (fun {$ X} X \= nil end)}
-		end
-	end		  
 
 	%%% Add to the Dict some pairs Key : Value
 	%%% Pre : Dict is the dictionary
@@ -105,9 +88,9 @@ define
 		case L
 		of nil then Dict
 		[] H|T then
-			if T.1 == nil then Dict
+			if T == nil then Dict
 			else
-				{AddToDict {AddElementToDict Dict H {String.tokens T.1 & }.2.1} T}
+				{AddToDict {AddElementToDict Dict H {String.tokens T.1 32}.2} T}
 			end
 		end
 	end
@@ -123,7 +106,7 @@ define
 		case L
 		of nil then Dict
 		[] H|T then
-			{CreateDict {AddToDict Dict {BiGramme {SplitList H 32}}} T}
+			{CreateDict {AddToDict Dict {BiGramme {String.tokens H 32}}} T}
 		end
 	end
 
