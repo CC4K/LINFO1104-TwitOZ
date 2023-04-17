@@ -272,8 +272,14 @@ define
 	%%%                                           | nil
 	%%%                  <probability/frequence> := <int> | <float>
 	fun {Press}
-		% TODO
-		0
+		Text = {InputText tkReturnAtom(get p(1 0) 'end' $)} 	% read first line of input from 0 to end (ex: "I am\n")
+		Splitted = {String.tokens Text & } 						% splits on spaces (ex: ["I" "am\n"])
+        End = {List.last Splitted} 								% get the last/most recent word (ex: "am\n")
+        Last = {String.tokens End &\n} 							% split/removes newline (ex: "am") /!\ adds [] around so Last must be called Last.1
+        
+		% TODO % func that searches in tree and returns a list of all words following 'Last' in database and their frequencies
+
+		{OutputText tk(insert p(1 0) 'end')}
 	end
 
 
