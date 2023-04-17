@@ -19,95 +19,127 @@ define
 	end
 
 
-	%%% Use a dictionnary because we don't remove any node in the process so a tree is not as usefull as usual.
-	%%% Structure of the dict : 
-	%%% Dict = {Key1 : {Value1 : Frequence1},
-	%%%			Key2 : {Value2 : Frequence2, Value3 : Frequence3},
-	%%%			Key3 : {Value4 : Frequence4}, ...}
+	%%% MAIN TREE FUNCTIONS BEGIN %%%
+
+	%%% Structure of the recursive binary tree : 
+	%%% 	obtree := leaf | obtree(Key Value Left Right)
+	%%% Example : 
+	%%% 	T = tree(key:horse value:cheval
+	%%%			tree(key:dog value:chien
+	%%%			tree(key:cat value:chat leaf leaf)
+	%%%			tree(key:elephant value:elephant leaf leaf))
+	%%%		tree(key:mouse value:souris
+	%%%			tree(key:monkey value:singe leaf leaf)
+	%%%			tree(key:tiger value:tigre leaf leaf)))
+
+	fun {LookingUp Tree Key}
+		case Tree
+		of leaf then notfound
+		[] tree(key:K value:V TLeft TRight) andthen K == Key
+			then V
+		[] tree(key:K value:V TLeft TRight) andthen K > Key
+			then {LookingUp TLeft Key}
+		[] tree(key:K value:V TLeft TRight) andthen K < Key
+			then {LookingUp TRight Key}
+		end
+	end
+
+	fun {Insert Key Value Tree}
+		case Tree
+		of leaf then tree(key:Key value:Value leaf leaf)
+		[] tree(key:K value:V TLeft TRight) andthen K == Key
+			then tree(key:Key value:Value TLeft TRight)
+		[] tree(key:K value:V TLeft TRight) andthen K < Key
+			then tree(key:K value:V TLeft {Insert Key Value TRight})
+		[] tree(key:K value:V TLeft TRight) andthen K > Key
+			then tree(key:K value:V {Insert Key Value TLeft} TRight)
+		end
+	end
+
+	fun {RemoveSmallest Tree}
+		case Tree
+		of leaf then none
+		[] tree(key:K value:V TLeft TRight) then
+			case {RemoveSmallest TLeft}
+			of none then triple(TRight K V)
+			[] triple(Tp Kp Vp) then
+				triple(tree(key:K value:V Tp TRight) Kp Vp)
+			end
+		end
+	end
+
+	fun {Delete Key Tree}
+		case Tree
+		of leaf then leaf
+		[] tree(key:K value:V TLeft TRight) andthen Key == K then
+			case {RemoveSmallest TRight}
+			of none then TLeft
+			[] triple(Tp Kp Vp) then
+				tree(key:Kp value:Vp TLeft Tp)
+			end
+		[] tree(key:K value:V TLeft TRight) andthen Key < K
+			then tree(key:K value:V {Delete Key TLeft} TRight)
+		[] tree(key:K value:V TLeft TRight) andthen Key > K
+			then tree(key:K value:V TLeft {Delete Key TRight})
+		end
+	end
+
+	%%% MAIN TREE FUNCTIONS END %%%
+
+
+
+	%%% SUBTREE FUNCTIONS BEGIN %%%
+
+	proc {AddChild SubTree Child}
+		SubTree.children = Child|SubTree.children
+	end
+
+	% fun {CreateNewSubTree Key Frequence Child}
+	% 	local SubTree Child in
+	% 		SubTree = tree(key:Key frequence:Frequence children:[])
+	% 		Child = tree(key:Child frequence:1 children:[])
+	% 		{AddChild SubTree Child}
+	% 	end
+	% end
+
+	%%% SUBTREE FUNCTIONS END %%%
 	
+	fun {AddLineToTree Tree ListWords}
+		case ListWords
+		of nil then Tree
+		[] H|T then
+			if T.1 \= nil andthen T.2 \= nil then
+				local SearchValue SubTree in
+					SearchValue = {LookingUp Tree {String.toAtom H}}
 
-	%%% Add element (Key : {Value : Frequence}) to the Dict and return the new Dict with the element added.
-	%%% If the Key already exist :
-	%%%     - If the Value exist too : Increase of 1 the Frequence of this (Key : {Value : Frequence+1})
-	%%%     - If the Value doesn't exist : Add the pair (Key : {Value : 1})
-	proc {AddElementToDict Dict Key Value ?NewDict}
+					% The first word is not in the main tree
+					if SearchValue == notfound then
+						SubTree = {CreateNewSubTree T.1 1 T.2}
+						{Insert {String.toAtom H} SubTree Tree}
 
-		if {Dictionary.is Dict} then
-			if {Atom.is Key} then
-
-				local Frequence SubDict in
-					if {Dictionary.member Dict Key} then
-						SubDict = {Dictionary.get Dict Key}
-						if {Dictionary.member SubDict Value} then
-							Frequence = {Dictionary.get SubDict Value}
-							{Dictionary.put SubDict Value Frequence+1}
-						else
-							Frequence = 1
-							{Dictionary.put SubDict Value Frequence}
-						end
+					% The first word is in the main tree
 					else
-						Frequence = 1
-						SubDict = {Dictionary.new}
-						{Dictionary.put SubDict Value Frequence}
-						{Dictionary.put Dict Key SubDict}
+						SubTree = SearchValue
+						
 					end
 				end
 			else
-                {Browse "Error : Key is not an Atom."}
-            end
-		else
-            {Browse "Error : Dict is not a dictionary."}
-        end
-		NewDict = Dict
-	end
-
-	%%% Pre : List is a list of words with no special characters and all letters are lowercase
-	%%% Example : ['this' 'is' 'a' 'list' 'of' 'words'])     (Warning : In reality, it's a list of ASCII characters)
-	%%% Post : Return a List of Bi-Gramme
-	%%% Example : ['this is' 'is a' 'a list' 'list of' 'of words']
-	fun {BiGramme L}
-		case L
-		of nil then nil
-		[] H|T then
-			if T == nil then nil
-			else
-				{Append {Append H [32]} T.1} | {BiGramme T}
+				Tree
 			end
 		end
 	end
 
 
-	%%% Add to the Dict some pairs Key : Value
-	%%% Pre : Dict is the dictionary
-	%%%		  L is a list (returns by BiGramme function)
-	%%% Post : Return the new Dict with all the pairs added.
-	%%% Example : L = ['i am' 'am the' 'the boss']    (Warning : In reality, it's a list of ASCII characters)
-	%%%           Dict = {'i am' : {'the' : 1}}
-	%%% => Return : Dict = {'i am' : {'the' : 2}, 'am the' : {'boss' : 1}}
-	fun {AddToDict Dict L}
-		case L
-		of nil then Dict
-		[] H|T then
-			if T == nil then Dict
-			else
-				% {Browse {String.toAtom {String.tokens T.1 32}.2.1}}
-				{AddToDict {AddElementToDict Dict {String.toAtom H} {String.toAtom {String.tokens T.1 32}.2.1}} T}
-			end
-		end
-	end
-
-	%%% Create all the Dict
-	%%% Pre : Dict is the dictionary
+	%%% Create the main Tree + all the SubTree
+	%%% Pre : Tree is the main Tree
 	%%%		  L is a list of lists
 	%%% Post : 
 	%%% Example : L = [['i am the boss'] ['no problem sir']]   (Warning : In reality, it's a list of ASCII characters)
-	%%% 		  Dict = {}
-	%%% => Return : Dict = {'i am' : {'the' : 1}, 'am the' : {'boss' : 1}, 'no problem' : {'sir' : 1}}
-	fun {CreateDict Dict L}
+	fun {CreateTree Tree L}
 		case L
-		of nil then Dict
+		of nil then Tree
 		[] H|T then
-			{CreateDict {AddToDict Dict {BiGramme {String.tokens H 32}}} T}
+			{CreateTree {AddLineToTree Tree {String.tokens H & }} T}
 		end
 	end
 
@@ -248,8 +280,12 @@ define
 	%%% Lance les N threads de lecture et de parsing qui liront et traiteront tous les fichiers
 	%%% Les threads de parsing envoient leur resultat au port Port
 	proc {LaunchThreads Port N}
-		% TODO
-		skip
+		for X in 1..N do File ThreadReader ThreadParser ThreadSaver L P in
+			File = {GetFilename X}
+			thread ThreadReader = {Reader File} L=1 end
+			thread {Wait L} ThreadParser = {ParseAllLines ThreadReader} P=1 end
+			{Port.send Port ThreadParser}
+		end
 	end
 
 
@@ -286,8 +322,7 @@ define
 		
 		local NbThreads InputText OutputText Description Window SeparatedWordsStream SeparatedWordsPort in
 		{Property.put print foo(width:1000 depth:1000)}  % for stdout siz
-		
-		% TODO
+
 		
 		% Creation de l interface graphique
 		Description=td(
@@ -306,19 +341,19 @@ define
 		
 		% On lance les threads de lecture et de parsing
 		SeparatedWordsPort = {NewPort SeparatedWordsStream}
-		NbThreads = 4
-		{LaunchThreads SeparatedWordsPort NbThreads}
-		
+		NbThreads = 208
+		% {LaunchThreads SeparatedWordsPort NbThreads}
 		{InputText set(1:"")}
+		{OutputText set(1:"haha")}
 		end
 	end
+
 	% Appelle la procedure principale
-	local ListLine ListParsed Dict in
+	{Main}
+
+	local ListLine ListParsed Tree in
 		ListLine = {Reader {GetFilename 1}}
 		ListParsed = {ParseAllLines ListLine}
-		% {ListAllFiles ListParsed}
-		Dict = {CreateDict {Dictionary.new} ListParsed}
-		% {Browse {Dictionary.keys {Dictionary.get Dict 'republicans should'}}}
+		Tree = {CreateTree {Dictionary.new} ListParsed}
 	end
-	{Main}
 end
