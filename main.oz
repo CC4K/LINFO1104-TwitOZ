@@ -8,7 +8,7 @@ import
     Property
     Browser
 define
-    
+
     %%% Class used to open the files
     class TextFile
         from Open.file Open.text
@@ -35,37 +35,37 @@ define
     fun {LookingUp Tree Key}
         case Tree
         of leaf then notfound
-        [] tree(key:K value:V TLeft TRight) andthen {Atom.toString K} == {Atom.toString Key}
+        [] tree(key:K value:V t_left:TLeft t_right:TRight) andthen K == Key
             then V
-        [] tree(key:K value:V TLeft TRight) andthen {Atom.toString K} > {Atom.toString Key}
+        [] tree(key:K value:V t_left:TLeft t_right:TRight) andthen K > Key
             then {LookingUp TLeft Key}
-        [] tree(key:K value:V TLeft TRight) andthen {Atom.toString K} < {Atom.toString Key}
+        [] tree(key:K value:V t_left:TLeft t_right:TRight) andthen K < Key
             then {LookingUp TRight Key}
+		else 
+			nil
         end
     end
 
     fun {Insert Tree Key Value}
         case Tree
-        of leaf then tree(key:Key value:Value leaf leaf)
-        [] tree(key:K value:V TLeft TRight) andthen K == Key
-            then tree(key:Key value:Value TLeft TRight)
-        [] tree(key:K value:V TLeft TRight) andthen K < Key
-            then tree(key:K value:V TLeft {Insert Key Value TRight})
-        [] tree(key:K value:V TLeft TRight) andthen K > Key
-            then tree(key:K value:V {Insert Key Value TLeft} TRight)
-		else 
-			tree(key:Key value:Value leaf leaf) % J'aimerais le degager mais ça crashe sinon.
+        of leaf then tree(key:Key value:Value t_left:leaf t_right:leaf)
+        [] tree(key:K value:V t_left:TLeft t_right:TRight) andthen K == Key
+            then tree(key:Key value:Value t_left:TLeft t_right:TRight)
+        [] tree(key:K value:V t_left:TLeft t_right:TRight) andthen K < Key
+            then tree(key:K value:V t_left:TLeft t_right:{Insert Key Value TRight})
+        [] tree(key:K value:V t_left:TLeft t_right:TRight) andthen K > Key
+            then tree(key:K value:V t_left:{Insert Key Value TLeft} t_right:TRight)
         end
     end
 
     fun {RemoveSmallest Tree}
         case Tree
         of leaf then none
-        [] tree(key:K value:V TLeft TRight) then
+        [] tree(key:K value:V t_left:TLeft t_right:TRight) then
             case {RemoveSmallest TLeft}
             of none then triple(TRight K V)
             [] triple(Tp Kp Vp) then
-                triple(tree(key:K value:V Tp TRight) Kp Vp)
+                triple(tree(key:K value:V t_left:Tp t_right:TRight) Kp Vp)
             end
         end
     end
@@ -73,18 +73,18 @@ define
     fun {Delete Tree Key}
         case Tree
         of leaf then leaf
-        [] tree(key:K value:V TLeft TRight) andthen Key == K then
+        [] tree(key:K value:V t_left:TLeft t_right:TRight) andthen Key == K then
             case {RemoveSmallest TRight}
             of none then TLeft
             [] triple(Tp Kp Vp) then
-                tree(key:Kp value:Vp TLeft Tp)
+                tree(key:Kp value:Vp t_left:TLeft t_right:Tp)
             else
                 none
             end
-        [] tree(key:K value:V TLeft TRight) andthen Key < K
-            then tree(key:K value:V {Delete Key TLeft} TRight)
-        [] tree(key:K value:V TLeft TRight) andthen Key > K
-            then tree(key:K value:V TLeft {Delete Key TRight})
+        [] tree(key:K value:V t_left:TLeft t_right:TRight) andthen Key < K
+            then tree(key:K value:V t_left:{Delete Key TLeft} t_right:TRight)
+        [] tree(key:K value:V t_left:TLeft t_right:TRight) andthen Key > K
+            then tree(key:K value:V t_left:TLeft t_right:{Delete Key TRight})
         end
     end
 
@@ -129,25 +129,23 @@ define
 
                 local List_Value Value_to_Insert Key NewList in
 
-                    Key = H % Représente un double mot (example 'i am' ou 'must go')
-                    Value_to_Insert = {String.toAtom {SecondWord {Atom.toString T.1}}} % Représente le prochain mot (example 'ready' ou 'now')
-					
-					{Browse Key}
+                    Key = H % ATOME : Représente un double mot (example 'i am' ou 'must go')
+					{System.show Key}
+                    Value_to_Insert = {String.toAtom {SecondWord {Atom.toString T.1}}} % ATOME : Représente le prochain mot (example 'ready' ou 'now')
+					{System.show Value_to_Insert}
+					{System.show Tree}
                     List_Value = {LookingUp Tree Key}
+					{System.show 1000000}
 
                     % The first word is not in the main tree
                     if List_Value == notfound then
-						% Tree = {Insert Tree Key [Value_to_Insert#1]}
 						{AddLineToTree {Insert Tree Key [Value_to_Insert#1]} T} % Appel récursif
 
                     % The first word is in the main tree
                     else
                         NewList = {UpdateList List_Value Value_to_Insert}
-						% Tree = {Insert Tree Key NewList}
 						{AddLineToTree {Insert Tree Key NewList} T} % Appel récursif
                     end
-
-					% {AddLineToTree Tree T} % Appel récursif
                 end
 
             else
