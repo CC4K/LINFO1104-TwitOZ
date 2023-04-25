@@ -9,6 +9,8 @@ import
     Browser
 define
 
+	InputText OutputText Tree % Global variables
+
 	%%% HELP SI BESOIN (mec discord) : Récursive terminale avec invariant
 	%%% Perso je créé N arbres (N = nombre de threads) et pour chaque arbre je traite 208/N fichiers (plus exactement 208 % N pour tous sauf le dernier, qui est 208 - N * (208 % N))
 	%%% Et pour chaque fichier, je traite chaque mot et je le rajoute à l'arbre jusqu'à atteindre la fin
@@ -123,6 +125,7 @@ define
         end
     end
     
+
     fun {AddLineToTree Tree ListBiGramme}
 
         case ListBiGramme
@@ -334,6 +337,27 @@ define
     end
     % {Browse {ParseLine "FLATTENING OF THE CURVE!"}} % "flattening of the curve "
 
+	fun {GetWordMostFreq List_Value_Freq}
+		local
+			fun {GetWordMostFreqAux List_Value_Freq MaxFreq List_Word}
+				case List_Value_Freq
+				of nil then List_Word
+				[] H|T then
+					case H
+					of W#F then
+						if F >= MaxFreq then
+							{GetWordMostFreqAux T F List_Word|W}
+						else
+							{GetWordMostFreqAux T MaxFreq List_Word}
+						end
+					end
+				end
+			end
+		in
+			{List.filter {GetWordMostFreqAux List_Value_Freq 0 nil} proc {$ X} X \= nil end}
+		end
+	end
+
     %%%===================================================================%%%
     %%% /!\ Fonction testee /!\
     %%% @pre : les threads sont "ready"
@@ -347,8 +371,21 @@ define
     %%%                                           | nil
     %%%                  <probability/frequence> := <int> | <float>
     fun {Press}
-        % TODO
-        0
+		local Text SplittedText BeforeLast Last Key List_Value Word_To_Display in
+			Text = {InputText tkReturnAtom(get p(1 0) 'end' $)} 	% read first line of input from 0 to end (ex: "I am\n")
+			SplittedText = {String.tokens Text & } 					% splits on spaces (ex: ["I" "am\n"])
+			Last = {List.last SplittedText} 							% get the last/most recent word (ex: "am\n")
+			% Last = {String.tokens End &\n}  						% split/removes newline (ex: "am") /!\ adds [] around so Last must be called Last.1
+			BeforeLast = {List.nth SplittedText {List.length SplittedText}-1}
+
+			% TODO % func that searches in tree and returns a list of all words following 'Last' in database and their frequencies
+			Key = {String.toAtom {Append BeforeLast Last}}
+			List_Value = {LookingUp Tree Key}
+			Word_To_Display = {GetWordMostFreq List_Value}
+
+			{OutputText tk(insert Word_To_Display)}
+			0
+		end
     end
 
 
@@ -398,7 +435,7 @@ define
         %%% soumission !!!
         % {ListAllFiles {OS.getDir TweetsFolder}}
         
-        local NbThreads InputText OutputText Description Window SeparatedWordsStream SeparatedWordsPort in
+        local NbThreads Description Window SeparatedWordsStream SeparatedWordsPort in
         {Property.put print foo(width:1000 depth:1000)}  % for stdout siz
 
         
@@ -416,6 +453,8 @@ define
         
         {InputText tk(insert 'end' "Loading... Please wait.")}
         {InputText bind(event:"<Control-s>" action:Press)} % You can also bind events
+
+		{Press}
         
         % On lance les threads de lecture et de parsing
         % SeparatedWordsPort = {NewPort SeparatedWordsStream}
@@ -431,7 +470,7 @@ define
 
     % Appelle la procedure principale
     {Main}
-    local File Line ParsedLine Tree in
+    local File Line ParsedLine in
         File = {GetFilename 1}
         Line = {Reader File}
         ParsedLine = {ParseAllLines Line}
@@ -439,6 +478,7 @@ define
         Tree = {CreateTree leaf ParsedLine}
 		% {Browse 'must go'}
         {Browse {LookingUp Tree 'I have'}}
+		{Browse {LookingUp Tree 'news conference'}}
 		%{Browse Tree}
     end
 end
