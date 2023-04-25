@@ -343,7 +343,7 @@ define
 			fun {GetWordMostFreqAux List_Value_Freq MaxFreq List_Word}
 				case List_Value_Freq
 				of notfound then [nil 0]
-				[] nil then [{List.filter List_Word proc {$ X} X \= nil end} MaxFreq]
+				[] nil then [List_Word MaxFreq]
 				[] H|T then
 					case H
 					of W#F then
@@ -374,19 +374,29 @@ define
     %%%                  <probability/frequence> := <int> | <float>
     fun {Press}
 		local Text SplittedText BeforeLast Last Key List_Value in
-			Text = {InputText tkReturnAtom(get p(1 0) 'end' $)} 	% read first line of input from 0 to end (ex: "I am\n")
-			SplittedText = {String.tokens Text & } 					% splits on spaces (ex: ["I" "am\n"])
-			Last = {List.last SplittedText} 							% get the last/most recent word (ex: "am\n")
-			% Last = {String.tokens End &\n}  						% split/removes newline (ex: "am") /!\ adds [] around so Last must be called Last.1
-			BeforeLast = {List.nth SplittedText {List.length SplittedText}-1}
 
-			Key = {String.toAtom {Append BeforeLast Last}}
+			Text = {InputText tkReturn(get p(1 0) 'end' $)} 	% read first line of input from 0 to end (ex: "I am\n")
+			SplittedText = {String.tokens Text & } 					% splits on spaces (ex: ["I" "am"])
+			Last = {List.last SplittedText} 						% get the last/most recent word (ex: "am")
+			BeforeLast = {List.nth SplittedText {List.length SplittedText} - 1} % get the before last/most recent word (ex: "i")
+
+			Key = {String.toAtom {Append {Append BeforeLast 32} Last}}
 			List_Value = {LookingUp Tree Key}
 			
 			% Return
 			{GetWordMostFreq List_Value}
 		end
     end
+
+	proc {CallPress}
+		local List_Press in
+			{OutputText set(1:"haha")} % La ça marche
+			List_Press = {Press} %%%%%%%%%%%%%% CA CRASH ICI %%%%%%%%%%%%%%%%
+			% {System.show List_Press.0.1.2}
+			% {OutputText tk(insert 'end' {Atom.toString List_Press.0.1.2})}
+			{OutputText set(1:"haha")} % La ça marche pas
+		end
+	end
 
 
     %%% Lance les N threads de lecture et de parsing qui liront et traiteront tous les fichiers
@@ -435,28 +445,37 @@ define
         %%% soumission !!!
         % {ListAllFiles {OS.getDir TweetsFolder}}
         
-        local List_Press NbThreads Description Window SeparatedWordsStream SeparatedWordsPort in
+        local File Line ParsedLine PressCaller List_Press NbThreads Window Description SeparatedWordsStream SeparatedWordsPort in
         {Property.put print foo(width:1000 depth:1000)}  % for stdout siz
 
         
         % Creation de l interface graphique
         Description=td(
             title: "Text predictor"
-            lr(text(handle:InputText width:50 height:10 background:white foreground:black wrap:word) button(text:"Predict" width:15 action:Press))
+            lr(text(handle:InputText width:50 height:10 background:white foreground:black wrap:word) button(text:"Predict" width:15 action:CallPress))
             text(handle:OutputText width:50 height:10 background:black foreground:white glue:w wrap:word)
-            action:proc{$}{Application.exit 0} end % quitte le programme quand la fenetre est fermee
+            action:proc{$} {Application.exit 0} end % Quitte le programme quand la fenetre est fermee
             )
         
         % Creation de la fenetre
-        Window={QTk.build Description}
+        Window = {QTk.build Description}
         {Window show}
         
         {InputText tk(insert 'end' "Loading... Please wait.")}
-        {InputText bind(event:"<Control-s>" action:Press)} % You can also bind events
+        {InputText bind(event:"<Control-s>" action:CallPress)} % You can also bind events
+		
+		File = {GetFilename 1}
+		Line = {Reader File}
+		ParsedLine = {ParseAllLines Line}
+		% % {Browse {String.toAtom ParsedLine.1}}
+		Tree = {CreateTree leaf ParsedLine}
+		% {System.show 'must go'}
+		{System.show {LookingUp Tree 'I have'}}
+		{System.show {LookingUp Tree 'news conference'}}
+		% {System.show Tree}
+		
+		%%% TODO : Pas encore fonctionnel %%%
 
-		List_Press = {Press}
-		{OutputText tk(insert List_Press.1.1)}
-        
         % On lance les threads de lecture et de parsing
         % SeparatedWordsPort = {NewPort SeparatedWordsStream}
         % NbThreads = 10
@@ -464,22 +483,9 @@ define
         % {LaunchThreads SeparatedWordsPort NbThreads}
         % {Record.forAll SeparatedWordsPort proc{$ X} {Browse X} end}
 
-        % {InputText set(1:"")}
-        % {OutputText set(1:"haha")}
         end
     end
 
     % Appelle la procedure principale
     {Main}
-    local File Line ParsedLine in
-        File = {GetFilename 1}
-        Line = {Reader File}
-        ParsedLine = {ParseAllLines Line}
-		% {Browse {String.toAtom ParsedLine.1}}
-        Tree = {CreateTree leaf ParsedLine}
-		% {Browse 'must go'}
-        {Browse {LookingUp Tree 'I have'}}
-		{Browse {LookingUp Tree 'news conference'}}
-		%{Browse Tree}
-    end
 end
