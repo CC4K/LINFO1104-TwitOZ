@@ -339,16 +339,20 @@ define
 
 	fun {GetWordMostFreq List_Value_Freq}
 		local
-			List_Final
 			fun {GetWordMostFreqAux List_Value_Freq MaxFreq List_Word}
 				case List_Value_Freq
-				of notfound then [nil 0]
-				[] nil then [List_Word MaxFreq]
+				of notfound then [none 0]
+				[] nil then
+					[List_Word|nil MaxFreq]
 				[] H|T then
 					case H
 					of W#F then
 						if F >= MaxFreq then
-							{GetWordMostFreqAux T F List_Word|W}
+							if List_Word == nil then % First iteration
+								{GetWordMostFreqAux T F [W]}
+							else
+								{GetWordMostFreqAux T F List_Word|W}
+							end
 						else
 							{GetWordMostFreqAux T MaxFreq List_Word}
 						end
@@ -373,28 +377,40 @@ define
     %%%                                           | nil
     %%%                  <probability/frequence> := <int> | <float>
     fun {Press}
-		local Text SplittedText BeforeLast Last Key List_Value in
+		
+		local SplittedText BeforeLast Last Key List_Value Word_To_Display in
 
-			Text = {InputText tkReturn(get p(1 0) 'end' $)} 	% read first line of input from 0 to end (ex: "I am\n")
-			SplittedText = {String.tokens Text & } 					% splits on spaces (ex: ["I" "am"])
-			Last = {List.last SplittedText} 						% get the last/most recent word (ex: "am")
-			BeforeLast = {List.nth SplittedText {List.length SplittedText} - 1} % get the before last/most recent word (ex: "i")
-
-			Key = {String.toAtom {Append {Append BeforeLast 32} Last}}
-			List_Value = {LookingUp Tree Key}
+			SplittedText = {String.tokens {InputText getText(p(1 0) 'end' $)} & }
+			Last = {String.tokens {List.last SplittedText} &\n}.1
+			BeforeLast = {List.nth SplittedText {List.length SplittedText} - 1}
+			% {Browse {String.toAtom Last}}
+			% {Browse {String.toAtom BeforeLast}}
 			
-			% Return
-			{GetWordMostFreq List_Value}
+			Key = {String.toAtom {List.append {List.append BeforeLast [32]} Last}}
+			% {Browse Key}
+
+			List_Value = {LookingUp Tree Key}
+			% {Browse List_Value}
+			
+			{GetWordMostFreq List_Value}.1
 		end
     end
 
 	proc {CallPress}
-		local List_Press in
-			{OutputText set(1:"haha")} % La ça marche
-			List_Press = {Press} %%%%%%%%%%%%%% CA CRASH ICI %%%%%%%%%%%%%%%%
-			% {System.show List_Press.0.1.2}
-			% {OutputText tk(insert 'end' {Atom.toString List_Press.0.1.2})}
-			{OutputText set(1:"haha")} % La ça marche pas
+		local Word_To_Display in
+
+			Word_To_Display = {Press}
+			% {Browse Word_To_Display}
+			% {Browse {List.is Word_To_Display}}
+			% {Browse Word_To_Display.1}
+
+			if Word_To_Display == none then
+				{OutputText set("Error")} % you can get/set text this way too
+			else
+				% {Browse Word_To_Display.1.1}
+				{OutputText set(Word_To_Display.1.1)} % you can get/set text this way too
+			end
+
 		end
 	end
 
@@ -461,7 +477,7 @@ define
         Window = {QTk.build Description}
         {Window show}
         
-        {InputText tk(insert 'end' "Loading... Please wait.")}
+        % {InputText tk(insert 'end' "Loading... Please wait.")}
         {InputText bind(event:"<Control-s>" action:CallPress)} % You can also bind events
 		
 		File = {GetFilename 1}
@@ -470,8 +486,8 @@ define
 		% % {Browse {String.toAtom ParsedLine.1}}
 		Tree = {CreateTree leaf ParsedLine}
 		% {System.show 'must go'}
-		{System.show {LookingUp Tree 'I have'}}
-		{System.show {LookingUp Tree 'news conference'}}
+		% {System.show {LookingUp Tree 'I have'}}
+		% {System.show {LookingUp Tree 'news conference'}}
 		% {System.show Tree}
 		
 		%%% TODO : Pas encore fonctionnel %%%
