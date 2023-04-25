@@ -35,16 +35,16 @@ define
     fun {LookingUp Tree Key}
         case Tree
         of leaf then notfound
-        [] tree(key:K value:V TLeft TRight) andthen K == Key
+        [] tree(key:K value:V TLeft TRight) andthen {Atom.toString K} == {Atom.toString Key}
             then V
-        [] tree(key:K value:V TLeft TRight) andthen K > Key
+        [] tree(key:K value:V TLeft TRight) andthen {Atom.toString K} > {Atom.toString Key}
             then {LookingUp TLeft Key}
-        [] tree(key:K value:V TLeft TRight) andthen K < Key
+        [] tree(key:K value:V TLeft TRight) andthen {Atom.toString K} < {Atom.toString Key}
             then {LookingUp TRight Key}
         end
     end
 
-    fun {Insert Key Value Tree}
+    fun {Insert Tree Key Value}
         case Tree
         of leaf then tree(key:Key value:Value leaf leaf)
         [] tree(key:K value:V TLeft TRight) andthen K == Key
@@ -53,6 +53,8 @@ define
             then tree(key:K value:V TLeft {Insert Key Value TRight})
         [] tree(key:K value:V TLeft TRight) andthen K > Key
             then tree(key:K value:V {Insert Key Value TLeft} TRight)
+		else 
+			tree(key:Key value:Value leaf leaf) % J'aimerais le degager mais ça crashe sinon.
         end
     end
 
@@ -68,7 +70,7 @@ define
         end
     end
 
-    fun {Delete Key Tree}
+    fun {Delete Tree Key}
         case Tree
         of leaf then leaf
         [] tree(key:K value:V TLeft TRight) andthen Key == K then
@@ -107,11 +109,11 @@ define
 
     %%% LIST (SUBTREE) FUNCTIONs END %%%
 
-    fun {FirstWord L}
+    fun {SecondWord L}
         case L
-        of 32|T then nil
+        of 32|T then T
         [] H|T then
-            H | {FirstWord T}
+            {SecondWord T}
         else
             nil
         end
@@ -127,20 +129,25 @@ define
 
                 local List_Value Value_to_Insert Key NewList in
 
-                    Key = H.1
-                    Value_to_Insert = {String.toAtom {FirstWord T.1.1}}
-
+                    Key = H % Représente un double mot (example 'i am' ou 'must go')
+                    Value_to_Insert = {String.toAtom {SecondWord {Atom.toString T.1}}} % Représente le prochain mot (example 'ready' ou 'now')
+					
+					{Browse Key}
                     List_Value = {LookingUp Tree Key}
 
                     % The first word is not in the main tree
                     if List_Value == notfound then
-                        {Insert Key [Value_to_Insert#1] Tree}
+						% Tree = {Insert Tree Key [Value_to_Insert#1]}
+						{AddLineToTree {Insert Tree Key [Value_to_Insert#1]} T} % Appel récursif
 
                     % The first word is in the main tree
                     else
                         NewList = {UpdateList List_Value Value_to_Insert}
-                        {Insert Key NewList Tree}
+						% Tree = {Insert Tree Key NewList}
+						{AddLineToTree {Insert Tree Key NewList} T} % Appel récursif
                     end
+
+					% {AddLineToTree Tree T} % Appel récursif
                 end
 
             else
@@ -154,7 +161,7 @@ define
         of nil then nil
         [] H|nil then nil
         [] H|T then
-            {Append {Append H [32]} T.1} | {BiGramme T}
+            {String.toAtom {Append {Append H [32]} T.1}} | {BiGramme T}
         end
     end
 
@@ -234,59 +241,98 @@ define
         end
     end
 
+	
+	fun {CreateList Start End}
+		if End >= Start then
+			Start | {CreateList Start+1 End}
+		else
+			nil
+		end
+	end
+
+	fun {IsInList List Value}
+		case List
+		of nil then false
+		[] H|T then
+			if H == Value then true
+			else
+				{IsInList T Value}
+			end
+		end
+	end
 
     % Replaces special caracters by a space (== 32 in ASCII) and letters to lowercase
     fun {ParseLine Line}
-        case Line
-        of 34|T then 32|{ParseLine T} % if "
-        [] 35|T then 32|{ParseLine T} % if #
-        [] 36|T then 32|{ParseLine T} % if $
-        [] 37|T then 32|{ParseLine T} % if %
-        [] 38|T then 32|{ParseLine T} % if &
-        [] 39|T then 32|{ParseLine T} % if '
-        [] 40|T then 32|{ParseLine T} % if (
-        [] 41|T then 32|{ParseLine T} % if )
-        [] 42|T then 32|{ParseLine T} % if *
-        [] 43|T then 32|{ParseLine T} % if +
-        [] 45|T then 32|{ParseLine T} % if -
-        [] 47|T then 32|{ParseLine T} % if /
-        [] 60|T then 32|{ParseLine T} % if <
-        [] 61|T then 32|{ParseLine T} % if =
-        [] 62|T then 32|{ParseLine T} % if >
-        [] 64|T then 32|{ParseLine T} % if @
-        [] 91|T then 32|{ParseLine T} % if [
-        [] 92|T then 32|{ParseLine T} % if \
-        [] 93|T then 32|{ParseLine T} % if ]
-        [] 94|T then 32|{ParseLine T} % if ^
-        [] 95|T then 32|{ParseLine T} % if _
-        [] 96|T then 32|{ParseLine T} % if `
-        []123|T then 32|{ParseLine T} % if {
-        []124|T then 32|{ParseLine T} % if |
-        []125|T then 32|{ParseLine T} % if }
-        []126|T then 32|{ParseLine T} % if ~
-        [] 33|T then 32|{ParseLine T} % if !
-        [] 44|T then 32|{ParseLine T} % if ,
-        [] 46|T then 32|{ParseLine T} % if .
-        [] 58|T then 32|{ParseLine T} % if :
-        [] 59|T then 32|{ParseLine T} % if ;
-        [] 63|T then 32|{ParseLine T} % if ?
 
-        [] H|T then                     % if capital or lowercase letter
-            local New_H in
-                if H < 97 then          % if capital letter
-                    if H == 32 then     % AND not a space
-                        New_H = H
-                    else
-                        New_H = H + 32  % switch to lowercase letter
-                    end
-                else                    % else
-                    New_H = H           % keep the already lowercase letter
-                end
-                New_H | {ParseLine T}
-            end
+		local ListMin ListMaj ListChiffre in
+			ListMin = {CreateList 65 90}
+			ListMaj = {CreateList 97 122}
+			ListChiffre = {CreateList 48 57}
+
+			case Line
+			of H|T then
+				if {IsInList ListMin H} == true then
+					H | {ParseLine T}
+				elseif {IsInList ListMaj H} == true then
+					H | {ParseLine T}
+				elseif {IsInList ListChiffre H} == true then
+					H | {ParseLine T}
+				else
+					32 | {ParseLine T}
+				end
+			[] nil then nil
+			end
+		end
+			
+        % of 34|T then 32|{ParseLine T} % if "
+        % [] 35|T then 32|{ParseLine T} % if #
+        % [] 36|T then 32|{ParseLine T} % if $
+        % [] 37|T then 32|{ParseLine T} % if %
+        % [] 38|T then 32|{ParseLine T} % if &
+        % [] 39|T then 32|{ParseLine T} % if '
+        % [] 40|T then 32|{ParseLine T} % if (
+        % [] 41|T then 32|{ParseLine T} % if )
+        % [] 42|T then 32|{ParseLine T} % if *
+        % [] 43|T then 32|{ParseLine T} % if +
+        % [] 45|T then 32|{ParseLine T} % if -
+        % [] 47|T then 32|{ParseLine T} % if /
+        % [] 60|T then 32|{ParseLine T} % if <
+        % [] 61|T then 32|{ParseLine T} % if =
+        % [] 62|T then 32|{ParseLine T} % if >
+        % [] 64|T then 32|{ParseLine T} % if @
+        % [] 91|T then 32|{ParseLine T} % if [
+        % [] 92|T then 32|{ParseLine T} % if \
+        % [] 93|T then 32|{ParseLine T} % if ]
+        % [] 94|T then 32|{ParseLine T} % if ^
+        % [] 95|T then 32|{ParseLine T} % if _
+        % [] 96|T then 32|{ParseLine T} % if `
+        % []123|T then 32|{ParseLine T} % if {
+        % []124|T then 32|{ParseLine T} % if |
+        % []125|T then 32|{ParseLine T} % if }
+        % []126|T then 32|{ParseLine T} % if ~
+        % [] 33|T then 32|{ParseLine T} % if !
+        % [] 44|T then 32|{ParseLine T} % if ,
+        % [] 46|T then 32|{ParseLine T} % if .
+        % [] 58|T then 32|{ParseLine T} % if :
+        % [] 59|T then 32|{ParseLine T} % if ;
+        % [] 63|T then 32|{ParseLine T} % if ?
+
+        % [] H|T then                     % if capital or lowercase letter
+        %     local New_H in
+        %         if H < 97 then          % if capital letter
+        %             if H == 32 then     % AND not a space
+        %                 New_H = H
+        %             else
+        %                 New_H = H + 32  % switch to lowercase letter
+        %             end
+        %         else                    % else
+        %             New_H = H           % keep the already lowercase letter
+        %         end
+        %         New_H | {ParseLine T}
+        %     end
         
-        [] nil then nil
-        end
+        % [] nil then nil
+        % end
     end
     % {Browse {ParseLine "FLATTENING OF THE CURVE!"}} % "flattening of the curve "
 
@@ -391,7 +437,10 @@ define
         File = {GetFilename 1}
         Line = {Reader File}
         ParsedLine = {ParseAllLines Line}
+		% {Browse {String.toAtom ParsedLine.1}}
         Tree = {CreateTree leaf ParsedLine}
-        {Browse Tree}
+		% {Browse 'must go'}
+        % {Browse {LookingUp Tree 'must go'}}
+		% {Browse Tree}
     end
 end
