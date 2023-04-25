@@ -339,9 +339,11 @@ define
 
 	fun {GetWordMostFreq List_Value_Freq}
 		local
+			List_Final
 			fun {GetWordMostFreqAux List_Value_Freq MaxFreq List_Word}
 				case List_Value_Freq
-				of nil then List_Word
+				of notfound then [nil 0]
+				[] nil then [{List.filter List_Word proc {$ X} X \= nil end} MaxFreq]
 				[] H|T then
 					case H
 					of W#F then
@@ -354,7 +356,7 @@ define
 				end
 			end
 		in
-			{List.filter {GetWordMostFreqAux List_Value_Freq 0 nil} proc {$ X} X \= nil end}
+			{GetWordMostFreqAux List_Value_Freq 0 nil}
 		end
 	end
 
@@ -371,20 +373,18 @@ define
     %%%                                           | nil
     %%%                  <probability/frequence> := <int> | <float>
     fun {Press}
-		local Text SplittedText BeforeLast Last Key List_Value Word_To_Display in
+		local Text SplittedText BeforeLast Last Key List_Value in
 			Text = {InputText tkReturnAtom(get p(1 0) 'end' $)} 	% read first line of input from 0 to end (ex: "I am\n")
 			SplittedText = {String.tokens Text & } 					% splits on spaces (ex: ["I" "am\n"])
 			Last = {List.last SplittedText} 							% get the last/most recent word (ex: "am\n")
 			% Last = {String.tokens End &\n}  						% split/removes newline (ex: "am") /!\ adds [] around so Last must be called Last.1
 			BeforeLast = {List.nth SplittedText {List.length SplittedText}-1}
 
-			% TODO % func that searches in tree and returns a list of all words following 'Last' in database and their frequencies
 			Key = {String.toAtom {Append BeforeLast Last}}
 			List_Value = {LookingUp Tree Key}
-			Word_To_Display = {GetWordMostFreq List_Value}
-
-			{OutputText tk(insert Word_To_Display)}
-			0
+			
+			% Return
+			{GetWordMostFreq List_Value}
 		end
     end
 
@@ -435,7 +435,7 @@ define
         %%% soumission !!!
         % {ListAllFiles {OS.getDir TweetsFolder}}
         
-        local NbThreads Description Window SeparatedWordsStream SeparatedWordsPort in
+        local List_Press NbThreads Description Window SeparatedWordsStream SeparatedWordsPort in
         {Property.put print foo(width:1000 depth:1000)}  % for stdout siz
 
         
@@ -454,7 +454,8 @@ define
         {InputText tk(insert 'end' "Loading... Please wait.")}
         {InputText bind(event:"<Control-s>" action:Press)} % You can also bind events
 
-		{Press}
+		List_Press = {Press}
+		{OutputText tk(insert List_Press.1.1)}
         
         % On lance les threads de lecture et de parsing
         % SeparatedWordsPort = {NewPort SeparatedWordsStream}
