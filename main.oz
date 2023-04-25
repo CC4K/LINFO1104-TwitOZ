@@ -52,9 +52,9 @@ define
         [] tree(key:K value:V t_left:TLeft t_right:TRight) andthen K == Key
             then tree(key:Key value:Value t_left:TLeft t_right:TRight)
         [] tree(key:K value:V t_left:TLeft t_right:TRight) andthen K < Key
-            then tree(key:K value:V t_left:TLeft t_right:{Insert Key Value TRight})
+            then tree(key:K value:V t_left:TLeft t_right:{Insert TRight Key Value})
         [] tree(key:K value:V t_left:TLeft t_right:TRight) andthen K > Key
-            then tree(key:K value:V t_left:{Insert Key Value TLeft} t_right:TRight)
+            then tree(key:K value:V t_left:{Insert TLeft Key Value} t_right:TRight)
         end
     end
 
@@ -93,7 +93,6 @@ define
     %%% LIST (SUBTREE) FUNCTIONS BEGIN %%%
 
     fun {UpdateList L Ch}
-        % {Show L}
         case L 
         of nil then (Ch#1)|nil 
         [] H|T then 
@@ -130,12 +129,8 @@ define
                 local List_Value Value_to_Insert Key NewList in
 
                     Key = H % ATOME : Représente un double mot (example 'i am' ou 'must go')
-					{System.show Key}
                     Value_to_Insert = {String.toAtom {SecondWord {Atom.toString T.1}}} % ATOME : Représente le prochain mot (example 'ready' ou 'now')
-					{System.show Value_to_Insert}
-					{System.show Tree}
                     List_Value = {LookingUp Tree Key}
-					{System.show 1000000}
 
                     % The first word is not in the main tree
                     if List_Value == notfound then
@@ -438,7 +433,7 @@ define
 		% {Browse {String.toAtom ParsedLine.1}}
         Tree = {CreateTree leaf ParsedLine}
 		% {Browse 'must go'}
-        % {Browse {LookingUp Tree 'must go'}}
+        {Browse {LookingUp Tree 'I have'}}
 		% {Browse Tree}
     end
 end
