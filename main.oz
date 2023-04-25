@@ -9,6 +9,11 @@ import
     Browser
 define
 
+	%%% HELP SI BESOIN (mec discord) : Récursive terminale avec invariant
+	%%% Perso je créé N arbres (N = nombre de threads) et pour chaque arbre je traite 208/N fichiers (plus exactement 208 % N pour tous sauf le dernier, qui est 208 - N * (208 % N))
+	%%% Et pour chaque fichier, je traite chaque mot et je le rajoute à l'arbre jusqu'à atteindre la fin
+	%%% Si ça t'aide, tu peux toujours réimplémenter les boucles while en récursive terminale
+
     %%% Class used to open the files
     class TextFile
         from Open.file Open.text
@@ -425,7 +430,7 @@ define
     end
 
     % Appelle la procedure principale
-    % {Main}
+    {Main}
     local File Line ParsedLine Tree in
         File = {GetFilename 1}
         Line = {Reader File}
@@ -434,6 +439,6 @@ define
         Tree = {CreateTree leaf ParsedLine}
 		% {Browse 'must go'}
         {Browse {LookingUp Tree 'I have'}}
-		% {Browse Tree}
+		%{Browse Tree}
     end
 end
