@@ -325,52 +325,9 @@ define
 			[] nil then nil
 			end
 		end
-
-        % [] H|T then                     % if capital or lowercase letter
-        %     local New_H in
-        %         if H < 97 then          % if capital letter
-        %             if H == 32 then     % AND not a space
-        %                 New_H = H
-        %             else
-        %                 New_H = H + 32  % switch to lowercase letter
-        %             end
-        %         else                    % else
-        %             New_H = H           % keep the already lowercase letter
-        %         end
-        %         New_H | {ParseLine T}
-        %     end
-        
-        % [] nil then nil
-        % end
     end
     % {Browse {ParseLine "FLATTENING OF THE CURVE!"}} % "flattening of the curve "
 
-	fun {GetWordMostFreq List_Value_Freq}
-		local
-			fun {GetWordMostFreqAux List_Value_Freq MaxFreq List_Word}
-				case List_Value_Freq
-				of notfound then [none 0]
-				[] nil then
-					[List_Word|nil MaxFreq]
-				[] H|T then
-					case H
-					of W#F then
-						if F >= MaxFreq then
-							if List_Word == nil then % First iteration
-								{GetWordMostFreqAux T F [W]}
-							else
-								{GetWordMostFreqAux T F List_Word|W}
-							end
-						else
-							{GetWordMostFreqAux T MaxFreq List_Word}
-						end
-					end
-				end
-			end
-		in
-			{GetWordMostFreqAux List_Value_Freq 0 nil}
-		end
-	end
 
     fun {GetTreeMaxFreq Tree}
         case Tree
@@ -407,12 +364,8 @@ define
 			% {Browse {String.toAtom BeforeLast}}
 			
 			Key = {String.toAtom {List.append {List.append BeforeLast [32]} Last}}
-			% {Browse Key}
-
 			Tree_Value = {LookingUp Tree Key}
-			% {Browse Tree_Value}
 			
-			% {GetWordMostFreq Tree_Value}.1
             TreeMaxFreq = {GetTreeMaxFreq Tree_Value}
             if TreeMaxFreq == leaf then
                 [none 0]
@@ -430,9 +383,8 @@ define
             ProbableWords = List_To_Display.1
             MaxFreq = List_To_Display.2
 
-			% {Browse List_To_Display}
-			% {Browse {List.is List_To_Display}}
-			% {Browse List_To_Display.1}
+			% {Browse ProbableWords}
+			% {Browse MaxFreq}
 
             {Browse ProbableWords}
 
@@ -441,14 +393,6 @@ define
             else
                 {OutputText set(ProbableWords.1)}
             end
-
-			% if List_To_Display == none then
-			% 	{OutputText set("Error")} % you can get/set text this way too
-			% else
-			% 	% {Browse List_To_Display.1.1}
-			% 	{OutputText set(List_To_Display.1.1)} % you can get/set text this way too
-			% end
-
 		end
 	end
 
@@ -475,16 +419,6 @@ define
     in
         Args.'folder'
     end
-
-    %%% Decomnentez moi si besoin
-    % proc {ListAllFiles L}
-    %   case L of nil then skip
-    %   [] H|T then
-    %       {Browse {String.toAtom H}}
-    %       {ListAllFiles T}
-    %   end
-    % end
-    
 
     %%% Procedure principale qui cree la fenetre et appelle les differentes procedures et fonctions
     proc {Main}
@@ -521,15 +455,11 @@ define
 		Line = {Reader File}
 		ParsedLine = {ParseAllLines Line}
 
-		% % {Browse {String.toAtom ParsedLine.1}}
-		%Tree = {CreateTree leaf ParsedLine}
-
 
         FirstTree = {CreateTree leaf ParsedLine}
-        % {Browse FirstTree}
-
         Tree = {TraverseAndChange FirstTree FirstTree}
 
+        % {Browse Tree}
         {Browse {LookingUp Tree 'must go'}}
         {Browse {LookingUp Tree 'i have'}}
         {Browse {LookingUp Tree 'closer cooperation'}}
