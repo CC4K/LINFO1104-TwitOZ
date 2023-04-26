@@ -200,10 +200,10 @@ define
 
     % Tree = arbre de base
     % copyTree = arbre de base (c'est une référence) qui va être modifié petit à petit et renvoyer
-    proc {TraverseAndChange Tree CopyTree ?R}
+    fun {TraverseAndChange Tree CopyTree}
 
         case Tree
-        of leaf then R = CopyTree
+        of leaf then CopyTree
         [] tree(key:Key value:Value t_left:TLeft t_right:TRight) then
             
             local NewValue NewTree T1 T2 in
@@ -212,11 +212,9 @@ define
                 NewTree = {Insert CopyTree Key NewValue}
                 
                 T1 = {TraverseAndChange TLeft NewTree}
-                T2 = {TraverseAndChange TRight NewTree}
+                T2 = {TraverseAndChange TRight T1}
                 
             end
-        else
-            R = CopyTree
         end
     end
 
@@ -499,7 +497,7 @@ define
         local NewTree in
 
             Tree = {CreateTree leaf ParsedLine}
-            {Browse Tree}
+            % {Browse Tree}
 
             NewTree = {TraverseAndChange Tree Tree}
 
