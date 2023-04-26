@@ -48,8 +48,6 @@ define
             then {LookingUp TLeft Key}
         [] tree(key:K value:V t_left:TLeft t_right:TRight) andthen K < Key
             then {LookingUp TRight Key}
-		else 
-			nil
         end
     end
 
@@ -65,35 +63,34 @@ define
         end
     end
 
-    fun {RemoveSmallest Tree}
-        case Tree
-        of leaf then none
-        [] tree(key:K value:V t_left:TLeft t_right:TRight) then
-            case {RemoveSmallest TLeft}
-            of none then triple(TRight K V)
-            [] triple(Tp Kp Vp) then
-                triple(tree(key:K value:V t_left:Tp t_right:TRight) Kp Vp)
-            end
-        end
-    end
+    % fun {RemoveSmallest Tree}
+    %     case Tree
+    %     of leaf then none
+    %     [] tree(key:K value:V t_left:TLeft t_right:TRight) then
+    %         case {RemoveSmallest TLeft}
+    %         of none then triple(TRight K V)
+    %         [] triple(Tp Kp Vp) then
+    %             triple(tree(key:K value:V t_left:Tp t_right:TRight) Kp Vp)
+    %         end
+    %     end
+    % end
 
-    fun {Delete Tree Key}
-        case Tree
-        of leaf then leaf
-        [] tree(key:K value:V t_left:TLeft t_right:TRight) andthen Key == K then
-            case {RemoveSmallest TRight}
-            of none then TLeft
-            [] triple(Tp Kp Vp) then
-                tree(key:Kp value:Vp t_left:TLeft t_right:Tp)
-            else
-                none
-            end
-        [] tree(key:K value:V t_left:TLeft t_right:TRight) andthen Key < K
-            then tree(key:K value:V t_left:{Delete Key TLeft} t_right:TRight)
-        [] tree(key:K value:V t_left:TLeft t_right:TRight) andthen Key > K
-            then tree(key:K value:V t_left:TLeft t_right:{Delete Key TRight})
-        end
-    end
+    % fun {Delete Tree Key}
+    %     case Tree
+    %     of leaf then leaf
+    %     [] tree(key:K value:V t_left:TLeft t_right:TRight) andthen Key == K then
+    %         case {RemoveSmallest TRight}
+    %         of none then TLeft
+    %         [] triple(Tp Kp Vp) then
+    %             tree(key:Kp value:Vp t_left:TLeft t_right:Tp)
+    %         end
+    %     [] tree(key:K value:V t_left:TLeft t_right:TRight) andthen Key < K
+    %         then tree(key:K value:V t_left:{Delete Key TLeft} t_right:TRight)
+    %     [] tree(key:K value:V t_left:TLeft t_right:TRight) andthen Key > K
+    %         then tree(key:K value:V t_left:TLeft t_right:{Delete Key TRight})
+    %     end
+    % end
+
 
     %%% MAIN TREE FUNCTIONS END %%%
 
@@ -120,8 +117,6 @@ define
         of 32|T then T
         [] H|T then
             {SecondWord T}
-        else
-            nil
         end
     end
     
@@ -150,9 +145,6 @@ define
 						{AddLineToTree {Insert Tree Key NewList} T} % Appel récursif
                     end
                 end
-
-            else
-                Tree
             end
         end
     end
@@ -180,7 +172,7 @@ define
     end
 
     fun {CreateSubtree SubTree List_Value}
-        % Value = [back#2 must#1 ok#3]
+        % Value = [back#2 must#1 ok#3] (EXAMPLE)
         case List_Value
         of nil then SubTree
         [] H|T then
@@ -267,8 +259,6 @@ define
                             H | {RemoveEmptySpaceAux T false}
                         end
                     end
-                else
-                    nil
                 end
             end
         in
@@ -352,13 +342,11 @@ define
     fun {Press}
 		
 		local TreeMaxFreq SplittedText BeforeLast Last Key Tree_Value Word_To_Display in
-
+            
 			SplittedText = {String.tokens {InputText getText(p(1 0) 'end' $)} & }
 			Last = {String.tokens {List.last SplittedText} &\n}.1
 			BeforeLast = {List.nth SplittedText {List.length SplittedText} - 1}
-			% {Browse {String.toAtom Last}}
-			% {Browse {String.toAtom BeforeLast}}
-			
+
 			Key = {String.toAtom {List.append {List.append BeforeLast [32]} Last}}
 			Tree_Value = {LookingUp Tree Key}
 			
@@ -384,7 +372,7 @@ define
             MaxFreq = List_To_Display.2
 
             if ProbableWords == none then
-                {OutputText set("NO WORD FIND!")}
+                {OutputText set("NO WORD FIND!")} % Que faire dans ce cas ?
             else
                 {OutputText set(ProbableWords.1)}
             end
@@ -392,11 +380,12 @@ define
 	end
 
     proc {ListAllFiles L}
-        case L of nil then skip
-        [] H|T then {Browse {String.toAtom H}} {ListAllFiles T}
+        case L
+        of nil then skip
+        [] H|T then
+            {Browse {String.toAtom H}} {ListAllFiles T}
         end
     end
-
 
     %%% Lance les N threads de lecture et de parsing qui liront et traiteront tous les fichiers
     %%% Les threads de parsing envoient leur resultat au port Port
@@ -417,30 +406,23 @@ define
                         Start = (X - 1) * Current_Nber_Iter1 + 1
                     else
                         Current_Nber_Iter1 = Basic_Nber_Iter
-                        %% 10 ans pour trouver cette formule !! => Permet de répartir le mieux possible le travail entre les threads
+                        %% Permet de répartir le mieux possible le travail entre les threads ! Formule trouvé par de la logique
                         Start = Rest_Nber_Iter * (Current_Nber_Iter1 + 1) + (X - 1 - Rest_Nber_Iter) * Current_Nber_Iter1 + 1
                     end
 
                     End = Start + Current_Nber_Iter1 - 1
 
-                    % {Browse Start}
-                    % {Browse End}
-
                     for Y in Start..End do
 
-                        local File_1 File ThreadReader ThreadParser ThreadSaver L P in
-
-                            % {Browse Y}
-                            % {Browse {String.toAtom {Append "tweets/" {GetFilename TweetsFolder_List Y}}}}
-                            % {Browse '=================='}
-           
+                        local File_1 File ThreadReader ThreadParser L P in
+                            
                             File_1 = {GetFilename TweetsFolder_List Y}
                             File = {Append "tweets/" File_1} %% DE BASE => Ne devrait pas avoir cette ligne je pense
-                            % {Browse {String.toAtom File}}
                             thread ThreadReader = {Reader File} L=1 end
                             thread {Wait L} ThreadParser = {ParseAllLines ThreadReader} P=1 end
                             {Wait P}
                             {Send Port ThreadParser}
+
                         end
                     end
                 end
@@ -449,13 +431,19 @@ define
     end
 
 
-    fun {Get_Nth_Elem_Port Stream_Port Acc N}
-        if N == 0 then nil
-        else
-            case Stream_Port
-            of H|T then
-                {List.append H {Get_Nth_Elem_Port T Acc+1 N-1}}
+    fun {Get_Nth_Elem_Port Stream_Port N}
+        local
+            fun {Get_Nth_Elem_Port_Aux Stream_Port Acc N}
+                if N == 0 then nil
+                else
+                    case Stream_Port
+                    of H|T then
+                        {List.append H {Get_Nth_Elem_Port_Aux T Acc+1 N-1}}
+                    end
+                end
             end
+        in
+            {Get_Nth_Elem_Port_Aux Stream_Port 1 N}
         end
     end
 
@@ -478,14 +466,11 @@ define
         %% se trouvant dans le dossier
         %%% N'appelez PAS cette fonction lors de la phase de
         %%% soumission !!!
-
         % {ListAllFiles TweetsFolder_List}
-        {Browse {String.toAtom {GetFilename TweetsFolder_List 208}}}
 
         local List_Port ParsedListLines FirstTree File Line ParsedLine PressCaller List_Press NbThreads Window Description SeparatedWordsStream SeparatedWordsPort in
         {Property.put print foo(width:1000 depth:1000)}  % for stdout siz
 
-        
         % Creation de l interface graphique
         Description=td(
             title: "Text predictor"
@@ -501,38 +486,17 @@ define
         % {InputText tk(insert 'end' "Loading... Please wait.")}
         {InputText bind(event:"<Control-s>" action:CallPress)} % You can also bind events
 
-
         %%% On créer le Port %%%
         SeparatedWordsPort = {NewPort SeparatedWordsStream}
-        NbThreads = 23
+        NbThreads = 10
         
         %%% On lance les threads de lecture et de parsing %%%
         {LaunchThreads SeparatedWordsPort NbThreads}
         
         %%% On créer l'arbre principale avec tout les sous-arbres en valeur ***
-
-        List_Port = {Get_Nth_Elem_Port SeparatedWordsStream 1 208}
+        List_Port = {Get_Nth_Elem_Port SeparatedWordsStream 208}
         FirstTree = {CreateTree leaf List_Port}
         Tree = {TraverseAndChange FirstTree FirstTree}
-
-        % {Browse Tree}
-        {Browse 1}
-
-
-        %%% POUR TEST JUSTE AVEC UN FICHIER SANS THREADS ! %%%
-
-		% File = {GetFilename 1}
-		% Line = {Reader File}
-		% ParsedLine = {ParseAllLines Line}
-
-        % FirstTree = {CreateTree leaf ParsedLine}
-        % Tree = {TraverseAndChange FirstTree FirstTree}
-
-        % {Browse Tree}
-        % {Browse {LookingUp Tree 'must go'}}
-        % {Browse {LookingUp Tree 'i have'}}
-        % {Browse {LookingUp Tree 'closer cooperation'}}
-        % {Browse {LookingUp Tree 'the fake'}}
 
         end
     end
