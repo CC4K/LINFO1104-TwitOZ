@@ -9,7 +9,7 @@ import
     Browser
 define
 
-	InputText OutputText Tree % Global variables
+	InputText OutputText TweetsFolder_List Tree % Global variables
 
 	%%% HELP SI BESOIN (mec discord) : Récursive terminale avec invariant
 	%%% Perso je créé N arbres (N = nombre de threads) et pour chaque arbre je traite 208/N fichiers (plus exactement 208 % N pour tous sauf le dernier, qui est 208 - N * (208 % N))
@@ -220,12 +220,13 @@ define
 
 
     %%% Create the filename "tweets/part_N.txt" where N is given in argument
-    fun {GetFilename N}
-        local F1 F2 in
-            F1 = "tweets/part_"
-            F2 = {Append F1 {Int.toString N}}
-            {Append F2 ".txt"}
-        end
+    fun {GetFilename List_PathName Idx}
+        {List.nth List_PathName Idx}
+        % local F1 F2 in
+        %     F1 = "tweets/part_"
+        %     F2 = {Append F1 {Int.toString N}}
+        %     {Append F2 ".txt"}
+        % end
     end
     % {Browse {String.toAtom {GetFilename 1}}} % "tweets/part_1.txt"
 
@@ -395,6 +396,12 @@ define
 		end
 	end
 
+    proc {ListAllFiles L}
+        case L of nil then skip
+        [] H|T then {Browse {String.toAtom H}} {ListAllFiles T}
+        end
+    end
+
 
     %%% Lance les N threads de lecture et de parsing qui liront et traiteront tous les fichiers
     %%% Les threads de parsing envoient leur resultat au port Port
@@ -405,22 +412,31 @@ define
             NberFiles = 208
             Basic_Nber_Iter = NberFiles div N
             Rest_Nber_Iter = NberFiles mod N
-            Current_Nber_Iter = Basic_Nber_Iter + 1
 
             for X in 1..N do
 
-                local Current_Nber_Iter1 in
+                local Current_Nber_Iter1 Start End in
                     
-                    if Rest_Nber_Iter - X > 0 then
+                    if Rest_Nber_Iter - X >= 0 then
                         Current_Nber_Iter1 = Basic_Nber_Iter + 1
+                        Start = (X - 1) * Current_Nber_Iter1 + 1
                     else
                         Current_Nber_Iter1 = Basic_Nber_Iter
+                        %% 10 ans pour trouver cette formule !! => Permet de répartir le mieux possible le travail entre les threads
+                        Start = Rest_Nber_Iter * (Current_Nber_Iter1 + 1) + (X - 1 - Rest_Nber_Iter) * Current_Nber_Iter1 + 1
                     end
 
-                    for Y in 1..Current_Nber_Iter1 do
+                    End = Start + Current_Nber_Iter1 - 1
 
-                        local File ThreadReader ThreadParser ThreadSaver L P in
-                            File = {GetFilename Y}
+                    % {Browse Start}
+                    % {Browse End}
+
+                    for Y in Start..End do
+
+                        local File_1 File ThreadReader ThreadParser ThreadSaver L P in
+                            File_1 = {GetFilename TweetsFolder_List Y}
+                            File = {Append "tweets/" File_1} %% DE BASE => Ne devrait pas avoir cette ligne je pense
+                            {Browse File}
                             thread ThreadReader = {Reader File} L=1 end
                             thread {Wait L} ThreadParser = {ParseAllLines ThreadReader} P=1 end
                             {Wait P}
@@ -453,16 +469,18 @@ define
 
     %%% Procedure principale qui cree la fenetre et appelle les differentes procedures et fonctions
     proc {Main}
-        TweetsFolder = {GetSentenceFolder}
-    in
+        
+        TweetsFolder_List = {OS.getDir {GetSentenceFolder}}
+
         %% Fonction d'exemple qui liste tous les fichiers
         %% contenus dans le dossier passe en Argument.
         %% Inspirez vous en pour lire le contenu des fichiers
         %% se trouvant dans le dossier
         %%% N'appelez PAS cette fonction lors de la phase de
         %%% soumission !!!
-        % {ListAllFiles {OS.getDir TweetsFolder}}
-        
+
+        % {ListAllFiles TweetsFolder_List}
+
         local List_Port ParsedListLines FirstTree File Line ParsedLine PressCaller List_Press NbThreads Window Description SeparatedWordsStream SeparatedWordsPort in
         {Property.put print foo(width:1000 depth:1000)}  % for stdout siz
 
@@ -485,14 +503,14 @@ define
 
         %%% On créer le Port %%%
         SeparatedWordsPort = {NewPort SeparatedWordsStream}
-        NbThreads = 100
+        NbThreads = 23
         
         %%% On lance les threads de lecture et de parsing %%%
         {LaunchThreads SeparatedWordsPort NbThreads}
         
         %%% On créer l'arbre principale avec tout les sous-arbres en valeur ***
 
-        List_Port = {Get_Nth_Elem_Port SeparatedWordsStream 1 50}
+        List_Port = {Get_Nth_Elem_Port SeparatedWordsStream 1 10}
         FirstTree = {CreateTree leaf List_Port}
         Tree = {TraverseAndChange FirstTree FirstTree}
 
