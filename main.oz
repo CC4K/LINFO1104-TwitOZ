@@ -205,12 +205,12 @@ define
         of leaf then R = NewTree
         [] tree(key:Key value:Value t_left:TLeft t_right:TRight) then
 
-            local NewValue T1 T2 in 
+            local NewValue T1 in 
                 
-                R = {TraverseAndChange TLeft NewTree}
+                T1 = {TraverseAndChange TLeft NewTree}
                 NewValue = {CreateSubtree leaf Value}
                 R = {TraverseAndChange TRight {Insert NewTree Key NewValue}}
-                
+
             end
         else
             R = NewTree
