@@ -180,6 +180,45 @@ define
         end
     end
 
+    fun {CreateSubtree SubTree List_Value}
+        % Value = [back#2 must#1 ok#3]
+        case List_Value
+        of nil then SubTree
+        [] H|T then
+            case H
+            of Word#Freq then
+                local Value in
+                    Value = {LookingUp SubTree Freq}
+                    if Value == notfound then
+                        {CreateSubtree {Insert SubTree Freq [Word]} T}
+                    else
+                        {CreateSubtree {Insert SubTree Freq {List.append Value [Word]}} T}
+                    end
+                end
+            end
+        end
+    end
+
+    fun {CreateAllSubTree Tree}
+        case Tree
+        of tree(key:Key value:Value t_left:TLeft t_right:TRight) then
+            local T1 T2 T3 T4 in
+                T1 = {Insert Tree Key {CreateSubtree leaf Value}}
+                if T1.t_left \= leaf then
+                    T3 = {CreateAllSubTree T1.t_left}
+                    T2 = {Insert Tree Key {CreateSubtree leaf Value}}
+                    if T2.t_right \= leaf then
+                        T4 = {CreateAllSubTree T2.t_right}
+                    else
+                        Tree
+                    end
+                else
+                    Tree
+                end
+            end
+        end
+    end
+
 
     %%% Create the filename "tweets/part_N.txt" where N is given in argument
     fun {GetFilename N}
@@ -284,39 +323,6 @@ define
 			[] nil then nil
 			end
 		end
-			
-        % of 34|T then 32|{ParseLine T} % if "
-        % [] 35|T then 32|{ParseLine T} % if #
-        % [] 36|T then 32|{ParseLine T} % if $
-        % [] 37|T then 32|{ParseLine T} % if %
-        % [] 38|T then 32|{ParseLine T} % if &
-        % [] 39|T then 32|{ParseLine T} % if '
-        % [] 40|T then 32|{ParseLine T} % if (
-        % [] 41|T then 32|{ParseLine T} % if )
-        % [] 42|T then 32|{ParseLine T} % if *
-        % [] 43|T then 32|{ParseLine T} % if +
-        % [] 45|T then 32|{ParseLine T} % if -
-        % [] 47|T then 32|{ParseLine T} % if /
-        % [] 60|T then 32|{ParseLine T} % if <
-        % [] 61|T then 32|{ParseLine T} % if =
-        % [] 62|T then 32|{ParseLine T} % if >
-        % [] 64|T then 32|{ParseLine T} % if @
-        % [] 91|T then 32|{ParseLine T} % if [
-        % [] 92|T then 32|{ParseLine T} % if \
-        % [] 93|T then 32|{ParseLine T} % if ]
-        % [] 94|T then 32|{ParseLine T} % if ^
-        % [] 95|T then 32|{ParseLine T} % if _
-        % [] 96|T then 32|{ParseLine T} % if `
-        % []123|T then 32|{ParseLine T} % if {
-        % []124|T then 32|{ParseLine T} % if |
-        % []125|T then 32|{ParseLine T} % if }
-        % []126|T then 32|{ParseLine T} % if ~
-        % [] 33|T then 32|{ParseLine T} % if !
-        % [] 44|T then 32|{ParseLine T} % if ,
-        % [] 46|T then 32|{ParseLine T} % if .
-        % [] 58|T then 32|{ParseLine T} % if :
-        % [] 59|T then 32|{ParseLine T} % if ;
-        % [] 63|T then 32|{ParseLine T} % if ?
 
         % [] H|T then                     % if capital or lowercase letter
         %     local New_H in
@@ -484,9 +490,14 @@ define
 		Line = {Reader File}
 		ParsedLine = {ParseAllLines Line}
 		% % {Browse {String.toAtom ParsedLine.1}}
-		Tree = {CreateTree leaf ParsedLine}
-		% {System.show 'must go'}
-		% {System.show {LookingUp Tree 'I have'}}
+		%Tree = {CreateTree leaf ParsedLine}
+
+        Tree = {CreateAllSubTree {CreateTree leaf ParsedLine}} % Create the binary tree with all binary subtree
+
+        {Browse Tree}
+		{Browse {LookingUp Tree 'must go'}}
+        {Browse {LookingUp Tree 'I have'}}
+
 		% {System.show {LookingUp Tree 'news conference'}}
 		% {System.show Tree}
 		
