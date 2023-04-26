@@ -8,13 +8,8 @@ import
     Property
     Browser
 define
-    % Test PUSH
+    
 	InputText OutputText TweetsFolder_List Tree % Global variables
-
-	%%% HELP SI BESOIN (mec discord) : Récursive terminale avec invariant
-	%%% Perso je créé N arbres (N = nombre de threads) et pour chaque arbre je traite 208/N fichiers (plus exactement 208 % N pour tous sauf le dernier, qui est 208 - N * (208 % N))
-	%%% Et pour chaque fichier, je traite chaque mot et je le rajoute à l'arbre jusqu'à atteindre la fin
-	%%% Si ça t'aide, tu peux toujours réimplémenter les boucles while en récursive terminale
 
     %%% Class used to open the files
     class TextFile
@@ -217,6 +212,85 @@ define
     end
     % {Browse {String.toAtom {GetFilename 1}}} % "tweets/part_1.txt"
 
+    fun {RemoveFirstLetter Str}
+        Str.2
+    end
+
+    fun {ReplaceList List Str}
+        case List
+        of nil then Str
+        [] H|nil then Str
+        [] H|T then
+            {ReplaceList T {Append H {RemoveFirstLetter T.1}}}
+        end
+    end
+
+    fun {GetListAfterNth List N}
+        case List
+        of nil then nil
+        [] H|T then
+            if N == 1 then T
+            else
+                {GetListAfterNth T N-1}
+            end
+        end
+    end
+
+    fun {FindDelimiter List Delimiter}
+        case Delimiter
+        of nil then true
+        [] H|T then
+            if List == nil then false
+            else
+                if H == List.1 then {FindDelimiter List.2 T}
+                else false end
+            end
+        end
+    end
+
+    fun {RemovePartString Str Delimiter Length_Delimiter NextCharRemoveToo}
+        local
+            fun {RemovePartString_Aux Str Delimiter Length_Delimiter NextCharRemoveToo}
+                case Str
+                of nil then nil
+                [] H|T then
+                    if {FindDelimiter T Delimiter} == true then
+                        if NextCharRemoveToo == true then
+                            %%% Si on veut séparer comme ceci : "didn't" en "didn t" et pas en "didnt", il faut faire
+                            %%% H | 32 | {RemovePartString_Aux {GetListAfterNth T Length_Delimiter+1} Delimiter Length_Delimiter NextCharRemoveToo}
+                            %%% à la place de la ligne en-dessous
+                            H | {RemovePartString_Aux {GetListAfterNth T Length_Delimiter+1} Delimiter Length_Delimiter NextCharRemoveToo}
+                        else
+                            H | {RemovePartString_Aux {GetListAfterNth T Length_Delimiter} Delimiter Length_Delimiter NextCharRemoveToo}
+                        end
+                    else
+                        H | {RemovePartString_Aux T Delimiter Length_Delimiter NextCharRemoveToo}
+                    end
+                end
+            end
+        in
+            if {FindDelimiter Str Delimiter} == true then
+                if NextCharRemoveToo == true then
+                    %%% Si on veut séparer comme ceci : "didn't" en "didn t" et pas en "didnt", il faut faire
+                    %%% H | 32 | {RemovePartString {GetListAfterNth T Length_Delimiter+1} Delimiter Length_Delimiter NextCharRemoveToo}
+                    %%% à la place de la ligne en-dessous
+                    {RemovePartString_Aux {GetListAfterNth Str Length_Delimiter+1} Delimiter Length_Delimiter NextCharRemoveToo}
+                else
+                    {RemovePartString_Aux {GetListAfterNth Str Length_Delimiter} Delimiter Length_Delimiter NextCharRemoveToo}
+                end
+            else
+                {RemovePartString_Aux Str Delimiter Length_Delimiter NextCharRemoveToo}
+            end
+        end
+    end
+
+    % Faudra aussi remove la lettre d'après car les délimiteur sont :
+    % Delimiteur1 = "â\x80\x99" (représente ')
+    % Delimiteur2 = "â\x80\x9C" (représente " d'un côté)
+    % Delimiteur3 = "â\x80\x9D" (représente " de l'autre côté)
+    fun {CleanUp LineStr}
+        {RemovePartString LineStr [226 128] 2 true} % [226 128] représente "â\x80\x9" (trouvé après des tests)
+    end
 
     %%% Create a list with all line of the file named "Filename"
     fun {Reader Filename}
@@ -227,7 +301,7 @@ define
                 {TextFile close}
                 nil
             else
-                Line | {GetLine TextFile}
+                {CleanUp Line} | {GetLine TextFile}
             end
         end
     in
@@ -415,7 +489,7 @@ define
                     for Y in Start..End do
 
                         local File_1 File ThreadReader ThreadParser L P in
-                            
+                               
                             File_1 = {GetFilename TweetsFolder_List Y}
                             File = {Append "tweets/" File_1} %% DE BASE => Ne devrait pas avoir cette ligne je pense
                             thread ThreadReader = {Reader File} L=1 end
@@ -492,12 +566,13 @@ define
         
         %%% On lance les threads de lecture et de parsing %%%
         {LaunchThreads SeparatedWordsPort NbThreads}
-        
+        {Browse 'OVER : Reading + Parsing'}
+
         %%% On créer l'arbre principale avec tout les sous-arbres en valeur ***
         List_Port = {Get_Nth_Elem_Port SeparatedWordsStream 208}
         FirstTree = {CreateTree leaf List_Port}
         Tree = {TraverseAndChange FirstTree FirstTree}
-
+        {Browse 'OVER : Creating Structure'}
         end
     end
 
