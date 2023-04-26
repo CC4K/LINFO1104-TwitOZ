@@ -367,9 +367,13 @@ define
 			Tree_Value = {LookingUp Tree Key}
 			
             TreeMaxFreq = {GetTreeMaxFreq Tree_Value}
+            {Browse Tree_Value}
+
             if TreeMaxFreq == leaf then
                 [none 0]
             else
+                {Browse TreeMaxFreq.value}
+                {Browse TreeMaxFreq.key}
                 [TreeMaxFreq.value TreeMaxFreq.key]
             end
 		end
@@ -382,11 +386,6 @@ define
 
             ProbableWords = List_To_Display.1
             MaxFreq = List_To_Display.2
-
-			% {Browse ProbableWords}
-			% {Browse MaxFreq}
-
-            {Browse ProbableWords}
 
             if ProbableWords == none then
                 {OutputText set("NO WORD FIND!")}
@@ -401,10 +400,11 @@ define
     %%% Les threads de parsing envoient leur resultat au port Port
     proc {LaunchThreads Port N}
         
-        local Basic_Nber_Iter Rest_Nber_Iter Current_Nber_Iter in
+        local NberFiles Basic_Nber_Iter Rest_Nber_Iter Current_Nber_Iter in
 
-            Basic_Nber_Iter = 208 div N
-            Rest_Nber_Iter = 208 mod N
+            NberFiles = 208
+            Basic_Nber_Iter = NberFiles div N
+            Rest_Nber_Iter = NberFiles mod N
             Current_Nber_Iter = Basic_Nber_Iter + 1
 
             for X in 1..N do
@@ -417,8 +417,6 @@ define
                         Current_Nber_Iter1 = Basic_Nber_Iter
                     end
 
-                    % {Browse Current_Nber_Iter1}
-
                     for Y in 1..Current_Nber_Iter1 do
 
                         local File ThreadReader ThreadParser ThreadSaver L P in
@@ -426,15 +424,24 @@ define
                             thread ThreadReader = {Reader File} L=1 end
                             thread {Wait L} ThreadParser = {ParseAllLines ThreadReader} P=1 end
                             {Wait P}
-                            {Port.send Port ThreadParser}
+                            {Send Port ThreadParser}
                         end
-
                     end
                 end
             end
         end
     end
 
+
+    fun {Get_Nth_Elem_Port Stream_Port Acc N}
+        if N == 0 then nil
+        else
+            case Stream_Port
+            of H|T then
+                {List.append H {Get_Nth_Elem_Port T Acc+1 N-1}}
+            end
+        end
+    end
 
     %%% Fetch Tweets Folder from CLI Arguments
     %%% See the Makefile for an example of how it is called
@@ -456,7 +463,7 @@ define
         %%% soumission !!!
         % {ListAllFiles {OS.getDir TweetsFolder}}
         
-        local FirstTree File Line ParsedLine PressCaller List_Press NbThreads Window Description SeparatedWordsStream SeparatedWordsPort in
+        local List_Port ParsedListLines FirstTree File Line ParsedLine PressCaller List_Press NbThreads Window Description SeparatedWordsStream SeparatedWordsPort in
         {Property.put print foo(width:1000 depth:1000)}  % for stdout siz
 
         
@@ -476,21 +483,21 @@ define
         {InputText bind(event:"<Control-s>" action:CallPress)} % You can also bind events
 
 
-
-
-        %%% TODO : Pas encore fonctionnel %%%
-
-        % On lance les threads de lecture et de parsing
+        %%% On créer le Port %%%
         SeparatedWordsPort = {NewPort SeparatedWordsStream}
-        NbThreads = 10
-
+        NbThreads = 100
+        
+        %%% On lance les threads de lecture et de parsing %%%
         {LaunchThreads SeparatedWordsPort NbThreads}
+        
+        %%% On créer l'arbre principale avec tout les sous-arbres en valeur ***
 
-        % {Record.forAll SeparatedWordsPort proc{$ X} {Browse X} end}
+        List_Port = {Get_Nth_Elem_Port SeparatedWordsStream 1 50}
+        FirstTree = {CreateTree leaf List_Port}
+        Tree = {TraverseAndChange FirstTree FirstTree}
 
-        %%% TODO : Pas encore fonctionnel %%%
-		
-
+        % {Browse Tree}
+        {Browse 1}
 
 
         %%% POUR TEST JUSTE AVEC UN FICHIER SANS THREADS ! %%%
