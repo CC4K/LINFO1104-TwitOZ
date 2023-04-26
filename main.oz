@@ -199,41 +199,22 @@ define
         end
     end
 
-    proc {TraverseAndChange Tree NewTree ?R}
+    proc {TraverseAndChange Tree CopyTree NewTree ?R}
 
         case Tree
         of leaf then R = NewTree
         [] tree(key:Key value:Value t_left:TLeft t_right:TRight) then
-
-            local NewValue T1 in 
+            
+            local NewValue NewTree T1 in 
                 
-                T1 = {TraverseAndChange TLeft NewTree}
                 NewValue = {CreateSubtree leaf Value}
-                R = {TraverseAndChange TRight {Insert NewTree Key NewValue}}
+                NewTree = {Insert CopyTree Key NewValue}
+                T1 = {TraverseAndChange TLeft NewTree NewTree}
+                R = {TraverseAndChange TRight NewTree NewTree}
 
             end
         else
             R = NewTree
-        end
-    end
-
-    fun {CreateAllSubTree Tree}
-        case Tree
-        of tree(key:Key value:Value t_left:TLeft t_right:TRight) then
-            local T1 T2 T3 T4 in
-                T1 = {Insert Tree Key {CreateSubtree leaf Value}}
-                if T1.t_left \= leaf then
-                    T3 = {CreateAllSubTree T1.t_left}
-                    T2 = {Insert Tree Key {CreateSubtree leaf Value}}
-                    if T2.t_right \= leaf then
-                        T4 = {CreateAllSubTree T2.t_right}
-                    else
-                        Tree
-                    end
-                else
-                    Tree
-                end
-            end
         end
     end
 
@@ -510,14 +491,14 @@ define
 		% % {Browse {String.toAtom ParsedLine.1}}
 		%Tree = {CreateTree leaf ParsedLine}
 
-        % Tree = {CreateAllSubTree {CreateTree leaf ParsedLine}} % Create the binary tree with all binary subtree
-        Tree = {TraverseAndChange {CreateTree leaf ParsedLine} leaf}
-        {Browse Tree}
-		{Browse {LookingUp Tree 'must go'}}
-        {Browse {LookingUp Tree 'I have'}}
-
-		% {System.show {LookingUp Tree 'news conference'}}
-		% {System.show Tree}
+        local NewTree in
+            NewTree = {CreateTree leaf ParsedLine}
+            Tree = {TraverseAndChange NewTree NewTree leaf}
+            {Browse {LookingUp Tree 'must go'}}
+            {Browse {LookingUp Tree 'I have'}}
+            {Browse {LookingUp NewTree 'must go'}}
+            {Browse {LookingUp NewTree 'I have'}}
+        end
 		
 		%%% TODO : Pas encore fonctionnel %%%
 
