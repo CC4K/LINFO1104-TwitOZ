@@ -3,27 +3,20 @@ import
     QTk at 'x-oz://system/wp/QTk.ozf'
     System
     Application
-    Open
     OS
     Property
     Browser
 
-    reader
-    parser
-    tree
+    Reader
+    Parser
+    Tree
 define
     
-	InputText OutputText TweetsFolder_List Tree % Global variables
-
-    %%% Class used to open the files
-    class TextFile
-        from Open.file Open.text
-    end
+	InputText OutputText TweetsFolder_List % Global variables
 
     proc {Browse Buf}
         {Browser.browse Buf}
     end
-
 
     %%%===================================================================%%%
     %%% /!\ Fonction testee /!\
@@ -46,9 +39,9 @@ define
 			BeforeLast = {List.nth SplittedText {List.length SplittedText} - 1}
 
 			Key = {String.toAtom {List.append {List.append BeforeLast [32]} Last}}
-			Tree_Value = {LookingUp Tree Key}
+			Tree_Value = {Tree.LookingUp Tree Key}
 			
-            TreeMaxFreq = {GetTreeMaxFreq Tree_Value}
+            TreeMaxFreq = {Tree.GetTreeMaxFreq Tree_Value}
             {Browse Tree_Value}
 
             if TreeMaxFreq == leaf then
@@ -114,10 +107,10 @@ define
 
                         local File_1 File ThreadReader ThreadParser L P in
                                
-                            File_1 = {GetFilename TweetsFolder_List Y}
+                            File_1 = {Reader.GetFilename TweetsFolder_List Y}
                             File = {Append "tweets/" File_1} %% DE BASE => Ne devrait pas avoir cette ligne je pense
-                            thread ThreadReader = {Reader File} L=1 end
-                            thread {Wait L} ThreadParser = {ParseAllLines ThreadReader} P=1 end
+                            thread ThreadReader = {Reader.Reader File} L=1 end
+                            thread {Wait L} ThreadParser = {Parser.ParseAllLines ThreadReader} P=1 end
                             {Wait P}
                             {Send Port ThreadParser}
 
@@ -194,8 +187,8 @@ define
 
         %%% On créer l'arbre principale avec tout les sous-arbres en valeur ***
         List_Port = {Get_Nth_FirstElem_Port SeparatedWordsStream 208}
-        FirstTree = {CreateTree leaf List_Port}
-        Tree = {TraverseAndChange FirstTree FirstTree}
+        FirstTree = {Tree.CreateTree leaf List_Port}
+        Tree = {Tree.TraverseAndChange FirstTree FirstTree}
         {Browse 'OVER : Creating Structure'}
         end
     end
