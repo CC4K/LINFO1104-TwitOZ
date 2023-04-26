@@ -206,13 +206,13 @@ define
         of leaf then R = CopyTree
         [] tree(key:Key value:Value t_left:TLeft t_right:TRight) then
             
-            local NewValue NewTree T1 in
+            local NewValue NewTree T1 T2 in
                 
                 NewValue = {CreateSubtree leaf Value}
                 NewTree = {Insert CopyTree Key NewValue}
-
+                
                 T1 = {TraverseAndChange TLeft NewTree}
-                R = {TraverseAndChange TRight NewTree}
+                T2 = {TraverseAndChange TRight NewTree}
                 
             end
         else
@@ -499,10 +499,10 @@ define
         local NewTree in
 
             Tree = {CreateTree leaf ParsedLine}
-            % {Browse Tree}
+            {Browse Tree}
 
             NewTree = {TraverseAndChange Tree Tree}
-            
+
             {Browse {LookingUp NewTree 'must go'}}
             {Browse {LookingUp NewTree 'i have'}}
             {Browse {LookingUp NewTree 'closer cooperation'}}
