@@ -400,13 +400,37 @@ define
     %%% Lance les N threads de lecture et de parsing qui liront et traiteront tous les fichiers
     %%% Les threads de parsing envoient leur resultat au port Port
     proc {LaunchThreads Port N}
-        for X in 1..N do
-            local File ThreadReader ThreadParser ThreadSaver L P in
-                File = {GetFilename X}
-                thread ThreadReader = {Reader File} L=1 end
-                thread {Wait L} ThreadParser = {ParseAllLines ThreadReader} P=1 end
-                {Wait P}
-                {Port.send Port ThreadParser}
+        
+        local Basic_Nber_Iter Rest_Nber_Iter Current_Nber_Iter in
+
+            Basic_Nber_Iter = 208 div N
+            Rest_Nber_Iter = 208 mod N
+            Current_Nber_Iter = Basic_Nber_Iter + 1
+
+            for X in 1..N do
+
+                local Current_Nber_Iter1 in
+                    
+                    if Rest_Nber_Iter - X > 0 then
+                        Current_Nber_Iter1 = Basic_Nber_Iter + 1
+                    else
+                        Current_Nber_Iter1 = Basic_Nber_Iter
+                    end
+
+                    % {Browse Current_Nber_Iter1}
+
+                    for Y in 1..Current_Nber_Iter1 do
+
+                        local File ThreadReader ThreadParser ThreadSaver L P in
+                            File = {GetFilename Y}
+                            thread ThreadReader = {Reader File} L=1 end
+                            thread {Wait L} ThreadParser = {ParseAllLines ThreadReader} P=1 end
+                            {Wait P}
+                            {Port.send Port ThreadParser}
+                        end
+
+                    end
+                end
             end
         end
     end
@@ -450,29 +474,39 @@ define
         
         % {InputText tk(insert 'end' "Loading... Please wait.")}
         {InputText bind(event:"<Control-s>" action:CallPress)} % You can also bind events
-		
-		File = {GetFilename 1}
-		Line = {Reader File}
-		ParsedLine = {ParseAllLines Line}
 
 
-        FirstTree = {CreateTree leaf ParsedLine}
-        Tree = {TraverseAndChange FirstTree FirstTree}
 
-        % {Browse Tree}
-        {Browse {LookingUp Tree 'must go'}}
-        {Browse {LookingUp Tree 'i have'}}
-        {Browse {LookingUp Tree 'closer cooperation'}}
-        {Browse {LookingUp Tree 'the fake'}}
-		
-		%%% TODO : Pas encore fonctionnel %%%
+
+        %%% TODO : Pas encore fonctionnel %%%
 
         % On lance les threads de lecture et de parsing
-        % SeparatedWordsPort = {NewPort SeparatedWordsStream}
-        % NbThreads = 10
+        SeparatedWordsPort = {NewPort SeparatedWordsStream}
+        NbThreads = 10
 
-        % {LaunchThreads SeparatedWordsPort NbThreads}
+        {LaunchThreads SeparatedWordsPort NbThreads}
+
         % {Record.forAll SeparatedWordsPort proc{$ X} {Browse X} end}
+
+        %%% TODO : Pas encore fonctionnel %%%
+		
+
+
+
+        %%% POUR TEST JUSTE AVEC UN FICHIER SANS THREADS ! %%%
+
+		% File = {GetFilename 1}
+		% Line = {Reader File}
+		% ParsedLine = {ParseAllLines Line}
+
+        % FirstTree = {CreateTree leaf ParsedLine}
+        % Tree = {TraverseAndChange FirstTree FirstTree}
+
+        % {Browse Tree}
+        % {Browse {LookingUp Tree 'must go'}}
+        % {Browse {LookingUp Tree 'i have'}}
+        % {Browse {LookingUp Tree 'closer cooperation'}}
+        % {Browse {LookingUp Tree 'the fake'}}
 
         end
     end
