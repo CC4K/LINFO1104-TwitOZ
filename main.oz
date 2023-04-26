@@ -222,11 +222,6 @@ define
     %%% Create the filename "tweets/part_N.txt" where N is given in argument
     fun {GetFilename List_PathName Idx}
         {List.nth List_PathName Idx}
-        % local F1 F2 in
-        %     F1 = "tweets/part_"
-        %     F2 = {Append F1 {Int.toString N}}
-        %     {Append F2 ".txt"}
-        % end
     end
     % {Browse {String.toAtom {GetFilename 1}}} % "tweets/part_1.txt"
 
@@ -434,9 +429,14 @@ define
                     for Y in Start..End do
 
                         local File_1 File ThreadReader ThreadParser ThreadSaver L P in
+
+                            % {Browse Y}
+                            % {Browse {String.toAtom {Append "tweets/" {GetFilename TweetsFolder_List Y}}}}
+                            % {Browse '=================='}
+           
                             File_1 = {GetFilename TweetsFolder_List Y}
                             File = {Append "tweets/" File_1} %% DE BASE => Ne devrait pas avoir cette ligne je pense
-                            {Browse File}
+                            % {Browse {String.toAtom File}}
                             thread ThreadReader = {Reader File} L=1 end
                             thread {Wait L} ThreadParser = {ParseAllLines ThreadReader} P=1 end
                             {Wait P}
@@ -480,6 +480,7 @@ define
         %%% soumission !!!
 
         % {ListAllFiles TweetsFolder_List}
+        {Browse {String.toAtom {GetFilename TweetsFolder_List 208}}}
 
         local List_Port ParsedListLines FirstTree File Line ParsedLine PressCaller List_Press NbThreads Window Description SeparatedWordsStream SeparatedWordsPort in
         {Property.put print foo(width:1000 depth:1000)}  % for stdout siz
@@ -510,7 +511,7 @@ define
         
         %%% On créer l'arbre principale avec tout les sous-arbres en valeur ***
 
-        List_Port = {Get_Nth_Elem_Port SeparatedWordsStream 1 10}
+        List_Port = {Get_Nth_Elem_Port SeparatedWordsStream 1 208}
         FirstTree = {CreateTree leaf List_Port}
         Tree = {TraverseAndChange FirstTree FirstTree}
 
