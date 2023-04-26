@@ -372,6 +372,18 @@ define
 		end
 	end
 
+    fun {GetTreeMaxFreq Tree}
+        case Tree
+        of notfound then leaf
+        [] tree(key:K value:V t_left:TLeft t_right:TRight) then
+            if TRight \= leaf then
+                {GetTreeMaxFreq TRight}
+            else
+                tree(key:K value:V t_left:TLeft t_right:TRight)
+            end
+        end
+    end
+
     %%%===================================================================%%%
     %%% /!\ Fonction testee /!\
     %%% @pre : les threads sont "ready"
@@ -386,7 +398,7 @@ define
     %%%                  <probability/frequence> := <int> | <float>
     fun {Press}
 		
-		local SplittedText BeforeLast Last Key List_Value Word_To_Display in
+		local TreeMaxFreq SplittedText BeforeLast Last Key Tree_Value Word_To_Display in
 
 			SplittedText = {String.tokens {InputText getText(p(1 0) 'end' $)} & }
 			Last = {String.tokens {List.last SplittedText} &\n}.1
@@ -397,27 +409,45 @@ define
 			Key = {String.toAtom {List.append {List.append BeforeLast [32]} Last}}
 			% {Browse Key}
 
-			List_Value = {LookingUp Tree Key}
-			% {Browse List_Value}
+			Tree_Value = {LookingUp Tree Key}
+			% {Browse Tree_Value}
 			
-			{GetWordMostFreq List_Value}.1
+			% {GetWordMostFreq Tree_Value}.1
+            TreeMaxFreq = {GetTreeMaxFreq Tree_Value}
+            if TreeMaxFreq == leaf then
+                [none 0]
+            else
+                [TreeMaxFreq.value TreeMaxFreq.key]
+            end
 		end
     end
 
 	proc {CallPress}
-		local Word_To_Display in
+		local List_To_Display ProbableWords MaxFreq in
 
-			Word_To_Display = {Press}
-			% {Browse Word_To_Display}
-			% {Browse {List.is Word_To_Display}}
-			% {Browse Word_To_Display.1}
+			List_To_Display = {Press}
 
-			if Word_To_Display == none then
-				{OutputText set("Error")} % you can get/set text this way too
-			else
-				% {Browse Word_To_Display.1.1}
-				{OutputText set(Word_To_Display.1.1)} % you can get/set text this way too
-			end
+            ProbableWords = List_To_Display.1
+            MaxFreq = List_To_Display.2
+
+			% {Browse List_To_Display}
+			% {Browse {List.is List_To_Display}}
+			% {Browse List_To_Display.1}
+
+            {Browse ProbableWords}
+
+            if ProbableWords == none then
+                {OutputText set("NO WORD FIND!")}
+            else
+                {OutputText set(ProbableWords.1)}
+            end
+
+			% if List_To_Display == none then
+			% 	{OutputText set("Error")} % you can get/set text this way too
+			% else
+			% 	% {Browse List_To_Display.1.1}
+			% 	{OutputText set(List_To_Display.1.1)} % you can get/set text this way too
+			% end
 
 		end
 	end
@@ -468,7 +498,7 @@ define
         %%% soumission !!!
         % {ListAllFiles {OS.getDir TweetsFolder}}
         
-        local File Line ParsedLine PressCaller List_Press NbThreads Window Description SeparatedWordsStream SeparatedWordsPort in
+        local FirstTree File Line ParsedLine PressCaller List_Press NbThreads Window Description SeparatedWordsStream SeparatedWordsPort in
         {Property.put print foo(width:1000 depth:1000)}  % for stdout siz
 
         
@@ -494,19 +524,16 @@ define
 		% % {Browse {String.toAtom ParsedLine.1}}
 		%Tree = {CreateTree leaf ParsedLine}
 
-        local NewTree in
 
-            Tree = {CreateTree leaf ParsedLine}
-            % {Browse Tree}
+        FirstTree = {CreateTree leaf ParsedLine}
+        % {Browse FirstTree}
 
-            NewTree = {TraverseAndChange Tree Tree}
+        Tree = {TraverseAndChange FirstTree FirstTree}
 
-            {Browse {LookingUp NewTree 'must go'}}
-            {Browse {LookingUp NewTree 'i have'}}
-            {Browse {LookingUp NewTree 'closer cooperation'}}
-            {Browse {LookingUp NewTree 'the fake'}}
-
-        end
+        {Browse {LookingUp Tree 'must go'}}
+        {Browse {LookingUp Tree 'i have'}}
+        {Browse {LookingUp Tree 'closer cooperation'}}
+        {Browse {LookingUp Tree 'the fake'}}
 		
 		%%% TODO : Pas encore fonctionnel %%%
 
