@@ -12,8 +12,12 @@ endif
 
 all : $(ENTRY_POINT)
 
-# main.ozf : main.oz reader.oz parser.oz tree.oz
-# 	$(OZC) -c main.oz -o main.ozf
+# J'ai ajouté cette partie
+main.ozf : main.oz reader.oz parser.oz tree.oz
+	$(OZC) -c parser.oz -o parser.ozf
+	$(OZC) -c tree.oz -o tree.ozf
+	$(OZC) -c reader.oz -o reader.ozf
+	$(OZC) -c main.oz -o main.ozf
 
 %.ozf: %.oz
 	$(OZC) -c $< -o "$@"

@@ -7,9 +7,9 @@ import
     Property
     Browser
 
-    Reader
-    Parser
-    Tree
+    Reader at 'reader.ozf'
+    Parser at 'parser.ozf'
+    Tree at 'tree.ozf'
 define
     
 	InputText OutputText TweetsFolder_List % Global variables

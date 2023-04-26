@@ -1,3 +1,6 @@
+functor
+import
+    Browser
 define
 
     fun {GetListAfterNth List N}

@@ -3,7 +3,7 @@ import
     Open
     Browser
 
-    parser
+    Parser at 'parser.ozf'
 define
 
     class TextFile
@@ -19,7 +19,7 @@ define
                 {TextFile close}
                 nil
             else
-                {CleanUp Line} | {GetLine TextFile}
+                {Parser.CleanUp Line} | {GetLine TextFile}
             end
         end
     in

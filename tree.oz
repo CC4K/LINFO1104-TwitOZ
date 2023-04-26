@@ -1,3 +1,6 @@
+functor
+import
+    Browser
 define
 
     %%% MAIN TREE FUNCTIONS BEGIN %%%
