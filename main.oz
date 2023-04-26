@@ -199,6 +199,24 @@ define
         end
     end
 
+    proc {TraverseAndChange Tree NewTree ?R}
+
+        case Tree
+        of leaf then R = NewTree
+        [] tree(key:Key value:Value t_left:TLeft t_right:TRight) then
+
+            local NewValue T1 T2 in 
+                
+                R = {TraverseAndChange TLeft NewTree}
+                NewValue = {CreateSubtree leaf Value}
+                R = {TraverseAndChange TRight {Insert NewTree Key NewValue}}
+                
+            end
+        else
+            R = NewTree
+        end
+    end
+
     fun {CreateAllSubTree Tree}
         case Tree
         of tree(key:Key value:Value t_left:TLeft t_right:TRight) then
@@ -492,8 +510,8 @@ define
 		% % {Browse {String.toAtom ParsedLine.1}}
 		%Tree = {CreateTree leaf ParsedLine}
 
-        Tree = {CreateAllSubTree {CreateTree leaf ParsedLine}} % Create the binary tree with all binary subtree
-
+        % Tree = {CreateAllSubTree {CreateTree leaf ParsedLine}} % Create the binary tree with all binary subtree
+        Tree = {TraverseAndChange {CreateTree leaf ParsedLine} leaf}
         {Browse Tree}
 		{Browse {LookingUp Tree 'must go'}}
         {Browse {LookingUp Tree 'I have'}}
