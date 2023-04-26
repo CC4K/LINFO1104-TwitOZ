@@ -166,7 +166,6 @@ define
         end
     end
 
-
     %%% Create the main Tree + all the SubTree
     %%% Pre : Tree is the main Tree
     %%%       L is a list of lists
@@ -199,22 +198,25 @@ define
         end
     end
 
-    proc {TraverseAndChange Tree CopyTree NewTree ?R}
+    % Tree = arbre de base
+    % copyTree = arbre de base (c'est une référence) qui va être modifié petit à petit et renvoyer
+    proc {TraverseAndChange Tree CopyTree ?R}
 
         case Tree
-        of leaf then R = NewTree
+        of leaf then R = CopyTree
         [] tree(key:Key value:Value t_left:TLeft t_right:TRight) then
             
-            local NewValue NewTree T1 in 
+            local NewValue NewTree T1 in
                 
                 NewValue = {CreateSubtree leaf Value}
                 NewTree = {Insert CopyTree Key NewValue}
-                T1 = {TraverseAndChange TLeft NewTree NewTree}
-                R = {TraverseAndChange TRight NewTree NewTree}
 
+                T1 = {TraverseAndChange TLeft NewTree}
+                R = {TraverseAndChange TRight NewTree}
+                
             end
         else
-            R = NewTree
+            R = CopyTree
         end
     end
 
@@ -304,21 +306,24 @@ define
     fun {ParseLine Line}
 
 		local ListMin ListMaj ListChiffre in
-			ListMin = {CreateList 65 90}
-			ListMaj = {CreateList 97 122}
+			ListMaj = {CreateList 65 90}
+			ListMin = {CreateList 97 122}
 			ListChiffre = {CreateList 48 57}
 
 			case Line
 			of H|T then
-				if {IsInList ListMin H} == true then
-					H | {ParseLine T}
-				elseif {IsInList ListMaj H} == true then
-					H | {ParseLine T}
-				elseif {IsInList ListChiffre H} == true then
-					H | {ParseLine T}
-				else
-					32 | {ParseLine T}
-				end
+                local New_H in
+                    if {IsInList ListMin H} == true then
+                        New_H = H
+                    elseif {IsInList ListMaj H} == true then
+                        New_H = H + 32
+                    elseif {IsInList ListChiffre H} == true then
+                        New_H = H
+                    else
+                        New_H = 32
+                    end
+                    New_H | {ParseLine T}
+                end
 			[] nil then nil
 			end
 		end
@@ -451,7 +456,6 @@ define
     %       {ListAllFiles T}
     %   end
     % end
-
     
 
     %%% Procedure principale qui cree la fenetre et appelle les differentes procedures et fonctions
@@ -488,16 +492,22 @@ define
 		File = {GetFilename 1}
 		Line = {Reader File}
 		ParsedLine = {ParseAllLines Line}
+
 		% % {Browse {String.toAtom ParsedLine.1}}
 		%Tree = {CreateTree leaf ParsedLine}
 
         local NewTree in
-            NewTree = {CreateTree leaf ParsedLine}
-            Tree = {TraverseAndChange NewTree NewTree leaf}
-            {Browse {LookingUp Tree 'must go'}}
-            {Browse {LookingUp Tree 'I have'}}
+
+            Tree = {CreateTree leaf ParsedLine}
+            % {Browse Tree}
+
+            NewTree = {TraverseAndChange Tree Tree}
+            
             {Browse {LookingUp NewTree 'must go'}}
-            {Browse {LookingUp NewTree 'I have'}}
+            {Browse {LookingUp NewTree 'i have'}}
+            {Browse {LookingUp NewTree 'closer cooperation'}}
+            {Browse {LookingUp NewTree 'the fake'}}
+
         end
 		
 		%%% TODO : Pas encore fonctionnel %%%
