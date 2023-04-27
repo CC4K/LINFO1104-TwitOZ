@@ -25,12 +25,14 @@ define
     %%% ================= READING ================= %%%
 
     %%%
-    % Creates a list of all the lines of a file given its filename
+    % Reads a text file (given its filename) and creates a list of all its lines
+    %
+    % Example usage:
     % In : "tweets/part_1.txt"
     % Out : ["Congress must..." "..." "..." "..." "..."]
     %
-    % @Filename : a string being the path to the file we want to read
-    % @return : a list of all the lines of in the file
+    % @param Filename : a string representing the path to the file
+    % @return: a list of all lines in the file, where each line is a string
     %%%
     fun {Reader Filename}
         fun {GetLine TextFile}
@@ -48,14 +50,16 @@ define
     end
 
     %%%
-    % Creates a filename from the nth filename in a list of filenames and the name of a folder
+    % Creates a filename by combining the name of a folder and the nth filename in a list of filenames
+    %
+    % Example usage:
     % In : "tweets" ["part_1.txt" "part_2.txt"] 2
     % Out : "tweets/part_2.txt"
     %
-    % @TweetsFolder_Name : a string being the name of a folder
-    % @List_PathName : a list of filenames
-    % @Idx : an index
-    % @return : the Idxth filename in the list preceded by the folder name
+    % @param TweetsFolder_Name : a string representing the name of a folder
+    % @param List_PathName : a list of filenames
+    % @param Idx : an index representing the position of the desired filename in List_PathName
+    % @return : a string representing the desired filename (the Idxth filename in the list) preceded by the folder name + "/"
     %%%
     fun {GetFilename TweetsFolder_Name List_PathName Idx}
         local PathName in
@@ -147,18 +151,21 @@ define
     end
 
     %%%
-    % Applies {ParseLine} parsing on all the lines in a list
-    % In : ["Hello there!" "General Kenobi!!!"]
-    % Out : ["hello there " "general kenobi "]
+    % Applies a parsing function to each string in a list of strings
     %
-    % @List : a list of strings/lines
-    % @return : the input list with all its strings parsed
+    % Example usage:
+    % In : ["  _&Hello there...! General Kenobi!!! %100 "]
+    % Out : ["hello there general kenobi 100"] if Parser = fun {$ StrLine} {RemoveEmptySpace {ParseLine Str_Line}} end
+    %
+    % @param List : a list of strings
+    % @param Parser : a function that takes a string as input and returns a parsed version of it
+    % @return : a list of the parsed strings
     %%%
-    fun {ParseAllLines List}
+    fun {ParseAllLines List Parser}
         case List
         of nil then nil
         [] H|T then
-            {RemoveEmptySpace {ParseLine H}}|{ParseAllLines T}
+            {Parser H} | {ParseAllLines T Parser}
         end
     end
 
@@ -178,11 +185,11 @@ define
     
     %%%
     % Removes any space larger than one character wide (and therefore useless)
-    % In : "general         kenobi      you are a           bold one"
+    % In : "  general    kenobi       you are a           bold   one   "
     % Out : "general kenobi you are a bold one"
     %
-    % @Line : a string/list of ASCII characters
-    % @return : the input string trimmed from its excess spaces
+    % @param Line : a string to be cleaned of unnecessary spaces.
+    % @return : a new string with all excess spaces removed
     %%%
     fun {RemoveEmptySpace Line}
         local
@@ -212,11 +219,14 @@ define
     end
 
     %%%
-    % Replaces special caracters by a space (== 32 in ASCII) and letters to lowercase
+    % Replaces special caracters by a space (== 32 in ASCII) and set all letters to lowercase
+    % Don't touch to the digits
+
+    % Example usage:
     % In : "FLATTENING OF THE CURVE!"
     % Out : "flattening of the curve "
     %
-    % @Line : a string/list of ASCII characters
+    % @param Line : a string ..... TODO
     % @return : a parsed string without any special characters or capital letters
     %%%
     fun {ParseLine Line}
@@ -232,7 +242,7 @@ define
                 else
                     New_H = 32
                 end
-                New_H|{ParseLine T}
+                New_H | {ParseLine T}
             end
         [] nil then nil
         end
@@ -665,7 +675,7 @@ define
                                
                             File = {GetFilename TweetsFolder_Name List_PathName_Tweets Y}
                             thread ThreadReader = {Reader File} L=1 end
-                            thread {Wait L} ThreadParser = {ParseAllLines ThreadReader} P=1 end
+                            thread {Wait L} ThreadParser = {ParseAllLines ThreadReader fun {$ Str_Line} {RemoveEmptySpace {ParseLine Str_Line}} end} P=1 end
                             {Wait P}
                             {Send Port ThreadParser}
                         end
