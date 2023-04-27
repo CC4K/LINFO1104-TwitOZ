@@ -42,7 +42,13 @@ define
                 {TextFile close}
                 nil
             else
-                {CleanUp Line}|{GetLine TextFile}
+                % The last argument of the anonymous function is set to true because we
+                % also need to remove the next letter because the substrings we want to remove are :
+                %      Substring n°1 = "â\x80\x99" (represent ')
+                %      Substring n°2 = "â\x80\x9C" (represent " from one side)
+                %      Substring n°3 = "â\x80\x9D" (represent " on the other side)
+                % [226 128] represent "â\x80\x9" (found after test)
+                {CleanUp Line fun {$ LineStr} {RemovePartList LineStr [226 128] true} end} | {GetLine TextFile}
             end
         end
     in
@@ -63,7 +69,7 @@ define
     %%%
     fun {GetFilename TweetsFolder_Name List_PathName Idx}
         local PathName in
-            PathName = {List.nth List_PathName Idx}
+            PathName = {Nth List_PathName Idx}
             {Append {Append TweetsFolder_Name "/"} PathName}
         end
     end
@@ -95,68 +101,100 @@ define
     end
 
     %%%
-    % TODO doc
+    % Checks if a list is a prefix of another list
+    %
+    % Example usage:
+    % In1: [83 97 108 117 116] [83 97]
+    % Out1: true
+    % In2: [83 97 108 117 116] [97 108]
+    % Out2: false
+    %
+    % @param List: the list to search in
+    % @param List_Prefix: the prefix list
+    % @return: true if 'List_Prefix' is a prefix of  'List', false otherwise
     %%%
-    fun {FindDelimiter List Delimiter}
-        case Delimiter
+    fun {FindPrefix List List_Prefix}
+        case List_Prefix
         of nil then true
         [] H|T then
             if List == nil then false
             else
-                if H == List.1 then {FindDelimiter List.2 T}
+                if H == List.1 then {FindPrefix List.2 T}
                 else false end
             end
         end
     end
 
     %%%
-    % TODO doc
+    % Remove a specified sublist from a given list
+    %
+    % Example usage:
+    % In1: "Jeui ui suis okuiui et je suis louisuiuiuiui" "ui" true
+    % Out1: "Jes oket je s lo"
+    % In2: "    Je suis   ok  et je  suis louis    " " " false
+    % Out2: "Je suis ok et je suis louis"
+    %
+    % @param SubList: a list from which to remove the specified sublist
+    % @param Length_SubList: the sublist to remove from the 'List'
+    % @param NextCharRemoveToo: boolean indicating whether to remove the next character
+    %                           after the substring if it is found in the 'List'
+    % @return: a new list with all instances of the specified sublist removed
+    %          (and their next character too if 'removeNextChar' is set to true)
     %%%
-    fun {RemovePartString Str Delimiter Length_Delimiter NextCharRemoveToo}
+    fun {RemovePartList List SubList NextCharRemoveToo}
         local
-            fun {RemovePartString_Aux Str Delimiter Length_Delimiter NextCharRemoveToo}
-                case Str
+            Length_SubList
+            fun {RemovePartList_Aux List SubList Length_SubList NextCharRemoveToo}
+                case List
                 of nil then nil
                 [] H|T then
-                    if {FindDelimiter T Delimiter} == true then
+                    if {FindPrefix T SubList} == true then
                         if NextCharRemoveToo == true then
                             %%% Si on veut séparer comme ceci : "didn't" en "didn t" et pas en "didnt", il faut faire
-                            %%% H|32|{RemovePartString_Aux {RemoveFirstNthElements T Length_Delimiter+1} Delimiter Length_Delimiter NextCharRemoveToo}
+                            %%% H | 32 | {RemovePartList_Aux {RemoveFirstNthElements T Length_SubList+1} SubList Length_SubList NextCharRemoveToo}
                             %%% à la place de la ligne en-dessous
-                            H | {RemovePartString_Aux {RemoveFirstNthElements T Length_Delimiter+1} Delimiter Length_Delimiter NextCharRemoveToo}
+                            H | {RemovePartList_Aux {RemoveFirstNthElements T Length_SubList+1} SubList Length_SubList NextCharRemoveToo}
                         else
-                            H | {RemovePartString_Aux {RemoveFirstNthElements T Length_Delimiter} Delimiter Length_Delimiter NextCharRemoveToo}
+                            H | {RemovePartList_Aux {RemoveFirstNthElements T Length_SubList} SubList Length_SubList NextCharRemoveToo}
                         end
                     else
-                        H | {RemovePartString_Aux T Delimiter Length_Delimiter NextCharRemoveToo}
+                        H | {RemovePartList_Aux T SubList Length_SubList NextCharRemoveToo}
                     end
                 end
             end
         in
-            if {FindDelimiter Str Delimiter} == true then
+            Length_SubList = {Length SubList}
+            if {FindPrefix List SubList} == true then
                 if NextCharRemoveToo == true then
                     %%% Si on veut séparer comme ceci : "didn't" en "didn t" et pas en "didnt", il faut faire
-                    %%% H|32|{RemovePartString {RemoveFirstNthElements T Length_Delimiter+1} Delimiter Length_Delimiter NextCharRemoveToo}
+                    %%% H | 32 | {RemovePartList_Aux {RemoveFirstNthElements T Length_SubList+1} SubList Length_SubList NextCharRemoveToo}
                     %%% à la place de la ligne en-dessous
-                    {RemovePartString_Aux {RemoveFirstNthElements Str Length_Delimiter+1} Delimiter Length_Delimiter NextCharRemoveToo}
+                    {RemovePartList_Aux {RemoveFirstNthElements List Length_SubList+1} SubList Length_SubList NextCharRemoveToo}
                 else
-                    {RemovePartString_Aux {RemoveFirstNthElements Str Length_Delimiter} Delimiter Length_Delimiter NextCharRemoveToo}
+                    {RemovePartList_Aux {RemoveFirstNthElements List Length_SubList} SubList Length_SubList NextCharRemoveToo}
                 end
             else
-                {RemovePartString_Aux Str Delimiter Length_Delimiter NextCharRemoveToo}
+                {RemovePartList_Aux List SubList Length_SubList NextCharRemoveToo}
             end
         end
     end
 
     %%%
-    % TODO doc
+    % Applies a cleaning function to a string
+    %
+    % Example usage:
+    % If Cleaner = fun {$ LineStr} {RemovePartList LineStr [226 128] true} end
+    %   In1: "Jeui ui suis okuiui et je suis louisuiuiuiui" "ui" true
+    %   Out1: "Jes oket je s lo"
+    %   In2: "    Je suis   ok  et je  suis louis    " " " false
+    %   Out2: "Je suis ok et je suis louis"
+    %
+    % @param LineStr: a string to be cleaned
+    % @param Cleaner: a function that takes as input a string and returns a cleaned string
+    % @return: a new string that has been cleaned by the function 'Cleaner'
     %%%
-    % Faudra aussi remove la lettre d'après car les délimiteur sont :
-    % Delimiteur1 = "â\x80\x99" (représente ')
-    % Delimiteur2 = "â\x80\x9C" (représente " d'un côté)
-    % Delimiteur3 = "â\x80\x9D" (représente " de l'autre côté)
-    fun {CleanUp LineStr}
-        {RemovePartString LineStr [226 128] 2 true} % [226 128] représente "â\x80\x9" (trouvé après des tests)
+    fun {CleanUp LineStr Cleaner}
+        {Cleaner LineStr}
     end
 
     %%%
@@ -179,7 +217,16 @@ define
     end
 
     %%%
-    % TODO doc
+    % Removes the last element of the string if it's a space (" " = 32 in ASCII code)
+    %
+    % Example usage:
+    % In1: "Test de la fonction"
+    % In2: "Test de la fonction "
+    % Out1 = Out2: "Test de la fonction"
+    %
+    % @param Line: the input string to be processed
+    % @return: a new string without the last element if it's a space,
+    %          or the original string if the last element is not a space
     %%%
     fun {RemoveLastElemIfSpace Line}
         case Line
@@ -194,6 +241,8 @@ define
     
     %%%
     % Removes any space larger than one character wide (and therefore useless)
+    %
+    % Example usage:
     % In: "  general    kenobi       you are a           bold   one   "
     % Out: "general kenobi you are a bold one"
     %
@@ -332,34 +381,6 @@ define
         end
     end
 
-    % fun {RemoveSmallest Tree}
-    %     case Tree
-    %     of leaf then none
-    %     [] tree(key:K value:V t_left:TLeft t_right:TRight) then
-    %         case {RemoveSmallest TLeft}
-    %         of none then triple(TRight K V)
-    %         [] triple(Tp Kp Vp) then
-    %             triple(tree(key:K value:V t_left:Tp t_right:TRight) Kp Vp)
-    %         end
-    %     end
-    % end
-
-    % fun {Delete Tree Key}
-    %     case Tree
-    %     of leaf then leaf
-    %     [] tree(key:K value:V t_left:TLeft t_right:TRight) andthen Key == K then
-    %         case {RemoveSmallest TRight}
-    %         of none then TLeft
-    %         [] triple(Tp Kp Vp) then
-    %             tree(key:Kp value:Vp t_left:TLeft t_right:Tp)
-    %         end
-    %     [] tree(key:K value:V t_left:TLeft t_right:TRight) andthen Key < K
-    %         then tree(key:K value:V t_left:{Delete Key TLeft} t_right:TRight)
-    %     [] tree(key:K value:V t_left:TLeft t_right:TRight) andthen Key > K
-    %         then tree(key:K value:V t_left:TLeft t_right:{Delete Key TRight})
-    %     end
-    % end
-
     %%%
     % Updates a list to increase the frequency of specified element
     % If the element is not yet in the list, it is added with a frequency of 1
@@ -394,7 +415,7 @@ define
     % In: "i am alone"
     % Out: "am alone" if the delimiter is " " (32 in ASCII code)
     %
-    % @param Str: a string
+    % @param Str_Line: a string
     % @param Delimiter_Char: a delimiter character to separate the string
     % @return: the substring of the input string after the delimiter character
     %%%
@@ -408,8 +429,7 @@ define
     end
 
     %%%
-    % Inserts ListBiGrams in Tree
-    % TODO doc
+    %%%%%%%%%%%%%%%%%%%%%%%%%% TODO DOC %%%%%%%%%%%%%%%%%%%%%%%%%%
     %%%
     fun {AddLineToTree Tree ListBiGrams}
         case ListBiGrams
@@ -505,9 +525,9 @@ define
                         local Value in
                             Value = {LookingUp SubTree Freq}
                             if Value == notfound then
-                                {CreateSubtree {Insert SubTree Freq [Word]} T}
+                                {CreateSubtreeAux {Insert SubTree Freq [Word]} T}
                             else
-                                {CreateSubtree {Insert SubTree Freq {List.append Value [Word]}} T}
+                                {CreateSubtreeAux {Insert SubTree Freq {Append Value [Word]}} T}
                             end
                         end
                     end
@@ -519,48 +539,31 @@ define
     end
 
     %%%
-    % TODO doc
+    %%%%%%%%%%%%%%%%%%%%%%%%%% TODO DOC %%%%%%%%%%%%%%%%%%%%%%%%%%
     %%%
-    % Tree = arbre de base
-    % copyTree = arbre de base (c'est une référence) qui va être modifié petit à petit et renvoyer
-    fun {TraverseAndChange Tree CopyTree}
-        case Tree
-        of leaf then CopyTree
-        [] tree(key:Key value:Value t_left:TLeft t_right:TRight) then
-            local NewValue NewTree T1 T2 in
-               % Pre-Order traversal
-                NewValue = {CreateSubtree Value}
-                NewTree = {Insert CopyTree Key NewValue}
-                
-                T1 = {TraverseAndChange TLeft NewTree}
-                T2 = {TraverseAndChange TRight T1}
+    fun {TraverseAndChange Tree}
+        local
+            fun {TraverseAndChangeAux Tree CopyTree}
+                case Tree
+                of leaf then CopyTree
+                [] tree(key:Key value:Value t_left:TLeft t_right:TRight) then
+                    local NewValue NewTree T1 T2 in
+                    % Pre-Order traversal
+                        NewValue = {CreateSubtree Value}
+                        NewTree = {Insert CopyTree Key NewValue}
+                        
+                        T1 = {TraverseAndChangeAux TLeft NewTree}
+                        T2 = {TraverseAndChangeAux TRight T1}
+                    end
+                end
             end
+        in
+            {TraverseAndChangeAux Tree Tree}
         end
     end
 
-    %%% FONCTIONNE PAS, JSP POURQUOI...
-    % fun {TraverseAndChange Tree CopyTree}
-
-    %     case Tree
-    %     of leaf then CopyTree
-    %     [] tree(key:Key value:Value t_left:TLeft t_right:TRight) then
-            
-    %         local NewValue NewTree T1 T2 in
-                
-    %             % Inorder traversal
-    %             T1 = {TraverseAndChange TLeft CopyTree}
-
-    %             NewValue = {CreateSubtree Value}
-    %             NewTree = {Insert CopyTree Key NewValue}
-
-    %             T2 = {TraverseAndChange TRight NewTree}
-                
-    %         end
-    %     end
-    % end
-
     %%%
-    % TODO doc
+    %%%%%%%%%%%%%%%%%%%%%%%%%% TODO DOC %%%%%%%%%%%%%%%%%%%%%%%%%%
     %%%
     fun {GetTreeMaxFreq Tree}
         case Tree
@@ -575,7 +578,7 @@ define
     end
 
     %%%
-    % TODO doc
+    %%%%%%%%%%%%%%%%%%%%%%%%%% TODO DOC %%%%%%%%%%%%%%%%%%%%%%%%%%
     %%%
     fun {TraverseToGetProbability Tree}
         local
@@ -629,13 +632,13 @@ define
             
 			SplittedText = {String.tokens {InputText getText(p(1 0) 'end' $)} & }
             
-            if {List.length SplittedText} < 2 then % Pourrait optimisé pour ne pas devoir appelé List.length
+            if {Length SplittedText} < 2 then % Pourrait optimisé pour ne pas devoir appelé {Length List}
                 none
             else
                 Last = {String.tokens {List.last SplittedText} &\n}.1
-                BeforeLast = {List.nth SplittedText {List.length SplittedText} - 1}
+                BeforeLast = {Nth SplittedText {Length SplittedText} - 1}
 
-                Key = {String.toAtom {List.append {List.append BeforeLast [32]} Last}}
+                Key = {String.toAtom {Append {Append BeforeLast [32]} Last}}
                 Tree_Value = {LookingUp Main_Tree Key}
                 
                 % {Browse Tree_Value}
@@ -663,7 +666,7 @@ define
     end
 
     %%%
-    % TODO doc
+    %%%%%%%%%%%%%%%%%%%%%%%%%% TODO DOC %%%%%%%%%%%%%%%%%%%%%%%%%%
     %%%
 	proc {CallPress}
 		local ResultPress ProbableWords MaxFreq in
@@ -672,6 +675,7 @@ define
             if Tree_Over == true then
 
                 ResultPress = {Press}
+                {Browse ResultPress}
 
                 if ResultPress == none then
                     {OutputText set("You must write minimum 2 words.")}
@@ -695,16 +699,8 @@ define
 		end
 	end
 
-    % proc {ListAllFiles L}
-    %     case L
-    %     of nil then skip
-    %     [] H|T then
-    %         {Browse {String.toAtom H}} {ListAllFiles T}
-    %     end
-    % end
-
     %%%
-    % TODO doc
+    %%%%%%%%%%%%%%%%%%%%%%%%%% TODO DOC %%%%%%%%%%%%%%%%%%%%%%%%%%
     %%%
     %%% Lance les N threads de lecture et de parsing qui liront et traiteront tous les fichiers
     %%% Les threads de parsing envoient leur resultat au port Port
@@ -747,7 +743,7 @@ define
     end
 
     %%%
-    % TODO doc
+    %%%%%%%%%%%%%%%%%%%%%%%%%% TODO DOC %%%%%%%%%%%%%%%%%%%%%%%%%%
     %%%
     fun {Get_Nth_FirstElem_Port Stream_Port N}
         local
@@ -756,7 +752,7 @@ define
                 else
                     case Stream_Port
                     of H|T then
-                        {List.append H {Get_Nth_FirstElem_Port T Acc+1 N-1}}
+                        {Append H {Get_Nth_FirstElem_Port T Acc+1 N-1}}
                     end
                 end
             end
@@ -766,7 +762,7 @@ define
     end
 
     %%%
-    % TODO doc
+    %%%%%%%%%%%%%%%%%%%%%%%%%% TODO DOC %%%%%%%%%%%%%%%%%%%%%%%%%%
     %%%
     %%% Fetch Tweets Folder from CLI Arguments
     %%% See the Makefile for an example of how it is called
@@ -777,14 +773,16 @@ define
     end
 
 
-
+    %%%
+    %%%%%%%%%%%%%%%%%%%%%%%%%% TODO DOC %%%%%%%%%%%%%%%%%%%%%%%%%%
+    %%%
     %%% Procedure principale qui cree la fenetre et appelle les differentes procedures et fonctions
     proc {Main}
         
         TweetsFolder_Name = {GetSentenceFolder}
         List_PathName_Tweets = {OS.getDir TweetsFolder_Name}
 
-        NberFiles = {List.length List_PathName_Tweets}
+        NberFiles = {Length List_PathName_Tweets}
         NbThreads = 5
 
         local List_Port Basic_Tree Window Description SeparatedWordsStream SeparatedWordsPort in
@@ -819,9 +817,7 @@ define
         {OutputText tk(insert p(6 0) "Step 1 Over : Reading + Parsing\n")} % Pour la position, c'est du test essais-erreur
 
         Basic_Tree = {CreateTree List_Port}
-        {System.show {LookingUp Basic_Tree 'must go'}}
-
-        Main_Tree = {TraverseAndChange Basic_Tree Basic_Tree}
+        Main_Tree = {TraverseAndChange Basic_Tree}
         Tree_Over = true
 
         {OutputText tk(insert p(7 0) "Step 2 Over : Stocking datas\n")} % Pour la position, c'est du test essais-erreur
