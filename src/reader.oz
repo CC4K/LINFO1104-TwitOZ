@@ -3,8 +3,7 @@ import
     Open
     Browser
 
-    % Parser at 'parser.ozf'
-    Parser
+    Parser at 'parser.ozf'
 export
     GetFilename Reader
 define
