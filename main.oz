@@ -12,7 +12,8 @@ import
     Tree at 'bin/tree.ozf'
 define
 
-	InputText OutputText TweetsFolder_Name List_PathName_Tweets Main_Tree Tree_Over NberFiles NbThreads % Global variables
+    % Global variables
+	InputText OutputText TweetsFolder_Name List_PathName_Tweets Main_Tree Tree_Over NberFiles NbThreads
 
     proc {Browse Buf}
         {Browser.browse Buf}
@@ -32,7 +33,7 @@ define
     %%%                  <probability/frequence> := <int> | <float>
     fun {Press}
 		
-		local List_List_Word_Proba TreeMaxFreq SplittedText BeforeLast Last Key Tree_Value Word_To_Display in
+		local ProbableWords_Probability TreeMaxFreq SplittedText BeforeLast Last Key Tree_Value in
             
 			SplittedText = {String.tokens {InputText getText(p(1 0) 'end' $)} & }
             
@@ -45,9 +46,15 @@ define
                 Key = {String.toAtom {List.append {List.append BeforeLast [32]} Last}}
                 Tree_Value = {Tree.lookingUp Main_Tree Key}
                 
-                {Browse Tree_Value}
+                % {System.show Tree_Value}
 
-                List_List_Word_Proba = {Tree.traverseToGetProbability Tree_Value}
+                if Tree_Value == notfound then
+                    ProbableWords_Probability = {Tree.traverseToGetProbability leaf}
+                else
+                    ProbableWords_Probability = {Tree.traverseToGetProbability Tree_Value}
+                end
+                
+                %%% To have frequence and not the probability %%%
 
                 % TreeMaxFreq = {Tree.getTreeMaxFreq Tree_Value}
 
@@ -58,28 +65,33 @@ define
                 %     {Browse TreeMaxFreq.key}
                 %     [TreeMaxFreq.value TreeMaxFreq.key]
                 % end
+
             end
 		end
     end
 
 
 	proc {CallPress}
-		local List_To_Display ProbableWords MaxFreq in
+		local ResultPress ProbableWords MaxFreq in
             
-            % But : bloquer le programme le temps que la structure soit crée!
+            % But de Tree_Over : bloquer le programme le temps que la structure soit crée!
             if Tree_Over == true then
-                List_To_Display = {Press}
 
-                if List_To_Display == none then
+                ResultPress = {Press}
+
+                if ResultPress == none then
                     {OutputText set("You must write minimum 2 words.")}
                 else
-                    ProbableWords = List_To_Display.1
-                    MaxFreq = List_To_Display.2
+                    ProbableWords = ResultPress.1
+                    MaxFreq = ResultPress.2.1
+
+                    {Browse ProbableWords}
+                    {Browse MaxFreq}
 
                     if ProbableWords == none then
                         {OutputText set("NO WORD FIND!")}
                     else
-                        {OutputText set(ProbableWords.1)}
+                        {OutputText set(ProbableWords.1)} % Faut-il renvoyer le premier si y'en a plusieurs ?
                     end
                 end
             else
@@ -164,25 +176,18 @@ define
 
     %%% Procedure principale qui cree la fenetre et appelle les differentes procedures et fonctions
     proc {Main}
-    
+        
         TweetsFolder_Name = {GetSentenceFolder}
         List_PathName_Tweets = {OS.getDir TweetsFolder_Name}
 
-        NberFiles = 208
+        NberFiles = {List.length List_PathName_Tweets}
         NbThreads = 5
 
-        %% Fonction d'exemple qui liste tous les fichiers
-        %% contenus dans le dossier passe en Argument.
-        %% Inspirez vous en pour lire le contenu des fichiers
-        %% se trouvant dans le dossier
-        %%% N'appelez PAS cette fonction lors de la phase de
-        %%% soumission !!!
-        % {ListAllFiles List_PathName_Tweets}
+        local List_Port Basic_Tree Window Description SeparatedWordsStream SeparatedWordsPort in
 
-        local List_Port ParsedListLines FirstTree File Line ParsedLine PressCaller List_Press Window Description SeparatedWordsStream SeparatedWordsPort in
         {Property.put print foo(width:1000 depth:1000)}  % for stdout siz
 
-        % Creation de l interface graphique
+        % Création de l'interface graphique
         Description=td(
             title: "Text predictor"
             lr(text(handle:InputText width:50 height:10 background:white foreground:black wrap:word) button(text:"Predict" width:15 action:CallPress))
@@ -190,11 +195,11 @@ define
             action:proc{$} {Application.exit 0} end % Quitte le programme quand la fenetre est fermee
             )
         
-        % Creation de la fenetre
+        % Création de la fenêtre
         Window = {QTk.build Description}
         {Window show}
         
-        % {InputText tk(insert 'end' "Loading... Please wait.")}
+        {InputText tk(insert 'end' "Loading... Please wait.")}
         {InputText bind(event:"<Control-s>" action:CallPress)} % You can also bind events
         {OutputText set("You must wait until the database is parsed.\nA message will notify you.\nDon't press the 'predict' button until the message appears!\n")}
 
@@ -209,12 +214,13 @@ define
         
         {OutputText tk(insert p(6 0) "Step 1 Over : Reading + Parsing\n")} % Pour la position, c'est du test essais-erreur
 
-        FirstTree = {Tree.createTree leaf List_Port}
-        Main_Tree = {Tree.traverseAndChange FirstTree FirstTree}
+        Basic_Tree = {Tree.createTree leaf List_Port}
+        Main_Tree = {Tree.traverseAndChange Basic_Tree Basic_Tree}
         Tree_Over = true
 
         {OutputText tk(insert p(7 0) "Step 2 Over : Stocking datas\n")} % Pour la position, c'est du test essais-erreur
         {OutputText tk(insert p(9 0) "The database is now parsed.\nYou can write and predict!")} % Pour la position, c'est du test essais-erreur
+        {InputText set("")}
 
         end
     end
