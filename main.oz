@@ -745,19 +745,18 @@ define
     %%%
     %%%%%%%%%%%%%%%%%%%%%%%%%% TODO DOC %%%%%%%%%%%%%%%%%%%%%%%%%%
     %%%
-    fun {Get_Nth_FirstElem_Port Stream_Port N}
+    fun {Get_ListFromPortStream Port Stream}
         local
-            fun {Get_Nth_FirstElem_Port Stream_Port Acc N}
-                if N == 0 then nil
-                else
-                    case Stream_Port
-                    of H|T then
-                        {Append H {Get_Nth_FirstElem_Port T Acc+1 N-1}}
-                    end
+            fun {Get_ListFromPortStreamAux Stream}
+                case Stream
+                of nil|T then nil
+                [] H|T then
+                    {Append H {Get_ListFromPortStreamAux T}}
                 end
             end
         in
-            {Get_Nth_FirstElem_Port Stream_Port 1 N}
+            {Send Port nil}
+            {Get_ListFromPortStreamAux Stream}
         end
     end
 
@@ -785,47 +784,50 @@ define
         NberFiles = {Length List_PathName_Tweets}
         NbThreads = 5
 
-        local List_Port Basic_Tree Window Description SeparatedWordsStream SeparatedWordsPort in
+        local List_Line_Parsed Window Description SeparatedWordsStream SeparatedWordsPort in
 
-        {Property.put print foo(width:1000 depth:1000)}  % for stdout siz
+            {Property.put print foo(width:1000 depth:1000)}  % for stdout siz
 
-        % Création de l'interface graphique
-        Description=td(
-            title: "Text predictor"
-            lr(text(handle:InputText width:50 height:10 background:white foreground:black wrap:word) button(text:"Predict" width:15 action:CallPress))
-            text(handle:OutputText width:50 height:10 background:black foreground:white glue:w wrap:word)
-            action:proc{$} {Application.exit 0} end % Quitte le programme quand la fenetre est fermee
-            )
-        
-        % Création de la fenêtre
-        Window = {QTk.build Description}
-        {Window show}
-        
-        {InputText tk(insert 'end' "Loading... Please wait.")}
-        {InputText bind(event:"<Control-s>" action:CallPress)} % You can also bind events
-        {OutputText set("You must wait until the database is parsed.\nA message will notify you.\nDon't press the 'predict' button until the message appears!\n")}
+            % Création de l'interface graphique
+            Description=td(
+                title: "Text predictor"
+                lr(text(handle:InputText width:50 height:10 background:white foreground:black wrap:word) button(text:"Predict" width:15 action:CallPress))
+                text(handle:OutputText width:50 height:10 background:black foreground:white glue:w wrap:word)
+                action:proc{$} {Application.exit 0} end % Quitte le programme quand la fenetre est fermee
+                )
+            
+            % Création de la fenêtre
+            Window = {QTk.build Description}
+            {Window show}
+            
+            {InputText tk(insert 'end' "Loading... Please wait.")}
+            {InputText bind(event:"<Control-s>" action:CallPress)} % You can also bind events
+            {OutputText set("You must wait until the database is parsed.\nA message will notify you.\nDon't press the 'predict' button until the message appears!\n")}
 
-        %%% On créer le Port %%%
-        SeparatedWordsPort = {NewPort SeparatedWordsStream}
-        
-        %%% On lance les threads de lecture et de parsing %%%
-        {LaunchThreads SeparatedWordsPort NbThreads}
+            %%% On créer le Port %%%
+            SeparatedWordsPort = {NewPort SeparatedWordsStream}
+            
+            %%% On lance les threads de lecture et de parsing%%%
+            {LaunchThreads SeparatedWordsPort NbThreads}
 
-        %%% On créer l'arbre principale avec tout les sous-arbres en valeur ***
-        List_Port = {Get_Nth_FirstElem_Port SeparatedWordsStream NberFiles}
-        
-        {OutputText tk(insert p(6 0) "Step 1 Over : Reading + Parsing\n")} % Pour la position, c'est du test essais-erreur
+            %%% On récupère les informations dans le Stream du Port %%%
+            List_Line_Parsed = {Get_ListFromPortStream SeparatedWordsPort SeparatedWordsStream}
 
-        Basic_Tree = {CreateTree List_Port}
-        Main_Tree = {TraverseAndChange Basic_Tree}
-        Tree_Over = true
+            {OutputText tk(insert p(6 0) "Step 1 Over : Reading + Parsing\n")} % Pour la position, c'est du test essais-erreur
+            
+            %%% On créer l'arbre principale avec tout les sous-arbres en valeur %%%
+            Main_Tree = {TraverseAndChange {CreateTree List_Line_Parsed}}
+            Tree_Over = true % CallPress can work now
 
-        {OutputText tk(insert p(7 0) "Step 2 Over : Stocking datas\n")} % Pour la position, c'est du test essais-erreur
-        {OutputText tk(insert p(9 0) "The database is now parsed.\nYou can write and predict!")} % Pour la position, c'est du test essais-erreur
-        {InputText set("")}
-        
+            {OutputText tk(insert p(7 0) "Step 2 Over : Stocking datas\n")} % Pour la position, c'est du test essais-erreur
+            {OutputText tk(insert p(9 0) "The database is now parsed.\nYou can write and predict!")} % Pour la position, c'est du test essais-erreur
+            
+            if {FindPrefix {InputText getText(p(1 0) 'end' $)} "Loading... Please wait."} then
+                {InputText tk(delete p(1 0) p(1 23))} % Remove the first 23 characters (= "Loading... Please wait.")
+            else
+                {InputText set("")} % Remove all because the user add some texts between or before the line : "Loading... Please wait."
+            end
         end
-        
         %%ENDOFCODE%%
     end
 
