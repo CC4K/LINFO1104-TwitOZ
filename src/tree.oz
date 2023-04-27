@@ -3,7 +3,7 @@ import
     Browser
     System
 export
-    CreateTree TraverseAndChange LookingUp GetTreeMaxFreq
+    CreateTree TraverseAndChange LookingUp GetTreeMaxFreq TraverseToGetProbability
 define
 
     proc {Browse Buf}
@@ -218,6 +218,37 @@ define
                 {GetTreeMaxFreq TRight}
             else
                 tree(key:K value:V t_left:TLeft t_right:TRight)
+            end
+        end
+    end
+
+
+    fun {TraverseToGetProbability Tree}
+        local
+            List
+            TotalFreq
+            MaxFreq
+            List_Word
+            Probability
+            fun {TraverseToGetProbability_Aux Tree TotalFreq MaxFreq ListWord}
+                case Tree
+                of leaf then [TotalFreq MaxFreq ListWord]
+                [] tree(key:Key value:Value t_left:TLeft t_right:TRight) then
+                    local T1 T2 in
+                        T1 = {TraverseToGetProbability_Aux TLeft TotalFreq+Key Key Value}
+                        T2 = {TraverseToGetProbability_Aux TRight T1.1+Key Key Value}
+                    end
+                end
+            end
+        in
+            if Tree == leaf then [none 0]
+            else
+                List = {TraverseToGetProbability_Aux Tree 0 0 nil}
+                TotalFreq = List.1 div 2
+                MaxFreq = List.2.1
+                List_Word = List.2.2.1
+                Probability = {Int.toFloat MaxFreq} / {Int.toFloat TotalFreq}
+                [List_Word Probability]
             end
         end
     end

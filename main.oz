@@ -32,7 +32,7 @@ define
     %%%                  <probability/frequence> := <int> | <float>
     fun {Press}
 		
-		local TreeMaxFreq SplittedText BeforeLast Last Key Tree_Value Word_To_Display in
+		local List_List_Word_Proba TreeMaxFreq SplittedText BeforeLast Last Key Tree_Value Word_To_Display in
             
 			SplittedText = {String.tokens {InputText getText(p(1 0) 'end' $)} & }
             
@@ -47,15 +47,17 @@ define
                 
                 {Browse Tree_Value}
 
-                TreeMaxFreq = {Tree.getTreeMaxFreq Tree_Value}
+                List_List_Word_Proba = {Tree.traverseToGetProbability Tree_Value}
 
-                if TreeMaxFreq == leaf then
-                    [none 0]
-                else
-                    {Browse TreeMaxFreq.value}
-                    {Browse TreeMaxFreq.key}
-                    [TreeMaxFreq.value TreeMaxFreq.key]
-                end
+                % TreeMaxFreq = {Tree.getTreeMaxFreq Tree_Value}
+
+                % if TreeMaxFreq == leaf then
+                %     [none 0]
+                % else
+                %     {Browse TreeMaxFreq.value}
+                %     {Browse TreeMaxFreq.key}
+                %     [TreeMaxFreq.value TreeMaxFreq.key]
+                % end
             end
 		end
     end
