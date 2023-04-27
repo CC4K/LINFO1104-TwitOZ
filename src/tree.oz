@@ -1,8 +1,9 @@
 functor
 import
     Browser
+    System
 export
-    CreateTree TraverseAndChange LookingUp
+    CreateTree TraverseAndChange LookingUp GetTreeMaxFreq
 define
 
     proc {Browse Buf}
@@ -37,12 +38,12 @@ define
     fun {Insert Tree Key Value}
         case Tree
         of leaf then tree(key:Key value:Value t_left:leaf t_right:leaf)
-        [] tree(key:K value:V t_left:TLeft t_right:TRight) andthen K == Key
-            then tree(key:Key value:Value t_left:TLeft t_right:TRight)
-        [] tree(key:K value:V t_left:TLeft t_right:TRight) andthen K < Key
-            then tree(key:K value:V t_left:TLeft t_right:{Insert TRight Key Value})
-        [] tree(key:K value:V t_left:TLeft t_right:TRight) andthen K > Key
-            then tree(key:K value:V t_left:{Insert TLeft Key Value} t_right:TRight)
+        [] tree(key:K value:V t_left:TLeft t_right:TRight) andthen K == Key then
+            tree(key:Key value:Value t_left:TLeft t_right:TRight)
+        [] tree(key:K value:V t_left:TLeft t_right:TRight) andthen K < Key then
+            tree(key:K value:V t_left:TLeft t_right:{Insert TRight Key Value})
+        [] tree(key:K value:V t_left:TLeft t_right:TRight) andthen K > Key then
+            tree(key:K value:V t_left:{Insert TLeft Key Value} t_right:TRight)
         end
     end
 
@@ -169,24 +170,6 @@ define
 
     % Tree = arbre de base
     % copyTree = arbre de base (c'est une référence) qui va être modifié petit à petit et renvoyer
-    % fun {TraverseAndChange Tree CopyTree}
-
-    %     case Tree
-    %     of leaf then CopyTree
-    %     [] tree(key:Key value:Value t_left:TLeft t_right:TRight) then
-            
-    %         local NewValue NewTree T1 T2 in
-                
-    %             NewValue = {CreateSubtree leaf Value}
-    %             NewTree = {Insert CopyTree Key NewValue}
-                
-    %             T1 = {TraverseAndChange TLeft NewTree}
-    %             T2 = {TraverseAndChange TRight T1}
-                
-    %         end
-    %     end
-    % end
-
     fun {TraverseAndChange Tree CopyTree}
 
         case Tree
@@ -195,17 +178,37 @@ define
             
             local NewValue NewTree T1 T2 in
                 
-                % Inorder traversal
-                T1 = {TraverseAndChange TLeft CopyTree}
-
                 NewValue = {CreateSubtree leaf Value}
                 NewTree = {Insert CopyTree Key NewValue}
-
-                T2 = {TraverseAndChange TRight NewValue}
+                
+                T1 = {TraverseAndChange TLeft NewTree}
+                T2 = {TraverseAndChange TRight T1}
                 
             end
         end
     end
+
+    %%% FONCTIONNE PAS, JSP POURQUOI...
+    % fun {TraverseAndChange Tree CopyTree}
+
+    %     case Tree
+    %     of leaf then CopyTree
+    %     [] tree(key:Key value:Value t_left:TLeft t_right:TRight) then
+            
+    %         local NewValue NewTree T1 T2 in
+                
+    %             % Inorder traversal
+    %             T1 = {TraverseAndChange TLeft CopyTree}
+
+    %             NewValue = {CreateSubtree leaf Value}
+    %             {System.show Key}
+    %             NewTree = {Insert CopyTree Key NewValue}
+
+    %             T2 = {TraverseAndChange TRight NewValue}
+                
+    %         end
+    %     end
+    % end
 
     fun {GetTreeMaxFreq Tree}
         case Tree
@@ -218,4 +221,5 @@ define
             end
         end
     end
+
 end

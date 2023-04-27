@@ -12,7 +12,7 @@ import
     Tree at 'bin/tree.ozf'
 define
     
-	InputText OutputText TweetsFolder_List Tree_Over % Global variables
+	InputText OutputText TweetsFolder_List Main_Tree Tree_Over NberFiles % Global variables
 
     proc {Browse Buf}
         {Browser.browse Buf}
@@ -35,18 +35,17 @@ define
 		local TreeMaxFreq SplittedText BeforeLast Last Key Tree_Value Word_To_Display in
             
 			SplittedText = {String.tokens {InputText getText(p(1 0) 'end' $)} & }
-
-            if SplittedText == [[10]] then % [10] is the char at the end (always there even if empty) 
+            
+            if {List.length SplittedText} < 2 then % Pourrait optimisé pour ne pas devoir appelé List.length
                 none
             else
                 Last = {String.tokens {List.last SplittedText} &\n}.1
                 BeforeLast = {List.nth SplittedText {List.length SplittedText} - 1}
-
-                Key = {String.toAtom {List.append {List.append BeforeLast [32]} Last}}
-                Tree_Value = {Tree.lookingUp Tree Key}
                 
+                Key = {String.toAtom {List.append {List.append BeforeLast [32]} Last}}
+                Tree_Value = {Tree.lookingUp Main_Tree Key}
+
                 TreeMaxFreq = {Tree.getTreeMaxFreq Tree_Value}
-                {Browse Tree_Value}
 
                 if TreeMaxFreq == leaf then
                     [none 0]
@@ -58,6 +57,7 @@ define
             end
 		end
     end
+
 
 	proc {CallPress}
 		local List_To_Display ProbableWords MaxFreq in
@@ -97,9 +97,8 @@ define
     %%% Les threads de parsing envoient leur resultat au port Port
     proc {LaunchThreads Port N}
         
-        local NberFiles Basic_Nber_Iter Rest_Nber_Iter Current_Nber_Iter in
+        local Basic_Nber_Iter Rest_Nber_Iter Current_Nber_Iter in
 
-            NberFiles = 208
             Basic_Nber_Iter = NberFiles div N
             Rest_Nber_Iter = NberFiles mod N
 
@@ -124,6 +123,9 @@ define
                                
                             File_1 = {Reader.getFilename TweetsFolder_List Y}
                             File = {Append "tweets/" File_1} %% DE BASE => Ne devrait pas avoir cette ligne je pense
+
+                            % File = {Append "tweets/part_" {Append {Int.toString 1} ".txt"}}
+
                             thread ThreadReader = {Reader.reader File} L=1 end
                             thread {Wait L} ThreadParser = {Parser.parseAllLines ThreadReader} P=1 end
                             {Wait P}
@@ -165,6 +167,7 @@ define
     proc {Main}
         
         TweetsFolder_List = {OS.getDir {GetSentenceFolder}}
+        NberFiles = 208
 
         %% Fonction d'exemple qui liste tous les fichiers
         %% contenus dans le dossier passe en Argument.
@@ -201,19 +204,15 @@ define
         {LaunchThreads SeparatedWordsPort NbThreads}
 
         %%% On créer l'arbre principale avec tout les sous-arbres en valeur ***
-        List_Port = {Get_Nth_FirstElem_Port SeparatedWordsStream 208}
+        List_Port = {Get_Nth_FirstElem_Port SeparatedWordsStream NberFiles}
         
         {OutputText tk(insert p(6 0) "Step 1 Over : Reading + Parsing\n")} % Pour la position, c'est du test essais-erreur
 
         FirstTree = {Tree.createTree leaf List_Port}
 
-        %%% CRASH ICI %%%
-        %%% CRASH ICI %%%
-        Tree = {Tree.traverseAndChange FirstTree FirstTree}
-        %%% CRASH ICI %%%
-        %%% CRASH ICI %%%
-
+        Main_Tree = {Tree.traverseAndChange FirstTree FirstTree}
         Tree_Over = true
+
         {OutputText tk(insert p(7 0) "Step 2 Over : Stocking datas\n")} % Pour la position, c'est du test essais-erreur
         {OutputText tk(insert p(9 0) "The database is now parsed.\nYou can write and predict!")} % Pour la position, c'est du test essais-erreur
 
