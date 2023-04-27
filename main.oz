@@ -7,9 +7,12 @@ import
     Property
     Browser
 
-    Reader at 'reader.ozf'
-    Parser at 'parser.ozf'
-    Tree at 'tree.ozf'
+    %Reader at 'reader.ozf'
+    %Parser at 'parser.ozf'
+    %Tree at 'tree.ozf'
+    Reader
+    Parser
+    Tree
 define
     
 	InputText OutputText TweetsFolder_List % Global variables
@@ -39,9 +42,9 @@ define
 			BeforeLast = {List.nth SplittedText {List.length SplittedText} - 1}
 
 			Key = {String.toAtom {List.append {List.append BeforeLast [32]} Last}}
-			Tree_Value = {Tree.LookingUp Tree Key}
+			Tree_Value = {Tree.lookingUp Tree Key}
 			
-            TreeMaxFreq = {Tree.GetTreeMaxFreq Tree_Value}
+            TreeMaxFreq = {Tree.getTreeMaxFreq Tree_Value}
             {Browse Tree_Value}
 
             if TreeMaxFreq == leaf then
@@ -107,10 +110,10 @@ define
 
                         local File_1 File ThreadReader ThreadParser L P in
                                
-                            File_1 = {Reader.GetFilename TweetsFolder_List Y}
+                            File_1 = {Reader.getFilename TweetsFolder_List Y}
                             File = {Append "tweets/" File_1} %% DE BASE => Ne devrait pas avoir cette ligne je pense
-                            thread ThreadReader = {Reader.Reader File} L=1 end
-                            thread {Wait L} ThreadParser = {Parser.ParseAllLines ThreadReader} P=1 end
+                            thread ThreadReader = {Reader.reader File} L=1 end
+                            thread {Wait L} ThreadParser = {Parser.parseAllLines ThreadReader} P=1 end
                             {Wait P}
                             {Send Port ThreadParser}
 
@@ -187,8 +190,8 @@ define
 
         %%% On créer l'arbre principale avec tout les sous-arbres en valeur ***
         List_Port = {Get_Nth_FirstElem_Port SeparatedWordsStream 208}
-        FirstTree = {Tree.CreateTree leaf List_Port}
-        Tree = {Tree.TraverseAndChange FirstTree FirstTree}
+        FirstTree = {Tree.createTree leaf List_Port}
+        Tree = {Tree.traverseAndChange FirstTree FirstTree}
         {Browse 'OVER : Creating Structure'}
         end
     end
