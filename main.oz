@@ -72,15 +72,24 @@ define
     %%% ================= PARSING ================= %%%
 
     %%%
-    % TODO doc
+    % Removes the first Nth elements from a list
+    %
+    % Example usage:
+    % In: [83 97 108 117 116] 3
+    % Out: [117 116]
+    %
+    % @param List: a list
+    % @param Nth: a positive integer representing the number of elements to remove from the beginning of the list
+    % @return: a new list with the first Nth elements removed from the original list.
+    %          If Nth is greater than the length of the list, an empty list is returned.
     %%%
-    fun {GetListAfterNth List N}
+    fun {RemoveFirstNthElements List Nth}
         case List
         of nil then nil
         [] H|T then
-            if N == 1 then T
+            if Nth == 1 then T
             else
-                {GetListAfterNth T N-1}
+                {RemoveFirstNthElements T Nth-1}
             end
         end
     end
@@ -112,14 +121,14 @@ define
                     if {FindDelimiter T Delimiter} == true then
                         if NextCharRemoveToo == true then
                             %%% Si on veut séparer comme ceci : "didn't" en "didn t" et pas en "didnt", il faut faire
-                            %%% H|32|{RemovePartString_Aux {GetListAfterNth T Length_Delimiter+1} Delimiter Length_Delimiter NextCharRemoveToo}
+                            %%% H|32|{RemovePartString_Aux {RemoveFirstNthElements T Length_Delimiter+1} Delimiter Length_Delimiter NextCharRemoveToo}
                             %%% à la place de la ligne en-dessous
-                            H|{RemovePartString_Aux {GetListAfterNth T Length_Delimiter+1} Delimiter Length_Delimiter NextCharRemoveToo}
+                            H | {RemovePartString_Aux {RemoveFirstNthElements T Length_Delimiter+1} Delimiter Length_Delimiter NextCharRemoveToo}
                         else
-                            H|{RemovePartString_Aux {GetListAfterNth T Length_Delimiter} Delimiter Length_Delimiter NextCharRemoveToo}
+                            H | {RemovePartString_Aux {RemoveFirstNthElements T Length_Delimiter} Delimiter Length_Delimiter NextCharRemoveToo}
                         end
                     else
-                        H|{RemovePartString_Aux T Delimiter Length_Delimiter NextCharRemoveToo}
+                        H | {RemovePartString_Aux T Delimiter Length_Delimiter NextCharRemoveToo}
                     end
                 end
             end
@@ -127,11 +136,11 @@ define
             if {FindDelimiter Str Delimiter} == true then
                 if NextCharRemoveToo == true then
                     %%% Si on veut séparer comme ceci : "didn't" en "didn t" et pas en "didnt", il faut faire
-                    %%% H|32|{RemovePartString {GetListAfterNth T Length_Delimiter+1} Delimiter Length_Delimiter NextCharRemoveToo}
+                    %%% H|32|{RemovePartString {RemoveFirstNthElements T Length_Delimiter+1} Delimiter Length_Delimiter NextCharRemoveToo}
                     %%% à la place de la ligne en-dessous
-                    {RemovePartString_Aux {GetListAfterNth Str Length_Delimiter+1} Delimiter Length_Delimiter NextCharRemoveToo}
+                    {RemovePartString_Aux {RemoveFirstNthElements Str Length_Delimiter+1} Delimiter Length_Delimiter NextCharRemoveToo}
                 else
-                    {RemovePartString_Aux {GetListAfterNth Str Length_Delimiter} Delimiter Length_Delimiter NextCharRemoveToo}
+                    {RemovePartString_Aux {RemoveFirstNthElements Str Length_Delimiter} Delimiter Length_Delimiter NextCharRemoveToo}
                 end
             else
                 {RemovePartString_Aux Str Delimiter Length_Delimiter NextCharRemoveToo}
