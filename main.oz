@@ -24,7 +24,14 @@ define
     %%% ================= READING ================= %%%
     %%% ================= READING ================= %%%
 
-    %%% Create a list with all line of the file named "Filename"
+    %%%
+    % Creates a list of all the lines of a file given its filename
+    % In : "tweets/part_1.txt"
+    % Out : ["Congress must..." "..." "..." "..." "..."]
+    %
+    % @Filename : a string being the path to the file we want to read
+    % @return : a list of all the lines of in the file
+    %%%
     fun {Reader Filename}
         fun {GetLine TextFile}
             Line = {TextFile getS($)}
@@ -33,14 +40,23 @@ define
                 {TextFile close}
                 nil
             else
-                {CleanUp Line} | {GetLine TextFile}
+                {CleanUp Line}|{GetLine TextFile}
             end
         end
     in
         {GetLine {New TextFile init(name:Filename flags:[read])}}
     end
 
-    %%% Create the filename "tweets/part_N.txt" where N is given in argument
+    %%%
+    % Creates a filename from the nth filename in a list of filenames and the name of a folder
+    % In : "tweets" ["part_1.txt" "part_2.txt"] 2
+    % Out : "tweets/part_2.txt"
+    %
+    % @TweetsFolder_Name : a string being the name of a folder
+    % @List_PathName : a list of filenames
+    % @Idx : an index
+    % @return : the Idxth filename in the list preceded by the folder name
+    %%%
     fun {GetFilename TweetsFolder_Name List_PathName Idx}
         local PathName in
             PathName = {List.nth List_PathName Idx}
@@ -51,6 +67,9 @@ define
     %%% ================= PARSING ================= %%%
     %%% ================= PARSING ================= %%%
 
+    %%%
+    % TODO doc
+    %%%
     fun {GetListAfterNth List N}
         case List
         of nil then nil
@@ -62,6 +81,9 @@ define
         end
     end
 
+    %%%
+    % TODO doc
+    %%%
     fun {FindDelimiter List Delimiter}
         case Delimiter
         of nil then true
@@ -74,6 +96,9 @@ define
         end
     end
 
+    %%%
+    % TODO doc
+    %%%
     fun {RemovePartString Str Delimiter Length_Delimiter NextCharRemoveToo}
         local
             fun {RemovePartString_Aux Str Delimiter Length_Delimiter NextCharRemoveToo}
@@ -83,14 +108,14 @@ define
                     if {FindDelimiter T Delimiter} == true then
                         if NextCharRemoveToo == true then
                             %%% Si on veut séparer comme ceci : "didn't" en "didn t" et pas en "didnt", il faut faire
-                            %%% H | 32 | {RemovePartString_Aux {GetListAfterNth T Length_Delimiter+1} Delimiter Length_Delimiter NextCharRemoveToo}
+                            %%% H|32|{RemovePartString_Aux {GetListAfterNth T Length_Delimiter+1} Delimiter Length_Delimiter NextCharRemoveToo}
                             %%% à la place de la ligne en-dessous
-                            H | {RemovePartString_Aux {GetListAfterNth T Length_Delimiter+1} Delimiter Length_Delimiter NextCharRemoveToo}
+                            H|{RemovePartString_Aux {GetListAfterNth T Length_Delimiter+1} Delimiter Length_Delimiter NextCharRemoveToo}
                         else
-                            H | {RemovePartString_Aux {GetListAfterNth T Length_Delimiter} Delimiter Length_Delimiter NextCharRemoveToo}
+                            H|{RemovePartString_Aux {GetListAfterNth T Length_Delimiter} Delimiter Length_Delimiter NextCharRemoveToo}
                         end
                     else
-                        H | {RemovePartString_Aux T Delimiter Length_Delimiter NextCharRemoveToo}
+                        H|{RemovePartString_Aux T Delimiter Length_Delimiter NextCharRemoveToo}
                     end
                 end
             end
@@ -98,7 +123,7 @@ define
             if {FindDelimiter Str Delimiter} == true then
                 if NextCharRemoveToo == true then
                     %%% Si on veut séparer comme ceci : "didn't" en "didn t" et pas en "didnt", il faut faire
-                    %%% H | 32 | {RemovePartString {GetListAfterNth T Length_Delimiter+1} Delimiter Length_Delimiter NextCharRemoveToo}
+                    %%% H|32|{RemovePartString {GetListAfterNth T Length_Delimiter+1} Delimiter Length_Delimiter NextCharRemoveToo}
                     %%% à la place de la ligne en-dessous
                     {RemovePartString_Aux {GetListAfterNth Str Length_Delimiter+1} Delimiter Length_Delimiter NextCharRemoveToo}
                 else
@@ -110,6 +135,9 @@ define
         end
     end
 
+    %%%
+    % TODO doc
+    %%%
     % Faudra aussi remove la lettre d'après car les délimiteur sont :
     % Delimiteur1 = "â\x80\x99" (représente ')
     % Delimiteur2 = "â\x80\x9C" (représente " d'un côté)
@@ -118,25 +146,44 @@ define
         {RemovePartString LineStr [226 128] 2 true} % [226 128] représente "â\x80\x9" (trouvé après des tests)
     end
 
+    %%%
+    % Applies {ParseLine} parsing on all the lines in a list
+    % In : ["Hello there!" "General Kenobi!!!"]
+    % Out : ["hello there " "general kenobi "]
+    %
+    % @List : a list of strings/lines
+    % @return : the input list with all its strings parsed
+    %%%
     fun {ParseAllLines List}
         case List
         of nil then nil
         [] H|T then
-            {RemoveEmptySpace {ParseLine H}} | {ParseAllLines T}
+            {RemoveEmptySpace {ParseLine H}}|{ParseAllLines T}
         end
     end
 
+    %%%
+    % TODO doc
+    %%%
     fun {RemoveLastElemIfSpace Line}
         case Line
         of nil then nil
         [] H|nil then
             if H == 32 then nil
-            else H | nil end
+            else H|nil end
         [] H|T then
-            H | {RemoveLastElemIfSpace T}
+            H|{RemoveLastElemIfSpace T}
         end
     end
-     
+    
+    %%%
+    % Removes any space larger than one character wide (and therefore useless)
+    % In : "general         kenobi      you are a           bold one"
+    % Out : "general kenobi you are a bold one"
+    %
+    % @Line : a string/list of ASCII characters
+    % @return : the input string trimmed from its excess spaces
+    %%%
     fun {RemoveEmptySpace Line}
         local
             CleanLine
@@ -145,16 +192,16 @@ define
                 of nil then nil
                 [] H|nil then
                     if H == 32 then nil
-                    else H | nil end
+                    else H|nil end
                 [] H|T then
                     if H == 32 then
                         if PreviousSpace == true then
                             {RemoveEmptySpaceAux T true}
                         else
-                            H | {RemoveEmptySpaceAux T true}
+                            H|{RemoveEmptySpaceAux T true}
                         end
                     else
-                        H | {RemoveEmptySpaceAux T false}
+                        H|{RemoveEmptySpaceAux T false}
                     end
                 end
             end
@@ -164,9 +211,15 @@ define
         end
     end
 
+    %%%
     % Replaces special caracters by a space (== 32 in ASCII) and letters to lowercase
+    % In : "FLATTENING OF THE CURVE!"
+    % Out : "flattening of the curve "
+    %
+    % @Line : a string/list of ASCII characters
+    % @return : a parsed string without any special characters or capital letters
+    %%%
     fun {ParseLine Line}
-
         case Line
         of H|T then
             local New_H in
@@ -179,7 +232,7 @@ define
                 else
                     New_H = 32
                 end
-                New_H | {ParseLine T}
+                New_H|{ParseLine T}
             end
         [] nil then nil
         end
@@ -200,6 +253,13 @@ define
     %%%         tree(key:monkey value:singe leaf leaf)
     %%%         tree(key:tiger value:tigre leaf leaf)))
 
+    %%%
+    % Searchs a value recursively in a binary tree using its key
+    %
+    % @Tree : a binary tree
+    % @Key : a value that represents a specific location in the binary tree
+    % @return : the value at the location of the key
+    %%%
     fun {LookingUp Tree Key}
         case Tree
         of leaf then notfound
@@ -212,6 +272,14 @@ define
         end
     end
 
+    %%%
+    % Inserts a value in a binary tree at the location of key
+    %
+    % @Tree : a binary tree
+    % @Key : a value that represents a specific location in the binary tree and binded to Value
+    % @Value : the value we want to insert in the tree
+    % @return : the new updated Tree
+    %%%
     fun {Insert Tree Key Value}
         case Tree
         of leaf then tree(key:Key value:Value t_left:leaf t_right:leaf)
@@ -252,7 +320,17 @@ define
     %     end
     % end
 
-
+    %%%
+    % Updates a list with the frequency of an element
+    % If the element is not yet in the list, it is added with a frequency of 1
+    % If the element is already in the list, its frequency is increased by 1
+    % In : [1#1 2#1 3#1 4#1] 4
+    % Out : [1#1 2#1 3#1 4#2]
+    %
+    % @L : a list of frequencies
+    % @Ch : the element which frequency we want to update
+    % @return : the new updated list
+    %%%
     fun {UpdateList L Ch}
         case L 
         of nil then (Ch#1)|nil 
@@ -260,32 +338,38 @@ define
             case H 
             of H1#H2 then 
                 if H1 == Ch then (H1#(H2+1))|T 
-                else H | {UpdateList T Ch} end 
+                else H|{UpdateList T Ch} end 
             end
         end
     end
-    % {Browse {UpdateList [1#1 2#1 3#1 4#1] 4}} % Out : [1#1 2#1 3#1 4#2]
 
-
-    fun {SecondWord L}
-        case L
+    %%%
+    % Returns second word of a string
+    % In : "i am"
+    % Out : "am"
+    %
+    % @Str : a string / a list of ASCII characters
+    % @return : Str trimmed from its first word
+    %%%
+    fun {SecondWord Str}
+        case Str
         of 32|T then T
         [] H|T then
             {SecondWord T}
         end
     end
 
-
+    %%%
+    % Inserts ListBiGramme in Tree
+    % TODO doc
+    %%%
     fun {AddLineToTree Tree ListBiGramme}
-
         case ListBiGramme
         of nil then Tree
         [] H|nil then Tree
         [] H|T then
             if T.1 \= nil andthen H \= nil then
-
                 local List_Value Value_to_Insert Key NewList in
-
                     Key = H % ATOME : Représente un double mot (example 'i am' ou 'must go')
                     Value_to_Insert = {String.toAtom {SecondWord {Atom.toString T.1}}} % ATOME : Représente le prochain mot (example 'ready' ou 'now')
                     List_Value = {LookingUp Tree Key}
@@ -304,20 +388,26 @@ define
         end
     end
 
+    %%%
+    % TODO doc
+    %%%
     fun {BiGramme List}
         case List
         of nil then nil
         [] H|nil then nil
         [] H|T then
-            {String.toAtom {Append {Append H [32]} T.1}} | {BiGramme T}
+            {String.toAtom {Append {Append H [32]} T.1}}|{BiGramme T}
         end
     end
 
-    %%% Create the main Tree + all the SubTree
-    %%% Pre : Tree is the main Tree
-    %%%       L is a list of lists
-    %%% Post : 
-    %%% Example : L = [['i am the boss'] ['no problem sir']]   (Warning : In reality, it's a list of ASCII characters)
+    %%%
+    % Creates the main tree
+    % In : L = [['i am the boss'] ['no problem sir']]
+    %
+    % @Tree : a binary tree
+    % @L : a list of lists of a string
+    % @return : the new updated binary tree
+    %%%
     fun {CreateTree Tree L}
         case L
         of nil then Tree
@@ -326,8 +416,15 @@ define
         end
     end
 
+    %%%
+    % Creates the subtrees
+    % In : List_Value = [back#2 must#1 ok#3]
+    %
+    % @SubTree : a binary tree
+    % @List_Value : a list of tuples
+    % @return : the new updated binary tree
+    %%%
     fun {CreateSubtree SubTree List_Value}
-        % Value = [back#2 must#1 ok#3] (EXAMPLE)
         case List_Value
         of nil then SubTree
         [] H|T then
@@ -345,23 +442,22 @@ define
         end
     end
 
+    %%%
+    % TODO doc
+    %%%
     % Tree = arbre de base
     % copyTree = arbre de base (c'est une référence) qui va être modifié petit à petit et renvoyer
     fun {TraverseAndChange Tree CopyTree}
-
         case Tree
         of leaf then CopyTree
         [] tree(key:Key value:Value t_left:TLeft t_right:TRight) then
-            
             local NewValue NewTree T1 T2 in
-                
                % Pre-Order traversal
                 NewValue = {CreateSubtree leaf Value}
                 NewTree = {Insert CopyTree Key NewValue}
                 
                 T1 = {TraverseAndChange TLeft NewTree}
                 T2 = {TraverseAndChange TRight T1}
-                
             end
         end
     end
@@ -387,6 +483,9 @@ define
     %     end
     % end
 
+    %%%
+    % TODO doc
+    %%%
     fun {GetTreeMaxFreq Tree}
         case Tree
         of notfound then leaf
@@ -399,7 +498,9 @@ define
         end
     end
 
-
+    %%%
+    % TODO doc
+    %%%
     fun {TraverseToGetProbability Tree}
         local
             List
@@ -485,7 +586,9 @@ define
 		end
     end
 
-
+    %%%
+    % TODO doc
+    %%%
 	proc {CallPress}
 		local ResultPress ProbableWords MaxFreq in
             
@@ -524,6 +627,9 @@ define
     %     end
     % end
 
+    %%%
+    % TODO doc
+    %%%
     %%% Lance les N threads de lecture et de parsing qui liront et traiteront tous les fichiers
     %%% Les threads de parsing envoient leur resultat au port Port
     proc {LaunchThreads Port N}
@@ -564,7 +670,9 @@ define
         end
     end
 
-
+    %%%
+    % TODO doc
+    %%%
     fun {Get_Nth_FirstElem_Port Stream_Port N}
         local
             fun {Get_Nth_FirstElem_Port Stream_Port Acc N}
@@ -581,6 +689,9 @@ define
         end
     end
 
+    %%%
+    % TODO doc
+    %%%
     %%% Fetch Tweets Folder from CLI Arguments
     %%% See the Makefile for an example of how it is called
     fun {GetSentenceFolder}
@@ -589,6 +700,8 @@ define
         Args.'folder'
     end
 
+
+    
     %%% Procedure principale qui cree la fenetre et appelle les differentes procedures et fonctions
     proc {Main}
         
