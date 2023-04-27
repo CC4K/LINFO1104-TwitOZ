@@ -1,7 +1,8 @@
 functor
 import
     Browser
-
+export
+    CleanUp ParseAllLines
 define
 
     fun {GetListAfterNth List N}

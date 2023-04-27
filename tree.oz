@@ -1,7 +1,8 @@
 functor
 import
     Browser
-    
+export
+    CreateTree TraverseAndChange LookingUp
 define
 
     %%% MAIN TREE FUNCTIONS BEGIN %%%

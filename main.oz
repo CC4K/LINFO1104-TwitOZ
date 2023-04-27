@@ -13,6 +13,7 @@ import
     Reader
     Parser
     Tree
+
 define
     
 	InputText OutputText TweetsFolder_List % Global variables
@@ -116,7 +117,7 @@ define
                             thread {Wait L} ThreadParser = {Parser.parseAllLines ThreadReader} P=1 end
                             {Wait P}
                             {Send Port ThreadParser}
-
+                            
                         end
                     end
                 end
@@ -190,9 +191,11 @@ define
 
         %%% On créer l'arbre principale avec tout les sous-arbres en valeur ***
         List_Port = {Get_Nth_FirstElem_Port SeparatedWordsStream 208}
+
         FirstTree = {Tree.createTree leaf List_Port}
-        Tree = {Tree.traverseAndChange FirstTree FirstTree}
+        Tree = {Tree.traverseAndChange FirstTree FirstTree} % CRASH ICI
         {Browse 'OVER : Creating Structure'}
+
         end
     end
 

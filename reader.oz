@@ -3,8 +3,10 @@ import
     Open
     Browser
 
-    %Parser at 'parser.ozf'
+    % Parser at 'parser.ozf'
     Parser
+export
+    GetFilename Reader
 define
 
     class TextFile
