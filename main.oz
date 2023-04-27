@@ -16,7 +16,7 @@ import
 
 define
     
-	InputText OutputText TweetsFolder_List % Global variables
+	InputText OutputText TweetsFolder_List Tree_Over % Global variables
 
     proc {Browse Buf}
         {Browser.browse Buf}
@@ -39,37 +39,52 @@ define
 		local TreeMaxFreq SplittedText BeforeLast Last Key Tree_Value Word_To_Display in
             
 			SplittedText = {String.tokens {InputText getText(p(1 0) 'end' $)} & }
-			Last = {String.tokens {List.last SplittedText} &\n}.1
-			BeforeLast = {List.nth SplittedText {List.length SplittedText} - 1}
 
-			Key = {String.toAtom {List.append {List.append BeforeLast [32]} Last}}
-			Tree_Value = {Tree.lookingUp Tree Key}
-			
-            TreeMaxFreq = {Tree.getTreeMaxFreq Tree_Value}
-            {Browse Tree_Value}
-
-            if TreeMaxFreq == leaf then
-                [none 0]
+            if SplittedText == [[10]] then % [10] is the char at the end (always there even if empty) 
+                none
             else
-                {Browse TreeMaxFreq.value}
-                {Browse TreeMaxFreq.key}
-                [TreeMaxFreq.value TreeMaxFreq.key]
+                Last = {String.tokens {List.last SplittedText} &\n}.1
+                BeforeLast = {List.nth SplittedText {List.length SplittedText} - 1}
+
+                Key = {String.toAtom {List.append {List.append BeforeLast [32]} Last}}
+                Tree_Value = {Tree.lookingUp Tree Key}
+                
+                TreeMaxFreq = {Tree.getTreeMaxFreq Tree_Value}
+                {Browse Tree_Value}
+
+                if TreeMaxFreq == leaf then
+                    [none 0]
+                else
+                    {Browse TreeMaxFreq.value}
+                    {Browse TreeMaxFreq.key}
+                    [TreeMaxFreq.value TreeMaxFreq.key]
+                end
             end
 		end
     end
 
 	proc {CallPress}
 		local List_To_Display ProbableWords MaxFreq in
+            
+            % But : bloquer le programme le temps que la structure soit crée!
+            if Tree_Over == true then
+                List_To_Display = {Press}
 
-			List_To_Display = {Press}
+                if List_To_Display == none then
+                    {OutputText set("You must write minimum 2 words.")}
+                else
+                    ProbableWords = List_To_Display.1
+                    MaxFreq = List_To_Display.2
 
-            ProbableWords = List_To_Display.1
-            MaxFreq = List_To_Display.2
-
-            if ProbableWords == none then
-                {OutputText set("NO WORD FIND!")} % Que faire dans ce cas ?
+                    if ProbableWords == none then
+                        {OutputText set("NO WORD FIND!")}
+                    else
+                        {OutputText set(ProbableWords.1)}
+                    end
+                end
             else
-                {OutputText set(ProbableWords.1)}
+                % Never executed
+                {OutputText set("Will never be display.")}
             end
 		end
 	end
@@ -180,6 +195,7 @@ define
         
         % {InputText tk(insert 'end' "Loading... Please wait.")}
         {InputText bind(event:"<Control-s>" action:CallPress)} % You can also bind events
+        {OutputText set("You must wait until the database is parsed.\nA message will notify you.\nDon't press the 'predict' button until the message appears!\n")}
 
         %%% On créer le Port %%%
         SeparatedWordsPort = {NewPort SeparatedWordsStream}
@@ -187,14 +203,23 @@ define
         
         %%% On lance les threads de lecture et de parsing %%%
         {LaunchThreads SeparatedWordsPort NbThreads}
-        {Browse 'OVER : Reading + Parsing'}
 
         %%% On créer l'arbre principale avec tout les sous-arbres en valeur ***
         List_Port = {Get_Nth_FirstElem_Port SeparatedWordsStream 208}
+        
+        {OutputText tk(insert p(6 0) "Step 1 Over : Reading + Parsing\n")} % Pour la position, c'est du test essais-erreur
 
         FirstTree = {Tree.createTree leaf List_Port}
-        Tree = {Tree.traverseAndChange FirstTree FirstTree} % CRASH ICI
-        {Browse 'OVER : Creating Structure'}
+
+        %%% CRASH ICI %%%
+        %%% CRASH ICI %%%
+        Tree = {Tree.traverseAndChange FirstTree FirstTree}
+        %%% CRASH ICI %%%
+        %%% CRASH ICI %%%
+
+        Tree_Over = true
+        {OutputText tk(insert p(7 0) "Step 2 Over : Stocking datas\n")} % Pour la position, c'est du test essais-erreur
+        {OutputText tk(insert p(9 0) "The database is now parsed.\nYou can write and predict!")} % Pour la position, c'est du test essais-erreur
 
         end
     end

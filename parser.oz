@@ -5,6 +5,10 @@ export
     CleanUp ParseAllLines
 define
 
+    proc {Browse Buf}
+        {Browser.browse Buf}
+    end
+
     fun {GetListAfterNth List N}
         case List
         of nil then nil
@@ -80,25 +84,41 @@ define
         end
     end
 
+    fun {RemoveLastElemIfSpace Line}
+        case Line
+        of nil then nil
+        [] H|nil then
+            if H == 32 then nil
+            else H | nil end
+        [] H|T then
+            H | {RemoveLastElemIfSpace T}
+        end
+    end
+     
     fun {RemoveEmptySpace Line}
         local
+            CleanLine
             fun {RemoveEmptySpaceAux Line PreviousSpace}
                 case Line
                 of nil then nil
+                [] H|nil then
+                    if H == 32 then nil
+                    else H | nil end
                 [] H|T then
-                    if H == 32 andthen PreviousSpace then
-                        {RemoveEmptySpaceAux T true}
-                    else
-                        if H == 32 then
-                            H | {RemoveEmptySpaceAux T true}
+                    if H == 32 then
+                        if PreviousSpace == true then
+                            {RemoveEmptySpaceAux T true}
                         else
-                            H | {RemoveEmptySpaceAux T false}
+                            H | {RemoveEmptySpaceAux T true}
                         end
+                    else
+                        H | {RemoveEmptySpaceAux T false}
                     end
                 end
             end
         in
-            {RemoveEmptySpaceAux Line false}
+            CleanLine = {RemoveEmptySpaceAux Line true}
+            {RemoveLastElemIfSpace CleanLine}
         end
     end
 
