@@ -178,6 +178,7 @@ define
             
             local NewValue NewTree T1 T2 in
                 
+               % Pre-Order traversal
                 NewValue = {CreateSubtree leaf Value}
                 NewTree = {Insert CopyTree Key NewValue}
                 
@@ -201,10 +202,9 @@ define
     %             T1 = {TraverseAndChange TLeft CopyTree}
 
     %             NewValue = {CreateSubtree leaf Value}
-    %             {System.show Key}
     %             NewTree = {Insert CopyTree Key NewValue}
 
-    %             T2 = {TraverseAndChange TRight NewValue}
+    %             T2 = {TraverseAndChange TRight NewTree}
                 
     %         end
     %     end

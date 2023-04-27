@@ -31,8 +31,11 @@ define
 
 
     %%% Create the filename "tweets/part_N.txt" where N is given in argument
-    fun {GetFilename List_PathName Idx}
-        {List.nth List_PathName Idx}
+    fun {GetFilename TweetsFolder_Name List_PathName Idx}
+        local PathName in
+            PathName = {List.nth List_PathName Idx}
+            {Append {Append TweetsFolder_Name "/"} PathName}
+        end
     end
     % {Browse {String.toAtom {GetFilename 1}}} % "tweets/part_1.txt"
 end

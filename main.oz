@@ -11,10 +11,8 @@ import
     Parser at 'bin/parser.ozf'
     Tree at 'bin/tree.ozf'
 define
-    
-    % Merge branch separate_files into main (Test Push)
-        
-	InputText OutputText TweetsFolder_List Main_Tree Tree_Over NberFiles % Global variables
+
+	InputText OutputText TweetsFolder_Name List_PathName_Tweets Main_Tree Tree_Over NberFiles NbThreads % Global variables
 
     proc {Browse Buf}
         {Browser.browse Buf}
@@ -46,6 +44,8 @@ define
                 
                 Key = {String.toAtom {List.append {List.append BeforeLast [32]} Last}}
                 Tree_Value = {Tree.lookingUp Main_Tree Key}
+                
+                {Browse Tree_Value}
 
                 TreeMaxFreq = {Tree.getTreeMaxFreq Tree_Value}
 
@@ -121,18 +121,13 @@ define
 
                     for Y in Start..End do
 
-                        local File_1 File ThreadReader ThreadParser L P in
+                        local File ThreadReader ThreadParser L P in
                                
-                            File_1 = {Reader.getFilename TweetsFolder_List Y}
-                            File = {Append "tweets/" File_1} %% DE BASE => Ne devrait pas avoir cette ligne je pense
-
-                            % File = {Append "tweets/part_" {Append {Int.toString 1} ".txt"}}
-
+                            File = {Reader.getFilename TweetsFolder_Name List_PathName_Tweets Y}
                             thread ThreadReader = {Reader.reader File} L=1 end
                             thread {Wait L} ThreadParser = {Parser.parseAllLines ThreadReader} P=1 end
                             {Wait P}
                             {Send Port ThreadParser}
-                            
                         end
                     end
                 end
@@ -167,9 +162,12 @@ define
 
     %%% Procedure principale qui cree la fenetre et appelle les differentes procedures et fonctions
     proc {Main}
-        
-        TweetsFolder_List = {OS.getDir {GetSentenceFolder}}
+    
+        TweetsFolder_Name = {GetSentenceFolder}
+        List_PathName_Tweets = {OS.getDir TweetsFolder_Name}
+
         NberFiles = 208
+        NbThreads = 5
 
         %% Fonction d'exemple qui liste tous les fichiers
         %% contenus dans le dossier passe en Argument.
@@ -177,9 +175,9 @@ define
         %% se trouvant dans le dossier
         %%% N'appelez PAS cette fonction lors de la phase de
         %%% soumission !!!
-        % {ListAllFiles TweetsFolder_List}
+        % {ListAllFiles List_PathName_Tweets}
 
-        local List_Port ParsedListLines FirstTree File Line ParsedLine PressCaller List_Press NbThreads Window Description SeparatedWordsStream SeparatedWordsPort in
+        local List_Port ParsedListLines FirstTree File Line ParsedLine PressCaller List_Press Window Description SeparatedWordsStream SeparatedWordsPort in
         {Property.put print foo(width:1000 depth:1000)}  % for stdout siz
 
         % Creation de l interface graphique
@@ -200,7 +198,6 @@ define
 
         %%% On créer le Port %%%
         SeparatedWordsPort = {NewPort SeparatedWordsStream}
-        NbThreads = 10
         
         %%% On lance les threads de lecture et de parsing %%%
         {LaunchThreads SeparatedWordsPort NbThreads}
@@ -211,7 +208,6 @@ define
         {OutputText tk(insert p(6 0) "Step 1 Over : Reading + Parsing\n")} % Pour la position, c'est du test essais-erreur
 
         FirstTree = {Tree.createTree leaf List_Port}
-
         Main_Tree = {Tree.traverseAndChange FirstTree FirstTree}
         Tree_Over = true
 
