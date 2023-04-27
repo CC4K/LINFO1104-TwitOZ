@@ -23,6 +23,13 @@ define
     %%%         tree(key:monkey value:singe leaf leaf)
     %%%         tree(key:tiger value:tigre leaf leaf)))
 
+    %%%
+    % Searchs a value recursively in a binary tree using its key
+    %
+    % @Tree : a binary tree
+    % @Key : a value that represents a specific location in the binary tree
+    % @return : the value at the location of the key
+    %%%
     fun {LookingUp Tree Key}
         case Tree
         of leaf then notfound
@@ -35,6 +42,14 @@ define
         end
     end
 
+    %%%
+    % Inserts a value in a binary tree at the location of key
+    %
+    % @Tree : a binary tree
+    % @Key : a value that represents a specific location in the binary tree and binded to Value
+    % @Value : the value we want to insert in the tree
+    % @return : the new updated Tree
+    %%%
     fun {Insert Tree Key Value}
         case Tree
         of leaf then tree(key:Key value:Value t_left:leaf t_right:leaf)
@@ -76,6 +91,17 @@ define
     % end
 
 
+    %%%
+    % Updates a list with the frequency of an element
+    % If the element is not yet in the list, it is added with a frequency of 1
+    % If the element is already in the list, its frequency is increased by 1
+    % In : [1#1 2#1 3#1 4#1] 4
+    % Out : [1#1 2#1 3#1 4#2]
+    %
+    % @L : a list of frequencies
+    % @Ch : the element which frequency we want to update
+    % @return : the new updated list
+    %%%
     fun {UpdateList L Ch}
         case L 
         of nil then (Ch#1)|nil 
@@ -83,32 +109,38 @@ define
             case H 
             of H1#H2 then 
                 if H1 == Ch then (H1#(H2+1))|T 
-                else H | {UpdateList T Ch} end 
+                else H|{UpdateList T Ch} end 
             end
         end
     end
-    % {Browse {UpdateList [1#1 2#1 3#1 4#1] 4}} % Out : [1#1 2#1 3#1 4#2]
 
-
-    fun {SecondWord L}
-        case L
+    %%%
+    % Returns second word of a string
+    % In : "i am"
+    % Out : "am"
+    %
+    % @Str : a string / a list of ASCII characters
+    % @return : Str trimmed from its first word
+    %%%
+    fun {SecondWord Str}
+        case Str
         of 32|T then T
         [] H|T then
             {SecondWord T}
         end
     end
 
-
+    %%%
+    % Inserts ListBiGramme in Tree
+    % TODO doc
+    %%%
     fun {AddLineToTree Tree ListBiGramme}
-
         case ListBiGramme
         of nil then Tree
         [] H|nil then Tree
         [] H|T then
             if T.1 \= nil andthen H \= nil then
-
                 local List_Value Value_to_Insert Key NewList in
-
                     Key = H % ATOME : Représente un double mot (example 'i am' ou 'must go')
                     Value_to_Insert = {String.toAtom {SecondWord {Atom.toString T.1}}} % ATOME : Représente le prochain mot (example 'ready' ou 'now')
                     List_Value = {LookingUp Tree Key}
@@ -127,20 +159,31 @@ define
         end
     end
 
+    %%%
+    % Combines all the strings of a list into one string
+    % In : ["i am hungry" "hello there"]
+    % Out : ["i am hungry hello there"]
+    % 
+    % @List : a list of strings/lists of ASCII characters
+    % @return : a list of one string/list of ASCII characters
+    %%%
     fun {BiGramme List}
         case List
         of nil then nil
         [] H|nil then nil
         [] H|T then
-            {String.toAtom {Append {Append H [32]} T.1}} | {BiGramme T}
+            {String.toAtom {Append {Append H [32]} T.1}}|{BiGramme T}
         end
     end
 
-    %%% Create the main Tree + all the SubTree
-    %%% Pre : Tree is the main Tree
-    %%%       L is a list of lists
-    %%% Post : 
-    %%% Example : L = [['i am the boss'] ['no problem sir']]   (Warning : In reality, it's a list of ASCII characters)
+    %%%
+    % Creates the main tree
+    % In : L = [['i am the boss'] ['no problem sir']]
+    %
+    % @Tree : a binary tree
+    % @L : a list of lists of a string
+    % @return : the new updated binary tree
+    %%%
     fun {CreateTree Tree L}
         case L
         of nil then Tree
@@ -149,8 +192,15 @@ define
         end
     end
 
+    %%%
+    % Creates the subtrees
+    % In : List_Value = [back#2 must#1 ok#3]
+    %
+    % @SubTree : a binary tree
+    % @List_Value : a list of tuples
+    % @return : the new updated binary tree
+    %%%
     fun {CreateSubtree SubTree List_Value}
-        % Value = [back#2 must#1 ok#3] (EXAMPLE)
         case List_Value
         of nil then SubTree
         [] H|T then
@@ -168,8 +218,11 @@ define
         end
     end
 
+    %%%
     % Tree = arbre de base
     % copyTree = arbre de base (c'est une référence) qui va être modifié petit à petit et renvoyer
+    % TODO doc
+    %%%
     fun {TraverseAndChange Tree CopyTree}
 
         case Tree

@@ -41,14 +41,14 @@ define
                     if {FindDelimiter T Delimiter} == true then
                         if NextCharRemoveToo == true then
                             %%% Si on veut séparer comme ceci : "didn't" en "didn t" et pas en "didnt", il faut faire
-                            %%% H | 32 | {RemovePartString_Aux {GetListAfterNth T Length_Delimiter+1} Delimiter Length_Delimiter NextCharRemoveToo}
+                            %%% H|32|{RemovePartString_Aux {GetListAfterNth T Length_Delimiter+1} Delimiter Length_Delimiter NextCharRemoveToo}
                             %%% à la place de la ligne en-dessous
-                            H | {RemovePartString_Aux {GetListAfterNth T Length_Delimiter+1} Delimiter Length_Delimiter NextCharRemoveToo}
+                            H|{RemovePartString_Aux {GetListAfterNth T Length_Delimiter+1} Delimiter Length_Delimiter NextCharRemoveToo}
                         else
-                            H | {RemovePartString_Aux {GetListAfterNth T Length_Delimiter} Delimiter Length_Delimiter NextCharRemoveToo}
+                            H|{RemovePartString_Aux {GetListAfterNth T Length_Delimiter} Delimiter Length_Delimiter NextCharRemoveToo}
                         end
                     else
-                        H | {RemovePartString_Aux T Delimiter Length_Delimiter NextCharRemoveToo}
+                        H|{RemovePartString_Aux T Delimiter Length_Delimiter NextCharRemoveToo}
                     end
                 end
             end
@@ -56,7 +56,7 @@ define
             if {FindDelimiter Str Delimiter} == true then
                 if NextCharRemoveToo == true then
                     %%% Si on veut séparer comme ceci : "didn't" en "didn t" et pas en "didnt", il faut faire
-                    %%% H | 32 | {RemovePartString {GetListAfterNth T Length_Delimiter+1} Delimiter Length_Delimiter NextCharRemoveToo}
+                    %%% H|32|{RemovePartString {GetListAfterNth T Length_Delimiter+1} Delimiter Length_Delimiter NextCharRemoveToo}
                     %%% à la place de la ligne en-dessous
                     {RemovePartString_Aux {GetListAfterNth Str Length_Delimiter+1} Delimiter Length_Delimiter NextCharRemoveToo}
                 else
@@ -76,11 +76,19 @@ define
         {RemovePartString LineStr [226 128] 2 true} % [226 128] représente "â\x80\x9" (trouvé après des tests)
     end
 
+    %%%
+    % Applies {ParseLine} parsing on all the lines in a list
+    % In : ["Hello there!" "General Kenobi!!!"]
+    % Out : ["hello there " "general kenobi "]
+    %
+    % @List : a list of strings/lines
+    % @return : the input list with all its strings parsed
+    %%%
     fun {ParseAllLines List}
         case List
         of nil then nil
         [] H|T then
-            {RemoveEmptySpace {ParseLine H}} | {ParseAllLines T}
+            {RemoveEmptySpace {ParseLine H}}|{ParseAllLines T}
         end
     end
 
@@ -89,12 +97,20 @@ define
         of nil then nil
         [] H|nil then
             if H == 32 then nil
-            else H | nil end
+            else H|nil end
         [] H|T then
-            H | {RemoveLastElemIfSpace T}
+            H|{RemoveLastElemIfSpace T}
         end
     end
-     
+    
+    %%%
+    % Removes any space larger than one character wide (and therefore useless)
+    % In : "general         kenobi      you are a           bold one"
+    % Out : "general kenobi you are a bold one"
+    %
+    % @Line : a string/list of ASCII characters
+    % @return : the input string trimmed from its excess spaces
+    %%%
     fun {RemoveEmptySpace Line}
         local
             CleanLine
@@ -103,16 +119,16 @@ define
                 of nil then nil
                 [] H|nil then
                     if H == 32 then nil
-                    else H | nil end
+                    else H|nil end
                 [] H|T then
                     if H == 32 then
                         if PreviousSpace == true then
                             {RemoveEmptySpaceAux T true}
                         else
-                            H | {RemoveEmptySpaceAux T true}
+                            H|{RemoveEmptySpaceAux T true}
                         end
                     else
-                        H | {RemoveEmptySpaceAux T false}
+                        H|{RemoveEmptySpaceAux T false}
                     end
                 end
             end
@@ -122,9 +138,15 @@ define
         end
     end
 
+    %%%
     % Replaces special caracters by a space (== 32 in ASCII) and letters to lowercase
+    % In : "FLATTENING OF THE CURVE!"
+    % Out : "flattening of the curve "
+    %
+    % @Line : a string/list of ASCII characters
+    % @return : a parsed string without any special characters or capital letters
+    %%%
     fun {ParseLine Line}
-
         case Line
         of H|T then
             local New_H in
@@ -137,7 +159,7 @@ define
                 else
                     New_H = 32
                 end
-                New_H | {ParseLine T}
+                New_H|{ParseLine T}
             end
         [] nil then nil
         end
