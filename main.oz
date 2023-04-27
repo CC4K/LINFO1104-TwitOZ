@@ -389,7 +389,12 @@ define
     end
 
     %%%
-    % TODO doc
+    % Creates bigrammes from a list of words
+    % In : ["i" "am" "hungry" "hello" "there"]
+    % Out : ['i am' 'am hungry' 'hungry hello' 'hello there']
+    % 
+    % @List : a list of words
+    % @return : a list of bigrammes of input words
     %%%
     fun {BiGramme List}
         case List
@@ -701,7 +706,7 @@ define
     end
 
 
-    
+
     %%% Procedure principale qui cree la fenetre et appelle les differentes procedures et fonctions
     proc {Main}
         
