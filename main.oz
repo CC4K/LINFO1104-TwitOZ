@@ -28,10 +28,10 @@ define
     % Reads a text file (given its filename) and creates a list of all its lines
     %
     % Example usage:
-    % In : "tweets/part_1.txt"
-    % Out : ["Congress must..." "..." "..." "..." "..."]
+    % In: "tweets/part_1.txt"
+    % Out: ["Congress must..." "..." "..." "..." "..."]
     %
-    % @param Filename : a string representing the path to the file
+    % @param Filename: a string representing the path to the file
     % @return: a list of all lines in the file, where each line is a string
     %%%
     fun {Reader Filename}
@@ -53,13 +53,13 @@ define
     % Creates a filename by combining the name of a folder and the nth filename in a list of filenames
     %
     % Example usage:
-    % In : "tweets" ["part_1.txt" "part_2.txt"] 2
-    % Out : "tweets/part_2.txt"
+    % In: "tweets" ["part_1.txt" "part_2.txt"] 2
+    % Out: "tweets/part_2.txt"
     %
-    % @param TweetsFolder_Name : a string representing the name of a folder
-    % @param List_PathName : a list of filenames
-    % @param Idx : an index representing the position of the desired filename in List_PathName
-    % @return : a string representing the desired filename (the Idxth filename in the list) preceded by the folder name + "/"
+    % @param TweetsFolder_Name: a string representing the name of a folder
+    % @param List_PathName: a list of filenames
+    % @param Idx: an index representing the position of the desired filename in List_PathName
+    % @return: a string representing the desired filename (the Idxth filename in the list) preceded by the folder name + "/"
     %%%
     fun {GetFilename TweetsFolder_Name List_PathName Idx}
         local PathName in
@@ -154,12 +154,12 @@ define
     % Applies a parsing function to each string in a list of strings
     %
     % Example usage:
-    % In : ["  _&Hello there...! General Kenobi!!! %100 "]
-    % Out : ["hello there general kenobi 100"] if Parser = fun {$ StrLine} {RemoveEmptySpace {ParseLine Str_Line}} end
+    % In: ["  _&Hello there...! General Kenobi!!! %100 "]
+    % Out: ["hello there general kenobi 100"] if Parser = fun {$ StrLine} {RemoveEmptySpace {ParseLine Str_Line}} end
     %
-    % @param List : a list of strings
-    % @param Parser : a function that takes a string as input and returns a parsed version of it
-    % @return : a list of the parsed strings
+    % @param List: a list of strings
+    % @param Parser: a function that takes a string as input and returns a parsed version of it
+    % @return: a list of the parsed strings
     %%%
     fun {ParseAllLines List Parser}
         case List
@@ -177,19 +177,19 @@ define
         of nil then nil
         [] H|nil then
             if H == 32 then nil
-            else H|nil end
+            else H | nil end
         [] H|T then
-            H|{RemoveLastElemIfSpace T}
+            H | {RemoveLastElemIfSpace T}
         end
     end
     
     %%%
     % Removes any space larger than one character wide (and therefore useless)
-    % In : "  general    kenobi       you are a           bold   one   "
-    % Out : "general kenobi you are a bold one"
+    % In: "  general    kenobi       you are a           bold   one   "
+    % Out: "general kenobi you are a bold one"
     %
-    % @param Line : a string to be cleaned of unnecessary spaces.
-    % @return : a new string with all excess spaces removed
+    % @param Line: a string to be cleaned of unnecessary spaces.
+    % @return: a new string with all excess spaces removed
     %%%
     fun {RemoveEmptySpace Line}
         local
@@ -219,15 +219,15 @@ define
     end
 
     %%%
-    % Replaces special caracters by a space (== 32 in ASCII) and set all letters to lowercase
-    % Don't touch to the digits
+    % Replaces special characters with spaces (== 32 in ASCII) and sets all letters to lowercase
+    % Digits are left untouched
 
     % Example usage:
-    % In : "FLATTENING OF THE CURVE!"
-    % Out : "flattening of the curve "
+    % In: "FLATTENING of the CURVE! 888 IS a GoOd DIgit..#/!"
+    % Out: "flattening of the curve  888 is a good digit     "
     %
-    % @param Line : a string ..... TODO
-    % @return : a parsed string without any special characters or capital letters
+    % @param Line: a string to be parsed
+    % @return: a parsed string without any special characters or capital letters
     %%%
     fun {ParseLine Line}
         case Line
@@ -252,23 +252,33 @@ define
     %%% ================= TREE STRUCTURE ================= %%%
     %%% ================= TREE STRUCTURE ================= %%%
 
-    %%% Structure of the recursive binary tree : 
-    %%%     obtree := leaf | obtree(Key Value Left Right)
-    %%% Example : 
-    %%%     T = tree(key:horse value:cheval
-    %%%         tree(key:dog value:chien
-    %%%         tree(key:cat value:chat leaf leaf)
-    %%%         tree(key:elephant value:elephant leaf leaf))
-    %%%     tree(key:mouse value:souris
-    %%%         tree(key:monkey value:singe leaf leaf)
-    %%%         tree(key:tiger value:tigre leaf leaf)))
+    %%%
+    % Structure of the recursive binary tree : 
+    %     tree := leaf | tree(key:Key value:Value t_left:TLeft t_right:TRight)
+    %
+    % Example usage: 
+    %     T = tree(key:horse value:cheval
+    %               t_left:tree(key:dog value:chien
+    %                   t_left:tree(key:cat value:chat t_left:leaf t_right:leaf)
+    %                   t_right:tree(key:elephant value:elephant t_left:leaf t_right:leaf))
+    %               t_right:tree(key:mouse value:souris
+    %                   t_left:tree(key:monkey value:singe t_left:leaf t_right:leaf)
+    %                   t_right:tree(key:tiger value:tigre t_left:leaf t_right:leaf)))
+    %%%
 
     %%%
-    % Searchs a value recursively in a binary tree using its key
+    % Recursively searches for a value in a binary tree using its key (based on lexicographical order of the keys)
     %
-    % @Tree : a binary tree
-    % @Key : a value that represents a specific location in the binary tree
-    % @return : the value at the location of the key
+    % Example usage:
+    % In: Tree = tree(key:'i am' value:['the'#1] t_left:tree(key:'boss is' value:['here'#2] t_left:
+    %            tree(key:'am the' value:['boss'#1] t_left:leaf t_right:leaf) t_right:leaf) t_right:
+    %            tree(key:'no problem' value:['sir'#1] t_left:leaf t_right:tree(key:'the boss' value:['man'#1 'is'#2] t_left:leaf t_right:leaf)))
+    %     Key = 'the boss'
+    % Out: ['man'#1 'is'#2]
+    %
+    % @param Tree: a binary tree
+    % @param Key: a value representing a specific location in the binary tree
+    % @return: the value at the location of the key in the binary tree, or 'notfound' if the key is not present
     %%%
     fun {LookingUp Tree Key}
         case Tree
@@ -283,12 +293,23 @@ define
     end
 
     %%%
-    % Inserts a value in a binary tree at the location of key
+    % Inserts a value into a binary tree at the location of the given key
+    % The value is inserted based on the lexicographical order of the keys
     %
-    % @Tree : a binary tree
-    % @Key : a value that represents a specific location in the binary tree and binded to Value
-    % @Value : the value we want to insert in the tree
-    % @return : the new updated Tree
+    % Example usage:
+    % In: Tree = tree(key:'i am' value:['the'#1] t_left:tree(key:'boss is' value:['here'#2] t_left:
+    %            tree(key:'am the' value:['boss'#1] t_left:leaf t_right:leaf) t_right:leaf) t_right:
+    %            tree(key:'no problem' value:['sir'#1] t_left:leaf t_right:tree(key:'the boss' value:['man'#1 'is'#2] t_left:leaf t_right:leaf)))
+    %     Key = 'the boss'
+    %     Value = ['newValue'#3]
+    % Out: tree(key:'i am' value:['the'#1] t_left:tree(key:'boss is' value:['here'#2] t_left:
+    %      tree(key:'am the' value:['boss'#1] t_left:leaf t_right:leaf) t_right:leaf) t_right:
+    %      tree(key:'no problem' value:['sir'#1] t_left:leaf t_right:tree(key:'the boss' value:['newValue'#3] t_left:leaf t_right:leaf)))
+    %
+    % @param Tree: a binary tree
+    % @param Key: a value representing a specific location in the binary tree where the value should be inserted
+    % @param Value: a value to insert into the binary tree
+    % @return: a new tree with the inserted value
     %%%
     fun {Insert Tree Key Value}
         case Tree
@@ -331,57 +352,65 @@ define
     % end
 
     %%%
-    % Updates a list with the frequency of an element
+    % Updates a list to increase the frequency of specified element
     % If the element is not yet in the list, it is added with a frequency of 1
     % If the element is already in the list, its frequency is increased by 1
-    % In : [1#1 2#1 3#1 4#1] 4
-    % Out : [1#1 2#1 3#1 4#2]
     %
-    % @L : a list of frequencies
-    % @Ch : the element which frequency we want to update
-    % @return : the new updated list
+    % Example usage:
+    % In1: ['word1'#1 'word2'#1 'word3'#9 'word4'#2] 'word4'
+    % Out1: ['word1'#1 'word2'#1 'word3'#9 'word4'#3]
+    % In2: ['word1'#1 'word2'#1 'word3'#9 'word4'#2] 'word5'
+    % Out2: ['word1'#1 'word2'#1 'word3'#9 'word4'#2 'word5'#1]
+    %
+    % @param L: a list of pairs in the form of atom#frequency
+    % @param NewElem: the element whose frequency we want to increase by one
+    % @return: a new updated list
     %%%
-    fun {UpdateList L Ch}
+    fun {UpdateList L NewElem}
         case L 
-        of nil then (Ch#1)|nil 
+        of nil then (NewElem#1)|nil 
         [] H|T then 
             case H 
             of H1#H2 then 
-                if H1 == Ch then (H1#(H2+1))|T 
-                else H|{UpdateList T Ch} end 
+                if H1 == NewElem then (H1#(H2+1))|T 
+                else H|{UpdateList T NewElem} end 
             end
         end
     end
 
     %%%
-    % Returns second word of a string
-    % In : "i am"
-    % Out : "am"
+    % Returns the part of the string after a specified delimiter character
     %
-    % @Str : a string / a list of ASCII characters
-    % @return : Str trimmed from its first word
+    % Example usage:
+    % In: "i am alone"
+    % Out: "am alone" if the delimiter is " " (32 in ASCII code)
+    %
+    % @param Str: a string
+    % @param Delimiter_Char: a delimiter character to separate the string
+    % @return: the substring of the input string after the delimiter character
     %%%
-    fun {SecondWord Str}
-        case Str
-        of 32|T then T
+    fun {GetStrAfterDelimiter Str_Line Delimiter_Char}
+        case Str_Line
+        of nil then nil
         [] H|T then
-            {SecondWord T}
+            if H == Delimiter_Char then T
+            else {GetStrAfterDelimiter T Delimiter_Char} end
         end
     end
 
     %%%
-    % Inserts ListBiGramme in Tree
+    % Inserts ListBiGrams in Tree
     % TODO doc
     %%%
-    fun {AddLineToTree Tree ListBiGramme}
-        case ListBiGramme
+    fun {AddLineToTree Tree ListBiGrams}
+        case ListBiGrams
         of nil then Tree
         [] H|nil then Tree
         [] H|T then
             if T.1 \= nil andthen H \= nil then
                 local List_Value Value_to_Insert Key NewList in
                     Key = H % ATOME : Représente un double mot (example 'i am' ou 'must go')
-                    Value_to_Insert = {String.toAtom {SecondWord {Atom.toString T.1}}} % ATOME : Représente le prochain mot (example 'ready' ou 'now')
+                    Value_to_Insert = {String.toAtom {GetStrAfterDelimiter {Atom.toString T.1} 32}} % ATOME : Représente le prochain mot (example 'ready' ou 'now')
                     List_Value = {LookingUp Tree Key}
 
                     % The first word is not in the main tree
@@ -399,61 +428,84 @@ define
     end
 
     %%%
-    % Creates bigrammes from a list of words
-    % In : ["i" "am" "hungry" "hello" "there"]
-    % Out : ['i am' 'am hungry' 'hungry hello' 'hello there']
+    % Creates a bi-grams list from a list of words
+    %
+    % Example usage:
+    % In: ["i" "am" "hungry" "get" "some" "food"]
+    % Out: ['i am' 'am hungry' 'hungry get' 'get some' 'some food']
     % 
-    % @List : a list of words
-    % @return : a list of bigrammes of input words
+    % @param List: a list of strings representing words
+    % @return: a list of bi-grams (atom, not string) created from adjacent words in the input list
     %%%
-    fun {BiGramme List}
+    fun {BiGrams List}
         case List
         of nil then nil
         [] H|nil then nil
         [] H|T then
-            {String.toAtom {Append {Append H [32]} T.1}}|{BiGramme T}
+            {String.toAtom {Append {Append H [32]} T.1}} | {BiGrams T}
         end
     end
 
     %%%
-    % Creates the main tree
-    % In : L = [['i am the boss'] ['no problem sir']]
+    % Creates a binary tree structure to store the data
     %
-    % @Tree : a binary tree
-    % @L : a list of lists of a string
-    % @return : the new updated binary tree
+    % Example usage:
+    % In: L = [['i am the boss man'] ['no problem sir'] ["the boss is here"] ["the boss is here"]]
+    % Out: tree(key:'i am' value:['the'#1] t_left:tree(key:'boss is' value:['here'#2] t_left:
+    %      tree(key:'am the' value:['boss'#1] t_left:leaf t_right:leaf) t_right:leaf) t_right:
+    %      tree(key:'no problem' value:['sir'#1] t_left:leaf t_right:tree(key:'the boss' value:['man'#1 'is'#2] t_left:leaf t_right:leaf)))
+    %
+    % @param L: a list of lists of strings representing a line parsed (from a file)
+    % @return: a binary tree with all the data added
     %%%
-    fun {CreateTree Tree L}
-        case L
-        of nil then Tree
-        [] H|T then
-            {CreateTree {AddLineToTree Tree {BiGramme {String.tokens H 32}}} T}
+    fun {CreateTree L}
+        local
+            fun {CreateTreeAux Tree L}
+                case L
+                of nil then Tree
+                [] H|T then
+                    {CreateTreeAux {AddLineToTree Tree {BiGrams {String.tokens H 32}}} T}
+                end
+            end
+        in
+            {CreateTreeAux leaf L}
         end
     end
 
     %%%
-    % Creates the subtrees
-    % In : List_Value = [back#2 must#1 ok#3]
+    % Creates a binary subtree representing a value of the main binary tree,
+    % given a list of Word#Frequency pairs
     %
-    % @SubTree : a binary tree
-    % @List_Value : a list of tuples
-    % @return : the new updated binary tree
+    % Example usage:
+    % In: ['back'#1 'perfect'#9 'must'#3 'ok'#5 'okay'#3]  b m o p
+    % Out: tree(key:5 value:['ok'] t_left:tree(key:3 value:['must' 'okay'] t_left:
+    %      tree(key:1 value:['back'] t_left:leaf t_right:leaf) t_right:leaf) t_right:
+    %      tree(key:9 value:['perfect'] t_left:leaf t_right:leaf))
+    %
+    % @param List_Value: a list of pairs in the form Word#Frequence (where Word is an atom and Frequence is a integer)
+    % @return: a binary subtree representing a value of the main binary tree
     %%%
-    fun {CreateSubtree SubTree List_Value}
-        case List_Value
-        of nil then SubTree
-        [] H|T then
-            case H
-            of Word#Freq then
-                local Value in
-                    Value = {LookingUp SubTree Freq}
-                    if Value == notfound then
-                        {CreateSubtree {Insert SubTree Freq [Word]} T}
-                    else
-                        {CreateSubtree {Insert SubTree Freq {List.append Value [Word]}} T}
+    fun {CreateSubtree List_Value}
+        local
+            fun {CreateSubtreeAux SubTree List_Value}
+                case List_Value
+                of nil then SubTree
+                [] H|T then
+                    case H
+                    of Word#Freq then
+                        local Value in
+                            Value = {LookingUp SubTree Freq}
+                            if Value == notfound then
+                                {CreateSubtree {Insert SubTree Freq [Word]} T}
+                            else
+                                {CreateSubtree {Insert SubTree Freq {List.append Value [Word]}} T}
+                            end
+                        end
                     end
                 end
             end
+        in
+            {CreateSubtreeAux leaf List_Value}
         end
     end
 
@@ -468,7 +520,7 @@ define
         [] tree(key:Key value:Value t_left:TLeft t_right:TRight) then
             local NewValue NewTree T1 T2 in
                % Pre-Order traversal
-                NewValue = {CreateSubtree leaf Value}
+                NewValue = {CreateSubtree Value}
                 NewTree = {Insert CopyTree Key NewValue}
                 
                 T1 = {TraverseAndChange TLeft NewTree}
@@ -489,7 +541,7 @@ define
     %             % Inorder traversal
     %             T1 = {TraverseAndChange TLeft CopyTree}
 
-    %             NewValue = {CreateSubtree leaf Value}
+    %             NewValue = {CreateSubtree Value}
     %             NewTree = {Insert CopyTree Key NewValue}
 
     %             T2 = {TraverseAndChange TRight NewTree}
@@ -573,11 +625,11 @@ define
             else
                 Last = {String.tokens {List.last SplittedText} &\n}.1
                 BeforeLast = {List.nth SplittedText {List.length SplittedText} - 1}
-                
+
                 Key = {String.toAtom {List.append {List.append BeforeLast [32]} Last}}
                 Tree_Value = {LookingUp Main_Tree Key}
                 
-                % {System.show Tree_Value}
+                % {Browse Tree_Value}
 
                 if Tree_Value == notfound then
                     ProbableWords_Probability = {TraverseToGetProbability leaf}
@@ -757,7 +809,9 @@ define
         
         {OutputText tk(insert p(6 0) "Step 1 Over : Reading + Parsing\n")} % Pour la position, c'est du test essais-erreur
 
-        Basic_Tree = {CreateTree leaf List_Port}
+        Basic_Tree = {CreateTree List_Port}
+        {System.show {LookingUp Basic_Tree 'must go'}}
+
         Main_Tree = {TraverseAndChange Basic_Tree Basic_Tree}
         Tree_Over = true
 
