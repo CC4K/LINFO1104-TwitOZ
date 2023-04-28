@@ -1,89 +1,41 @@
 functor
-import
-    Browser
 export
-    CleanUp ParseAllLines
+    parsealllines:ParseAllLines
+    removeemptyspace:RemoveEmptySpace
+    parseline:ParseLine
 define
 
-    proc {Browse Buf}
-        {Browser.browse Buf}
-    end
-
-    fun {GetListAfterNth List N}
+    %%%
+    % Applies a parsing function to each string in a list of strings
+    %
+    % Example usage:
+    % In: ["  _&Hello there...! General Kenobi!!! %100 "]
+    % Out: ["hello there general kenobi 100"] if Parser = fun {$ StrLine} {RemoveEmptySpace {ParseLine Str_Line}} end
+    %
+    % @param List: a list of strings
+    % @param Parser: a function that takes a string as input and returns a parsed version of it
+    % @return: a list of the parsed strings
+    %%%
+    fun {ParseAllLines List Parser}
         case List
         of nil then nil
         [] H|T then
-            if N == 1 then T
-            else
-                {GetListAfterNth T N-1}
-            end
+            {Parser H} | {ParseAllLines T Parser}
         end
     end
 
-    fun {FindDelimiter List Delimiter}
-        case Delimiter
-        of nil then true
-        [] H|T then
-            if List == nil then false
-            else
-                if H == List.1 then {FindDelimiter List.2 T}
-                else false end
-            end
-        end
-    end
-
-    fun {RemovePartString Str Delimiter Length_Delimiter NextCharRemoveToo}
-        local
-            fun {RemovePartString_Aux Str Delimiter Length_Delimiter NextCharRemoveToo}
-                case Str
-                of nil then nil
-                [] H|T then
-                    if {FindDelimiter T Delimiter} == true then
-                        if NextCharRemoveToo == true then
-                            %%% Si on veut séparer comme ceci : "didn't" en "didn t" et pas en "didnt", il faut faire
-                            %%% H | 32 | {RemovePartString_Aux {GetListAfterNth T Length_Delimiter+1} Delimiter Length_Delimiter NextCharRemoveToo}
-                            %%% à la place de la ligne en-dessous
-                            H | {RemovePartString_Aux {GetListAfterNth T Length_Delimiter+1} Delimiter Length_Delimiter NextCharRemoveToo}
-                        else
-                            H | {RemovePartString_Aux {GetListAfterNth T Length_Delimiter} Delimiter Length_Delimiter NextCharRemoveToo}
-                        end
-                    else
-                        H | {RemovePartString_Aux T Delimiter Length_Delimiter NextCharRemoveToo}
-                    end
-                end
-            end
-        in
-            if {FindDelimiter Str Delimiter} == true then
-                if NextCharRemoveToo == true then
-                    %%% Si on veut séparer comme ceci : "didn't" en "didn t" et pas en "didnt", il faut faire
-                    %%% H | 32 | {RemovePartString {GetListAfterNth T Length_Delimiter+1} Delimiter Length_Delimiter NextCharRemoveToo}
-                    %%% à la place de la ligne en-dessous
-                    {RemovePartString_Aux {GetListAfterNth Str Length_Delimiter+1} Delimiter Length_Delimiter NextCharRemoveToo}
-                else
-                    {RemovePartString_Aux {GetListAfterNth Str Length_Delimiter} Delimiter Length_Delimiter NextCharRemoveToo}
-                end
-            else
-                {RemovePartString_Aux Str Delimiter Length_Delimiter NextCharRemoveToo}
-            end
-        end
-    end
-
-    % Faudra aussi remove la lettre d'après car les délimiteur sont :
-    % Delimiteur1 = "â\x80\x99" (représente ')
-    % Delimiteur2 = "â\x80\x9C" (représente " d'un côté)
-    % Delimiteur3 = "â\x80\x9D" (représente " de l'autre côté)
-    fun {CleanUp LineStr}
-        {RemovePartString LineStr [226 128] 2 true} % [226 128] représente "â\x80\x9" (trouvé après des tests)
-    end
-
-    fun {ParseAllLines List}
-        case List
-        of nil then nil
-        [] H|T then
-            {RemoveEmptySpace {ParseLine H}} | {ParseAllLines T}
-        end
-    end
-
+    %%%
+    % Removes the last element of the string if it's a space (" " = 32 in ASCII code)
+    %
+    % Example usage:
+    % In1: "Test de la fonction"
+    % In2: "Test de la fonction "
+    % Out1 = Out2: "Test de la fonction"
+    %
+    % @param Line: the input string to be processed
+    % @return: a new string without the last element if it's a space,
+    %          or the original string if the last element is not a space
+    %%%
     fun {RemoveLastElemIfSpace Line}
         case Line
         of nil then nil
@@ -94,7 +46,17 @@ define
             H | {RemoveLastElemIfSpace T}
         end
     end
-     
+    
+    %%%
+    % Removes any space larger than one character wide (and therefore useless)
+    %
+    % Example usage:
+    % In: "  general    kenobi       you are a           bold   one   "
+    % Out: "general kenobi you are a bold one"
+    %
+    % @param Line: a string to be cleaned of unnecessary spaces.
+    % @return: a new string with all excess spaces removed
+    %%%
     fun {RemoveEmptySpace Line}
         local
             CleanLine
@@ -103,16 +65,16 @@ define
                 of nil then nil
                 [] H|nil then
                     if H == 32 then nil
-                    else H | nil end
+                    else H|nil end
                 [] H|T then
                     if H == 32 then
                         if PreviousSpace == true then
                             {RemoveEmptySpaceAux T true}
                         else
-                            H | {RemoveEmptySpaceAux T true}
+                            H|{RemoveEmptySpaceAux T true}
                         end
                     else
-                        H | {RemoveEmptySpaceAux T false}
+                        H|{RemoveEmptySpaceAux T false}
                     end
                 end
             end
@@ -122,9 +84,18 @@ define
         end
     end
 
-    % Replaces special caracters by a space (== 32 in ASCII) and letters to lowercase
+    %%%
+    % Replaces special characters with spaces (== 32 in ASCII) and sets all letters to lowercase
+    % Digits are left untouched
+    %
+    % Example usage:
+    % In: "FLATTENING of the CURVE! 888 IS a GoOd DIgit..#/!"
+    % Out: "flattening of the curve  888 is a good digit     "
+    %
+    % @param Line: a string to be parsed
+    % @return: a parsed string without any special characters or capital letters
+    %%%
     fun {ParseLine Line}
-
         case Line
         of H|T then
             local New_H in
@@ -142,5 +113,5 @@ define
         [] nil then nil
         end
     end
-    % {Browse {ParseLine "FLATTENING OF THE CURVE!"}} % "flattening of the curve "
+
 end
