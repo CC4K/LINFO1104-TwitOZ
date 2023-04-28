@@ -9,6 +9,14 @@ import
     Open
 define
 
+    %%% BEGIN TODO %%%
+
+    % Quand symbole "'" alors don't = don\'t
+    % Quand symbole chelou "'" (pas Utf-8) alors don't => dont
+    % Je veux toujours obtenir don't => don't !
+
+    %% END TODO %%%
+
     % Global variables
 	InputText OutputText TweetsFolder_Name List_PathName_Tweets Main_Tree Tree_Over NberFiles NbThreads SeparatedWordsStream SeparatedWordsPort
 
@@ -61,8 +69,9 @@ define
             else
                 local FirstCleanLine in
                     % [226 128] is a character that is not recognised by UTF-8 (the follow char too). That's why the last argument is set to true.
-                    FirstCleanLine = {CleanUp Line fun {$ LineStr} {RemovePartList LineStr [226 128] true} end}
-                    {FoldR {String.tokens FirstCleanLine 39} fun {$ L1 L2} {Append L1 L2} end [32]} | {GetLine TextFile}
+                    {CleanUp Line fun {$ LineStr} {RemovePartList LineStr [226 128] true} end} | {GetLine TextFile}
+                    % FirstCleanLine = {CleanUp Line fun {$ LineStr} {RemovePartList LineStr [226 128] true} end}
+                    % {FoldR {String.tokens FirstCleanLine 39} fun {$ L1 L2} {Append L1 L2} end [32]} | {GetLine TextFile}
                 end
             end
         end
@@ -172,7 +181,16 @@ define
                             %%% Si on veut separer comme ceci : "didn't" en "didn t" et pas en "didnt", il faut faire
                             %%% H | 32 | {RemovePartList_Aux {RemoveFirstNthElements T Length_SubList+1} SubList Length_SubList NextCharRemoveToo}
                             %%% A la place de la ligne en-dessous
-                            H | {RemovePartList_Aux {RemoveFirstNthElements T Length_SubList+1} SubList Length_SubList NextCharRemoveToo}
+                            
+                            % 153 => Remove le 's -> don
+                            % 156 => Remove le 's -> don
+                            % 157 => Colle 'dont'
+                            % 153 156 157
+                            if {Nth T Length_SubList+1} == 157 then
+                                H | {RemovePartList_Aux T SubList Length_SubList NextCharRemoveToo}
+                            else
+                                H | {RemovePartList_Aux {RemoveFirstNthElements T Length_SubList+1} SubList Length_SubList NextCharRemoveToo}
+                            end
                         else
                             H | {RemovePartList_Aux {RemoveFirstNthElements T Length_SubList} SubList Length_SubList NextCharRemoveToo}
                         end
@@ -295,6 +313,22 @@ define
         end
     end
 
+
+    %%%%%%% TODO %%%%%%%%%
+    %%%%%%% TODO %%%%%%%%%
+    %%%%%%% TODO %%%%%%%%%
+    fun {GetNewChar Char}
+        if 97 =< Char andthen Char =< 122 then
+            [Char true]
+        elseif 65 =< Char andthen Char =< 90 then
+            [Char+32 true]
+        elseif 48 =< Char andthen Char =< 57 then
+            [Char true]
+        else
+            [32 false]
+        end
+    end
+
     %%%
     % Replaces special characters with spaces (== 32 in ASCII) and sets all letters to lowercase
     % Digits are left untouched
@@ -306,20 +340,24 @@ define
     % @param Line: a string to be parsed
     % @return: a parsed string without any special characters or capital letters
     %%%
-    fun {ParseLine Line}
+    fun {ParseLine Line PreviousGoodChar}
         case Line
         of H|T then
-            local New_H in
-                if 97 =< H andthen H =< 122 then
-                    New_H = H
-                elseif 65 =< H andthen H =< 90 then
-                    New_H = H + 32
-                elseif 48 =< H andthen H =< 57 then
-                    New_H = H
+            local New_H Result_List in
+                if H == 39 andthen PreviousGoodChar == true then
+                    if T \= nil then
+                        if T.1 == {GetNewChar T.1}.1 then
+                            H | {ParseLine T true}
+                        else
+                            32 | {ParseLine T false}
+                        end
+                    else
+                        32 | {ParseLine T false}
+                    end
                 else
-                    New_H = 32
+                    Result_List = {GetNewChar H}
+                    Result_List.1 | {ParseLine T Result_List.2.1}
                 end
-                New_H | {ParseLine T}
             end
         [] nil then nil
         end
@@ -679,6 +717,7 @@ define
     %%%
     fun {Get_ListFromPortStream Stream}
         local
+            ListParsed
             fun {Get_ListFromPortStreamAux Stream}
                 case Stream
                 of nil|T then nil
@@ -688,7 +727,9 @@ define
             end
         in
             {Send SeparatedWordsPort nil}
-            {Get_ListFromPortStreamAux Stream}
+            ListParsed = {Get_ListFromPortStreamAux Stream}
+            {InsertText_Window OutputText 6 0 none "Step 1 Over : Reading + Parsing\n"}
+            ListParsed
         end
     end
 
@@ -710,7 +751,7 @@ define
                 {Browse ResultPress}
 
                 if ResultPress == none then
-                    {OutputText set("You must write minimum 2 words.")}
+                    {SetText_Window OutputText "You must write minimum 2 words."}
                 else
                     ProbableWords = ResultPress.1
                     MaxFreq = ResultPress.2.1
@@ -719,18 +760,40 @@ define
                     % {Browse MaxFreq}
 
                     if ProbableWords == nil then
-                        {OutputText set("NO WORD FIND!")}
+                        {SetText_Window OutputText "NO WORD FIND!"}
                     else
-                        {OutputText set(ProbableWords.1)} % Faut-il renvoyer le premier si y'en a plusieurs ?
+                        {SetText_Window OutputText ProbableWords.1}
                     end
                 end
             else
                 % Never executed
-                {OutputText set("Will never be display.")}
+                {SetText_Window OutputText "Will never be display."}
             end
 		end
 	end
 
+
+    %%%
+    % Inserts a text into the tk window.
+    %
+    % @param Location_Text: the location where inserts the text (InputText or OutputText)
+    % @param Row: a positive number representing the row where to inserts the text
+    % @param Col: a positive number representing the column where to inserts the text
+    % @param Special_Location: = 'end' or none if no special location
+    % @param Text: the text to inserts
+    % @return: /
+    %%%
+    proc {InsertText_Window Location_Text Row Col Special_Location Text}
+        if Special_Location == none then
+            {Location_Text tk(insert p(Row Col) Text)}
+        else
+            {Location_Text tk(insert Special_Location Text)}
+        end
+    end
+
+    proc {SetText_Window Location_Text Text}
+        {Location_Text set(Text)}
+    end
 
 
 
@@ -768,30 +831,13 @@ define
                 Key = {String.toAtom {Append {Append BeforeLast [32]} Last}}
                 Tree_Value = {LookingUp Main_Tree Key}
                 
-                % {System.show Tree_Value}
+                {System.show Tree_Value}
 
                 if Tree_Value == notfound then
                     ProbableWords_Probability = {TraverseToGetProbability leaf}
                 else
                     ProbableWords_Probability = {TraverseToGetProbability Tree_Value}
                 end
-                
-                %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-                %%%%%%%%%%%% To remove if we sure that we do with probability and not frequency %%%%%%%%%
-                %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-                %%% To have frequence and not the probability %%%
-
-                % TreeMaxFreq = {Tree.getTreeMaxFreq Tree_Value}
-
-                % if TreeMaxFreq == leaf then
-                %     [nil 0]
-                % else
-                %     {Browse TreeMaxFreq.value}
-                %     {Browse TreeMaxFreq.key}
-                %     [TreeMaxFreq.value TreeMaxFreq.key]
-                % end
-
             end
 		end
     end
@@ -831,7 +877,7 @@ define
                         local File ThreadReader ThreadParser L P in
                             File = {GetFilename TweetsFolder_Name List_PathName_Tweets Y}
                             thread ThreadReader = {Reader File} L=1 end
-                            thread {Wait L} ThreadParser = {ParseAllLines ThreadReader fun {$ Str_Line} {RemoveEmptySpace {ParseLine Str_Line}} end} P=1 end
+                            thread {Wait L} ThreadParser = {ParseAllLines ThreadReader fun {$ Str_Line} {RemoveEmptySpace {ParseLine Str_Line false}} end} P=1 end
                             {Wait P}
                             {Send Port ThreadParser}
                         end
@@ -873,7 +919,7 @@ define
         NberFiles = {Length List_PathName_Tweets}
         NbThreads = 5
 
-        local List_Line_Parsed Window Description in
+        local UpdaterTree List_Line_Parsed Window Description in
 
             {Property.put print foo(width:1000 depth:1000)}  % for stdout siz
 
@@ -888,10 +934,10 @@ define
             % Creation de la fenÃªtre
             Window = {QTk.build Description}
             {Window show}
-            
-            {InputText tk(insert 'end' "Loading... Please wait.")}
+
+            {InsertText_Window InputText 0 0 'end' "Loading... Please wait."}
             {InputText bind(event:"<Control-s>" action:CallPress)} % You can also bind events
-            {OutputText set("You must wait until the database is parsed.\nA message will notify you.\nDon't press the 'predict' button until the message appears!\n")}
+            {InsertText_Window OutputText 0 0 'end' "You must wait until the database is parsed.\nA message will notify you.\nDon't press the 'predict' button until the message appears!\n"}
 
             %%% On creer le Port %%%
             SeparatedWordsPort = {NewPort SeparatedWordsStream}
@@ -901,20 +947,24 @@ define
 
             %%% On recupere les informations dans le Stream du Port %%%
             List_Line_Parsed = {Get_ListFromPortStream SeparatedWordsStream}
+            UpdaterTree = fun {$ Tree Key Value} {Insert Tree Key {CreateSubtree Value}} end
+ 
+            % Creation of the main binary tree (with all subtree as value)
+            Main_Tree = {TraverseAndChange {CreateTree List_Line_Parsed} UpdaterTree}
 
-            {OutputText tk(insert p(6 0) "Step 1 Over : Reading + Parsing\n")} % Pour la position, c'est du test essais-erreur
-            
-            %%% On creer l'arbre principale avec tout les sous-arbres en valeur %%%
-            Main_Tree = {TraverseAndChange {CreateTree List_Line_Parsed} fun {$ Tree Key Value} {Insert Tree Key {CreateSubtree Value}} end}
-            Tree_Over = true % CallPress can work now
+            % CallPress can work now because the structure is ready
+            Tree_Over = true
 
-            {OutputText tk(insert p(7 0) "Step 2 Over : Stocking datas\n")} % Pour la position, c'est du test essais-erreur
-            {OutputText tk(insert p(9 0) "The database is now parsed.\nYou can write and predict!")} % Pour la position, c'est du test essais-erreur
-            
+            % Display and remove some strings
+            {InsertText_Window OutputText 7 0 none "Step 2 Over : Stocking datas\n"}
+            {InsertText_Window OutputText 9 0 none "The database is now parsed.\nYou can write and predict!"}
+
             if {FindPrefix {InputText getText(p(1 0) 'end' $)} "Loading... Please wait."} then
-                {InputText tk(delete p(1 0) p(1 23))} % Remove the first 23 characters (= "Loading... Please wait.")
+                % Remove the first 23 characters (= "Loading... Please wait.")
+                {InputText tk(delete p(1 0) p(1 23))}
             else
-                {InputText set("")} % Remove all because the user add some texts between or before the line : "Loading... Please wait."
+                % Remove all because the user add some texts between or before the line : "Loading... Please wait."
+                {SetText_Window InputText ""}
             end
         end
         %%ENDOFCODE%%
