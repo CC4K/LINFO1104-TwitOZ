@@ -9,11 +9,11 @@ import
     Open
 define
 
-    %%% BEGIN TODO %%%
+    %%% PROBLEME %%%
 
     % Les mot comme don't s'affiche bien dans la fenêtre mais l'atome est 'don\'t' au lieu de 'don't'
 
-    %% END TODO %%%
+    %% PROBLEME %%%
 
     % Global variables
 	InputText OutputText TweetsFolder_Name List_PathName_Tweets Main_Tree Tree_Over NberFiles NbThreads SeparatedWordsStream SeparatedWordsPort
@@ -312,16 +312,28 @@ define
     end
 
 
-    %%%%%%% TODO %%%%%%%%%
-    %%%%%%% TODO %%%%%%%%%
-    %%%%%%% TODO %%%%%%%%%
+    %%%
+    % Replaces the character by an other
+    % If the character is an uppercase letter => replaces it by its lowercase version
+    % If the character is a digit letter => don't replace it
+    % If the character is a lowercase letter => don't replace it
+    % If the character is a special character (all the other case) => replaces it by a space (32 in ASCII code)
+    % Returns too a boolean : false if the new character is a space, true otherwise
+    %
+    % Example usage:
+    % In1: 99          In2: 69            In3: 57           In4: 42
+    % Out1: [99 true]  Out2: [101 true]   Out3: [57 true]   Out4: [32 false]
+    %
+    % @param Char: a character (number in ASCII code)
+    % @return: a list of length 2 : [the new character    the boolean]
+    %%%
     fun {GetNewChar Char}
         if 97 =< Char andthen Char =< 122 then
             [Char true]
-        elseif 65 =< Char andthen Char =< 90 then
-            [Char+32 true]
         elseif 48 =< Char andthen Char =< 57 then
             [Char true]
+        elseif 65 =< Char andthen Char =< 90 then
+            [Char+32 true]
         else
             [32 false]
         end
@@ -637,21 +649,6 @@ define
         end
     end
 
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    %%%%%%%%%%%% To remove if we sure that we do with probability and not frequency %%%%%%%%%
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    fun {GetTreeMaxFreq Tree}
-        case Tree
-        of notfound then leaf
-        [] tree(key:K value:V t_left:TLeft t_right:TRight) then
-            if TRight \= leaf then
-                {GetTreeMaxFreq TRight}
-            else
-                tree(key:K value:V t_left:TLeft t_right:TRight)
-            end
-        end
-    end
-
     %%%
     % Traverse a binary tree in Pre-Order traversal to get the following three items in a list:
     %   1) The sum of all keys
@@ -789,6 +786,14 @@ define
         end
     end
 
+
+    %%%
+    % Set a text into the tk window (and delete all before).
+    %
+    % @param Location_Text: the location where set the text (InputText or OutputText)
+    % @param Text: the text to sets
+    % @return: /
+    %%%
     proc {SetText_Window Location_Text Text}
         {Location_Text set(Text)}
     end
