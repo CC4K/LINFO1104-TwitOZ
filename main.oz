@@ -11,9 +11,7 @@ define
 
     %%% BEGIN TODO %%%
 
-    % Quand symbole "'" alors don't = don\'t
-    % Quand symbole chelou "'" (pas Utf-8) alors don't => dont
-    % Je veux toujours obtenir don't => don't !
+    % Les mot comme don't s'affiche bien dans la fenêtre mais l'atome est 'don\'t' au lieu de 'don't'
 
     %% END TODO %%%
 
@@ -189,7 +187,7 @@ define
                             if {Nth T Length_SubList+1} == 157 then
                                 H | {RemovePartList_Aux T SubList Length_SubList NextCharRemoveToo}
                             else
-                                H | {RemovePartList_Aux {RemoveFirstNthElements T Length_SubList+1} SubList Length_SubList NextCharRemoveToo}
+                                H | 39 | {RemovePartList_Aux {RemoveFirstNthElements T Length_SubList+1} SubList Length_SubList NextCharRemoveToo}
                             end
                         else
                             H | {RemovePartList_Aux {RemoveFirstNthElements T Length_SubList} SubList Length_SubList NextCharRemoveToo}
