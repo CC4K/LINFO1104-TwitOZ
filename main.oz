@@ -9,12 +9,6 @@ import
     Open
 define
 
-    %%% PROBLEME %%%
-
-    % Les mot comme don't s'affiche bien dans la fenêtre mais l'atome est 'don\'t' au lieu de 'don't'
-
-    %% PROBLEME %%%
-
     % Global variables
 	InputText OutputText TweetsFolder_Name List_PathName_Tweets Main_Tree Tree_Over NberFiles NbThreads SeparatedWordsStream SeparatedWordsPort
 
@@ -235,7 +229,17 @@ define
         of nil then nil
         [] H|T then
             % {Browse {String.toAtom {Parser H}}}
-            {Parser H} | {ParseAllLines T Parser}
+            local ParsedLine in
+                ParsedLine = {Parser H}
+                % nil represent the empty atom like this : ''.
+                % Useless because false the result of prediction.
+                % Remove it.
+                if ParsedLine == nil then
+                    {ParseAllLines T Parser}
+                else
+                    {Parser H} | {ParseAllLines T Parser}
+                end
+            end
         end
     end
 
@@ -635,7 +639,6 @@ define
                 of leaf then UpdatedTree
                 [] tree(key:Key value:Value t_left:TLeft t_right:TRight) then
                     local T1 T2 in
-                        % Pre-Order traversal
                         T1 = {TraverseAndChangeAux TLeft UpdaterTree_ChangerValue {UpdaterTree_ChangerValue UpdatedTree Key Value}}
                         T2 = {TraverseAndChangeAux TRight UpdaterTree_ChangerValue T1}
                     end
@@ -734,7 +737,10 @@ define
 	proc {CallPress}
 		local ResultPress ProbableWords MaxFreq in
             
-            % But de Tree_Over : bloquer le programme le temps que la structure soit cree
+            % Goal of Tree_Over : Block this bloc of instruction until the structure is created.
+            % If {CallPress} is called (= if the user pressed the button "predict") and the structure
+            % to stock datas is not ready yet, the program wait here because Tree_Over is only bind
+            % when the structure is over and ready.
             if Tree_Over == true then
 
                 ResultPress = {Press}
@@ -756,8 +762,9 @@ define
                     end
                 end
             else
-                % Never executed
-                {SetText_Window OutputText "Will never be display."}
+                % Will never be executed but need to put something
+                skip
+                % {SetText_Window OutputText "Will never be display."}
             end
 		end
 	end
@@ -812,12 +819,6 @@ define
     end
 
 
-    %%% ================================================================================ %%%
-    %%% /! Fonction testee /!  %%% /! Fonction testee /! %%% /! Fonction testee /! %%%
-    %%% /! Fonction testee /!  %%% /! Fonction testee /! %%% /! Fonction testee /! %%%
-    %%% /! Fonction testee /!  %%% /! Fonction testee /! %%% /! Fonction testee /! %%%
-    %%% ================================================================================ %%%
-
     %%%
     % Displays the most likely prediction of the next word based on the last two entered words.
     %
@@ -837,7 +838,8 @@ define
             
 			SplittedText = {String.tokens {InputText getText(p(1 0) 'end' $)} & }
             
-            if {Length SplittedText} < 2 then % Pourrait optimise pour ne pas devoir appele {Length List}
+            % Could optimise this line to not have to call {Length List}
+            if {Length SplittedText} < 2 then
                 none
             else
                 Last = {String.tokens {List.last SplittedText} &\n}.1
@@ -849,7 +851,7 @@ define
 
                 Tree_Value = {LookingUp Main_Tree Parsed_Key}
                 
-                {System.show Tree_Value}
+                % {System.show Tree_Value}
 
                 if Tree_Value == notfound then
                     ProbableWords_Probability = {TraverseToGetProbability leaf}
@@ -861,7 +863,7 @@ define
     end
 
     
-     %%%
+    %%%
     % Launches N reading and parsing threads that will read and process all the files.
     % The parsing threads send their results to the Port.
     %
@@ -880,13 +882,20 @@ define
             for X in 1..N do
 
                 local Current_Nber_Iter1 Start End in
-
+                    
+                    % Those formulas are used to split (in the best way) the work between threads.
+                    % Those formulas are complicated to find but the idea is here:
+                    % Example : if we have 6 threads and 23 files to read and process,
+                    %           the repartition will be [4 4 4 4 4 3].
+                    %           A naive version will do a repartition
+                    %           like this [3 3 3 3 3 8].
+                    %           This is a bad version because the last
+                    %           thread will slow down the program
                     if Rest_Nber_Iter - X >= 0 then
                         Current_Nber_Iter1 = Basic_Nber_Iter + 1
                         Start = (X - 1) * Current_Nber_Iter1 + 1
                     else
                         Current_Nber_Iter1 = Basic_Nber_Iter
-                        %% Permet de repartir le mieux possible le travail entre les threads ! Formule trouve par de la logique
                         Start = Rest_Nber_Iter * (Current_Nber_Iter1 + 1) + (X - 1 - Rest_Nber_Iter) * Current_Nber_Iter1 + 1
                     end
 
@@ -914,14 +923,25 @@ define
                     end
                 end
             end
-            % To "stop" the Stream
             {Send Port_Waiting_Threads nil}
-
-            % Wait that all threads have finished their work
             {ForAll_Port Stream_Waiting_Threads}
         end
     end
 
+    %%%
+    % Procedure usefull to wait that all threads have finished their work.
+    %
+    % Example usage:
+    % In1: 1|1|1|_|1|_|nil|_ 
+    % Out1: Wait because the 4th thread doesn't finished  yet!
+    % In2: 1|1|1|1|1|_|nil|_ 
+    % Out2: Wait because the 6th thread doesn't finished  yet!
+    % In3: 1|1|1|1|1|1|nil|_ 
+    % Out3: the program can go out of this procedure!
+    %
+    % @param Stream: a stream associated with a port that contains a list of value that are unbind or bind to 1.
+    % @return: /
+    %%%
     proc {ForAll_Port Stream}
         case Stream
         of nil|T then skip
@@ -980,7 +1000,7 @@ define
                 action:proc{$} {Application.exit 0} end % Quitte le programme quand la fenetre est fermee
                 )
             
-            % Creation de la fenÃªtre
+            % Creation of the graphical user interface"
             Window = {QTk.build Description}
             {Window show}
 
@@ -988,19 +1008,18 @@ define
             {InputText bind(event:"<Control-s>" action:CallPress)} % You can also bind events
             {InsertText_Window OutputText 0 0 'end' "You must wait until the database is parsed.\nA message will notify you.\nDon't press the 'predict' button until the message appears!\n"}
 
-            %%% On creer le Port %%%
+            % Create the Port
             SeparatedWordsPort = {NewPort SeparatedWordsStream}
             
-            %%% On lance les threads de lecture et de parsing %%%
+            % Launch all threads to reads and parses the files
             {LaunchThreads SeparatedWordsPort NbThreads}
 
-            %%% On recupere les informations dans le Stream du Port %%%
+            % We retrieve the information (parsed lines of the files) from the port's stream
             List_Line_Parsed = {Get_ListFromPortStream SeparatedWordsStream}
             {InsertText_Window OutputText 6 0 none "Step 1 Over : Reading + Parsing\n"}
-
-            UpdaterTree = fun {$ Tree Key Value} {Insert Tree Key {CreateSubtree Value}} end
-                
+    
             % Creation of the main binary tree (with all subtree as value)
+            UpdaterTree = fun {$ Tree Key Value} {Insert Tree Key {CreateSubtree Value}} end
             Main_Tree = {TraverseAndChange {CreateTree List_Line_Parsed} UpdaterTree}
 
             % CallPress can work now because the structure is ready
