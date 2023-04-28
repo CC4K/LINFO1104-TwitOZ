@@ -42,13 +42,11 @@ define
                 {TextFile close}
                 nil
             else
-                % The last argument of the anonymous function is set to true because we
-                % also need to remove the next letter because the substrings we want to remove are :
-                %      Substring 1 = "â\x80\x99" (represent ')
-                %      Substring 2 = "â\x80\x9C" (represent " from one side)
-                %      Substring 3 = "â\x80\x9D" (represent " on the other side)
-                % [226 128] represent "â\x80\x9" (found after test)
-                {CleanUp Line fun {$ LineStr} {RemovePartList LineStr [226 128] true} end} | {GetLine TextFile}
+                local FirstCleanLine in
+                    % [226 128] is a character that is not recognised by UTF-8 (the follow char too). That's why the last argument is set to true.
+                    FirstCleanLine = {CleanUp Line fun {$ LineStr} {RemovePartList LineStr [226 128] true} end}
+                    {FoldR {String.tokens FirstCleanLine 39} fun {$ L1 L2} {Append L1 L2} end [32]} | {GetLine TextFile}
+                end
             end
         end
     in
@@ -656,7 +654,7 @@ define
                 Key = {String.toAtom {Append {Append BeforeLast [32]} Last}}
                 Tree_Value = {LookingUp Main_Tree Key}
                 
-                % {Browse Tree_Value}
+                {System.show Tree_Value}
 
                 if Tree_Value == notfound then
                     ProbableWords_Probability = {TraverseToGetProbability leaf}
@@ -690,7 +688,7 @@ define
             if Tree_Over == true then
 
                 ResultPress = {Press}
-                {Browse ResultPress}
+                % {Browse ResultPress}
 
                 if ResultPress == none then
                     {OutputText set("You must write minimum 2 words.")}
