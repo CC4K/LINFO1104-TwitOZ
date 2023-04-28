@@ -660,7 +660,7 @@ define
         end
     end
 
-    
+
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %%% ================= MAIN SECTION ================= %%%
@@ -734,26 +734,25 @@ define
 
 
 
+    %%% ================================================================================ %%%
+    %%% /!\ Fonction testee /!\  %%% /!\ Fonction testee /!\ %%% /!\ Fonction testee /!\ %%%
+    %%% /!\ Fonction testee /!\  %%% /!\ Fonction testee /!\ %%% /!\ Fonction testee /!\ %%%
+    %%% /!\ Fonction testee /!\  %%% /!\ Fonction testee /!\ %%% /!\ Fonction testee /!\ %%%
+    %%% ================================================================================ %%%
 
-
-
-    %%%==================================================%%%
-    %%% /!\ Fonction testee /!\  %%% /!\ Fonction testee /!\
-    %%% /!\ Fonction testee /!\  %%% /!\ Fonction testee /!\
-    %%% /!\ Fonction testee /!\  %%% /!\ Fonction testee /!\
-    %%%==================================================%%%
-
-
-    %%% @pre : les threads sont "ready"
-    %%% @post: Fonction appellee lorsqu on appuie sur le bouton de prediction
-    %%%        Affiche la prediction la plus probable du prochain mot selon les deux derniers mots entres
-    %%% @return: Retourne une liste contenant la liste du/des mot(s) le(s) plus probable(s) accompagnee de 
-    %%%          la probabilite/frequence la plus elevee. 
-    %%%          La valeur de retour doit prendre la forme:
-    %%%                  <return_val> := <most_probable_words> '|' <probability/frequence> '|' nil
-    %%%                  <most_probable_words> := <atom> '|' <most_probable_words> 
-    %%%                                           | nil
-    %%%                  <probability/frequence> := <int> | <float>
+    %%%
+    % Displays the most likely prediction of the next word based on the last two entered words.
+    %
+    % @pre: The threads are "ready".
+    % @post: Function called when the prediction button is pressed.
+    %
+    % @param: /
+    % @return: Returns a list containing the most probable word(s) list accompanied by the highest probability/frequency.
+    %          The return value must take the form:
+    %               <return_val> := <most_probable_words> '|' <probability/frequency> '|' nil
+    %               <most_probable_words> := <atom> '|' <most_probable_words> | nil
+    %               <probability/frequency> := <int> | <float>
+    %%%
     fun {Press}
 		
 		local ProbableWords_Probability TreeMaxFreq SplittedText BeforeLast Last Key Tree_Value in
@@ -777,6 +776,10 @@ define
                     ProbableWords_Probability = {TraverseToGetProbability Tree_Value}
                 end
                 
+                %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                %%%%%%%%%%%% To remove if we sure that we do with probability and not frequency %%%%%%%%%
+                %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
                 %%% To have frequence and not the probability %%%
 
                 % TreeMaxFreq = {Tree.getTreeMaxFreq Tree_Value}
@@ -794,10 +797,13 @@ define
     end
 
     %%%
-    %%%%%%%%%%%%%%%%%%%%%%%%%% TODO DOC %%%%%%%%%%%%%%%%%%%%%%%%%%
+    % Launches N reading and parsing threads that will read and process all the files.
+    % The parsing threads send their results to the Port.
+    %
+    % @param Port: a port structure to store the results of the parser threads
+    % @param N: the number of threads used to read and parse all files
+    % @return: /
     %%%
-    %%% Lance les N threads de lecture et de parsing qui liront et traiteront tous les fichiers
-    %%% Les threads de parsing envoient leur resultat au port Port
     proc {LaunchThreads Port N}
         
         local Basic_Nber_Iter Rest_Nber_Iter Current_Nber_Iter in
@@ -838,10 +844,11 @@ define
 
 
     %%%
-    %%%%%%%%%%%%%%%%%%%%%%%%%% TODO DOC %%%%%%%%%%%%%%%%%%%%%%%%%%
+    % Fetches Tweets Folder specified in the command line arguments
+    %
+    % @param: /
+    % @return: the Tweets folder specified in the command line arguments
     %%%
-    %%% Fetch Tweets Folder from CLI Arguments
-    %%% See the Makefile for an example of how it is called
     fun {GetSentenceFolder}
         Args = {Application.getArgs record('folder'(single type:string optional:false))}
     in
@@ -850,9 +857,14 @@ define
 
 
     %%%
-    %%%%%%%%%%%%%%%%%%%%%%%%%% TODO DOC %%%%%%%%%%%%%%%%%%%%%%%%%%
+    % Main procedure that creates the Qtk window and calls differents functions/procedures to make the program functional.
+    %
+    % This procedure creates a GUI window using the Qt toolkit and sets up event handlers to interact with user inputs.
+    % It then calls other functions/procedures to parse data files, build data structures, and make predictions based on user inputs.
+    %
+    % @param: /
+    % @return: /
     %%%
-    %%% Procedure principale qui cree la fenetre et appelle les differentes procedures et fonctions
     proc {Main}
         
         TweetsFolder_Name = {GetSentenceFolder}
