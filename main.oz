@@ -1,5 +1,5 @@
 functor
-import 
+import
     QTk at 'x-oz://system/wp/QTk.ozf'
     System
     Application
@@ -10,19 +10,36 @@ import
 define
 
     % Global variables
-	InputText OutputText TweetsFolder_Name List_PathName_Tweets Main_Tree Tree_Over NberFiles NbThreads
+	InputText OutputText TweetsFolder_Name List_PathName_Tweets Main_Tree Tree_Over NberFiles NbThreads SeparatedWordsStream SeparatedWordsPort
 
+    %%%
+    % Procedure used to display some datas
+    %
+    % Example usage:
+    % In: 'hello there, please display me'
+    % Out: Display on a window : 'hello there, please display me'
+    %
+    % @param Buf: The data that we want to display on a window.
+    %             The data can be a list, a string, an atom,...
+    % @return: /
+    %%%
     proc {Browse Buf}
         {Browser.browse Buf}
     end
 
+    %%%
+    % Class used to open the files, read it and close it.
+    %%%
     class TextFile
         from Open.file Open.text
     end
 
 
-    %%% ================= READING ================= %%%
-    %%% ================= READING ================= %%%
+
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    %%% ================= READING SECTION ================= %%%
+    %%% ================= READING SECTION ================= %%%
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
     %%%
     % Reads a text file (given its filename) and creates a list of all its lines
@@ -72,8 +89,12 @@ define
         end
     end
 
-    %%% ================= PARSING ================= %%%
-    %%% ================= PARSING ================= %%%
+
+
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    %%%% ================= PARSING SECTION ================= %%%%
+    %%%% ================= PARSING SECTION ================= %%%%
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
     %%%
     % Removes the first Nth elements from a list
@@ -305,8 +326,11 @@ define
     end
     
 
-    %%% ================= TREE STRUCTURE ================= %%%
-    %%% ================= TREE STRUCTURE ================= %%%
+
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    %%% ================= TREE STRUCTURE SECTION ================= %%%
+    %%% ================= TREE STRUCTURE SECTION ================= %%%
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
     %%%
     % Structure of the recursive binary tree : 
@@ -465,7 +489,7 @@ define
     end
 
     %%%
-    % Creates a bi-grams list from a list of words (representing the list of the keys of the main binary tree)
+    % Creates a bi-grams list from a list of words (representing the list of the main binary tree's keys)
     %
     % Example usage:
     % In: ["i" "am" "hungry" "get" "some" "food"]
@@ -547,15 +571,17 @@ define
     end
 
     %%%
-    % 
+    % Traverse a binary tree in a Pre-Order traversal to update the value of all keys
+    % A function UpdaterTree_ChangerValue is used to update values
+    % tree(key: value: t_left: t_right:)
+    % Example usage: 
+    % In: Tree = tree(key:5 value:['ok'#1] t_left:tree(key:3 value:['must'#2 'okay'#1] t_left:leaf t_right:leaf) t_right:leaf)
+    %     UpdaterTree_ChangerValue = fun {$ Tree Key Value} {Insert Tree Key {CreateSubtree Value}} end
+    % Out: tree(key:5 value:tree(key:1 value:['ok'] t_left:leaf t_right:leaf) t_left:tree(key:2 value:tree(key: value:['okay'] t_left:tree(key:1 value:['must'] t_left:leaf t_right:leaf) t_right:leaf) t_left:leaf t_right:leaf) t_right:leaf)
     %
-    % Example usage:
-    % In: 
-    % Out: 
-    %
-    % @param Tree: 
-    % @param UpdaterTree_ChangerValue: 
-    % @return: 
+    % @param Tree: a binary tree
+    % @param UpdaterTree_ChangerValue: a function that takes as input a tree, a key and a value and update the value at the specified key
+    % @return: a new binary tree where each of these value has been updated by UpdaterTree_ChangerValue
     %%%
     fun {TraverseAndChange Tree UpdaterTree_ChangerValue}
         local
@@ -575,9 +601,9 @@ define
         end
     end
 
-    %%%
-    %%% To remove if we do with probability and not frequency %%%
-    %%%
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    %%%%%%%%%%%% To remove if we sure that we do with probability and not frequency %%%%%%%%%
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     fun {GetTreeMaxFreq Tree}
         case Tree
         of notfound then leaf
@@ -591,7 +617,18 @@ define
     end
 
     %%%
-    %%%%%%%%%%%%%%%%%%%%%%%%%% TODO DOC %%%%%%%%%%%%%%%%%%%%%%%%%%
+    % Traverse a binary tree in Pre-Order traversal to get the following three items in a list:
+    %   1) The sum of all keys
+    %   2) The greatest key
+    %   3) The value associated with the greatest key
+    % Note: The keys are numbers, and the values are lists of atoms (words)
+    %
+    % Example usage: 
+    % In: Tree = tree(key:5 value:['ok'] t_left:tree(key:3 value:['must' 'okay'] t_left:leaf t_right:leaf) t_right:leaf)
+    % Out: [8 5 ['ok']]
+    %
+    % @param Tree: a binary tree
+    % @return: a list of length 3 => [The sum of all keys      The greater key      The value associated to the greater key]
     %%%
     fun {TraverseToGetProbability Tree}
         local
@@ -611,7 +648,7 @@ define
                 end
             end
         in
-            if Tree == leaf then [none 0]
+            if Tree == leaf then [nil 0]
             else
                 List = {TraverseToGetProbability_Aux Tree 0 0 nil}
                 TotalFreq = List.1 div 2
@@ -623,12 +660,90 @@ define
         end
     end
 
+    
 
-    %%% ================= MAIN ================= %%%
-    %%% ================= MAIN ================= %%%
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    %%% ================= MAIN SECTION ================= %%%
+    %%% ================= MAIN SECTION ================= %%%
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-    %%%===================================================================%%%
-    %%% /!\ Fonction testee /!\
+    %%%
+    % Concatenates a list of strings from a stream associated with a port
+    %
+    % Example usage:
+    % In: ['i am good and you']|['i am very good thanks']|['wow this is a port']|_ 
+    % Out: ['i am good and you i am very good thanks wow this is a port']
+    %
+    % @param Stream: a stream associated with a port that contains a list of parsed lines
+    % @return: a list with all the elements of the stream concatenated together
+    %%%
+    fun {Get_ListFromPortStream Stream}
+        local
+            fun {Get_ListFromPortStreamAux Stream}
+                case Stream
+                of nil|T then nil
+                [] H|T then
+                    {Append H {Get_ListFromPortStreamAux T}}
+                end
+            end
+        in
+            {Send SeparatedWordsPort nil}
+            {Get_ListFromPortStreamAux Stream}
+        end
+    end
+
+
+    %%%
+    % Function called when the user pressed the button 'predict'.
+    % Call the function {Press} to get the most probable word to predict and display it on the window.
+    %
+    % @param: /
+    % @return: /
+    %%%
+	proc {CallPress}
+		local ResultPress ProbableWords MaxFreq in
+            
+            % But de Tree_Over : bloquer le programme le temps que la structure soit crée
+            if Tree_Over == true then
+
+                ResultPress = {Press}
+                % {Browse ResultPress}
+
+                if ResultPress == none then
+                    {OutputText set("You must write minimum 2 words.")}
+                else
+                    ProbableWords = ResultPress.1
+                    MaxFreq = ResultPress.2.1
+
+                    % {Browse ProbableWords}
+                    % {Browse MaxFreq}
+
+                    if ProbableWords == nil then
+                        {OutputText set("NO WORD FIND!")}
+                    else
+                        {OutputText set(ProbableWords.1)} % Faut-il renvoyer le premier si y'en a plusieurs ?
+                    end
+                end
+            else
+                % Never executed
+                {OutputText set("Will never be display.")}
+            end
+		end
+	end
+
+
+
+
+
+
+
+    %%%==================================================%%%
+    %%% /!\ Fonction testee /!\  %%% /!\ Fonction testee /!\
+    %%% /!\ Fonction testee /!\  %%% /!\ Fonction testee /!\
+    %%% /!\ Fonction testee /!\  %%% /!\ Fonction testee /!\
+    %%%==================================================%%%
+
+
     %%% @pre : les threads sont "ready"
     %%% @post: Fonction appellee lorsqu on appuie sur le bouton de prediction
     %%%        Affiche la prediction la plus probable du prochain mot selon les deux derniers mots entres
@@ -667,7 +782,7 @@ define
                 % TreeMaxFreq = {Tree.getTreeMaxFreq Tree_Value}
 
                 % if TreeMaxFreq == leaf then
-                %     [none 0]
+                %     [nil 0]
                 % else
                 %     {Browse TreeMaxFreq.value}
                 %     {Browse TreeMaxFreq.key}
@@ -677,40 +792,6 @@ define
             end
 		end
     end
-
-    %%%
-    %%%%%%%%%%%%%%%%%%%%%%%%%% TODO DOC %%%%%%%%%%%%%%%%%%%%%%%%%%
-    %%%
-	proc {CallPress}
-		local ResultPress ProbableWords MaxFreq in
-            
-            % But de Tree_Over : bloquer le programme le temps que la structure soit crée!
-            if Tree_Over == true then
-
-                ResultPress = {Press}
-                % {Browse ResultPress}
-
-                if ResultPress == none then
-                    {OutputText set("You must write minimum 2 words.")}
-                else
-                    ProbableWords = ResultPress.1
-                    MaxFreq = ResultPress.2.1
-
-                    % {Browse ProbableWords}
-                    % {Browse MaxFreq}
-
-                    if ProbableWords == none then
-                        {OutputText set("NO WORD FIND!")}
-                    else
-                        {OutputText set(ProbableWords.1)} % Faut-il renvoyer le premier si y'en a plusieurs ?
-                    end
-                end
-            else
-                % Never executed
-                {OutputText set("Will never be display.")}
-            end
-		end
-	end
 
     %%%
     %%%%%%%%%%%%%%%%%%%%%%%%%% TODO DOC %%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -755,23 +836,6 @@ define
         end
     end
 
-    %%%
-    %%%%%%%%%%%%%%%%%%%%%%%%%% TODO DOC %%%%%%%%%%%%%%%%%%%%%%%%%%
-    %%%
-    fun {Get_ListFromPortStream Port Stream}
-        local
-            fun {Get_ListFromPortStreamAux Stream}
-                case Stream
-                of nil|T then nil
-                [] H|T then
-                    {Append H {Get_ListFromPortStreamAux T}}
-                end
-            end
-        in
-            {Send Port nil}
-            {Get_ListFromPortStreamAux Stream}
-        end
-    end
 
     %%%
     %%%%%%%%%%%%%%%%%%%%%%%%%% TODO DOC %%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -797,7 +861,7 @@ define
         NberFiles = {Length List_PathName_Tweets}
         NbThreads = 5
 
-        local List_Line_Parsed Window Description SeparatedWordsStream SeparatedWordsPort in
+        local List_Line_Parsed Window Description in
 
             {Property.put print foo(width:1000 depth:1000)}  % for stdout siz
 
@@ -824,7 +888,7 @@ define
             {LaunchThreads SeparatedWordsPort NbThreads}
 
             %%% On récupère les informations dans le Stream du Port %%%
-            List_Line_Parsed = {Get_ListFromPortStream SeparatedWordsPort SeparatedWordsStream}
+            List_Line_Parsed = {Get_ListFromPortStream SeparatedWordsStream}
 
             {OutputText tk(insert p(6 0) "Step 1 Over : Reading + Parsing\n")} % Pour la position, c'est du test essais-erreur
             
