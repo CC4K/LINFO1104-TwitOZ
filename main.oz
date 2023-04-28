@@ -722,9 +722,7 @@ define
             end
         in
             {Send SeparatedWordsPort nil}
-            ListParsed = {Get_ListFromPortStreamAux Stream}
-            {InsertText_Window OutputText 6 0 none "Step 1 Over : Reading + Parsing\n"}
-            ListParsed
+            {Get_ListFromPortStreamAux Stream}
         end
     end
 
@@ -834,7 +832,7 @@ define
                 Key = {String.toAtom {Append {Append BeforeLast [32]} Last}}
                 Tree_Value = {LookingUp Main_Tree Key}
                 
-                {System.show Tree_Value}
+                % {System.show Tree_Value}
 
                 if Tree_Value == notfound then
                     ProbableWords_Probability = {TraverseToGetProbability leaf}
@@ -845,7 +843,8 @@ define
 		end
     end
 
-    %%%
+    
+     %%%
     % Launches N reading and parsing threads that will read and process all the files.
     % The parsing threads send their results to the Port.
     %
@@ -855,15 +854,16 @@ define
     %%%
     proc {LaunchThreads Port N}
         
-        local Basic_Nber_Iter Rest_Nber_Iter Current_Nber_Iter in
+        local Port_Waiting_Threads Stream_Waiting_Threads Basic_Nber_Iter Rest_Nber_Iter Current_Nber_Iter in
 
+            Port_Waiting_Threads = {NewPort Stream_Waiting_Threads}
             Basic_Nber_Iter = NberFiles div N
             Rest_Nber_Iter = NberFiles mod N
 
             for X in 1..N do
 
                 local Current_Nber_Iter1 Start End in
-                    
+
                     if Rest_Nber_Iter - X >= 0 then
                         Current_Nber_Iter1 = Basic_Nber_Iter + 1
                         Start = (X - 1) * Current_Nber_Iter1 + 1
@@ -877,17 +877,38 @@ define
 
                     for Y in Start..End do
 
-                        local File ThreadReader ThreadParser L P in
+                        local File_Parsed File LineToParsed Thread_Reader_Parser L P in
                             File = {GetFilename TweetsFolder_Name List_PathName_Tweets Y}
-                            thread ThreadReader = {Reader File} L=1 end
-                            thread {Wait L} ThreadParser = {ParseAllLines ThreadReader fun {$ Str_Line} {RemoveEmptySpace {ParseLine Str_Line false}} end} P=1 end
-                            {Wait P}
-                            {Send Port ThreadParser}
+
+                            thread Thread_Reader_Parser =
+                                LineToParsed = {Reader File}
+                                L=1
+                                {Wait L}
+                                File_Parsed = {ParseAllLines LineToParsed fun {$ Str_Line} {RemoveEmptySpace {ParseLine Str_Line false}} end}
+                                P=1
+                            end
+
+                            {Send Port_Waiting_Threads P}
+                            {Send Port Thread_Reader_Parser}
                         end
                         
                     end
                 end
             end
+            % To "stop" the Stream
+            {Send Port_Waiting_Threads nil}
+
+            % Wait that all threads have finished their work
+            {ForAll_Port Stream_Waiting_Threads}
+        end
+    end
+
+    proc {ForAll_Port Stream}
+        case Stream
+        of nil|T then skip
+        [] H|T then
+            {Wait H}
+            {ForAll_Port T}
         end
     end
 
@@ -920,7 +941,12 @@ define
         List_PathName_Tweets = {OS.getDir TweetsFolder_Name}
 
         NberFiles = {Length List_PathName_Tweets}
-        NbThreads = 5
+
+        if NberFiles < 10 then
+            NbThreads = NberFiles
+        else
+            NbThreads = NberFiles div 2
+        end
 
         local UpdaterTree List_Line_Parsed Window Description in
 
@@ -950,8 +976,10 @@ define
 
             %%% On recupere les informations dans le Stream du Port %%%
             List_Line_Parsed = {Get_ListFromPortStream SeparatedWordsStream}
+            {InsertText_Window OutputText 6 0 none "Step 1 Over : Reading + Parsing\n"}
+
             UpdaterTree = fun {$ Tree Key Value} {Insert Tree Key {CreateSubtree Value}} end
- 
+                
             % Creation of the main binary tree (with all subtree as value)
             Main_Tree = {TraverseAndChange {CreateTree List_Line_Parsed} UpdaterTree}
 
