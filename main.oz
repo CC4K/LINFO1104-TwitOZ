@@ -169,9 +169,9 @@ define
                 [] H|T then
                     if {FindPrefix T SubList} == true then
                         if NextCharRemoveToo == true then
-                            %%% Si on veut séparer comme ceci : "didn't" en "didn t" et pas en "didnt", il faut faire
+                            %%% Si on veut separer comme ceci : "didn't" en "didn t" et pas en "didnt", il faut faire
                             %%% H | 32 | {RemovePartList_Aux {RemoveFirstNthElements T Length_SubList+1} SubList Length_SubList NextCharRemoveToo}
-                            %%% à la place de la ligne en-dessous
+                            %%% A la place de la ligne en-dessous
                             H | {RemovePartList_Aux {RemoveFirstNthElements T Length_SubList+1} SubList Length_SubList NextCharRemoveToo}
                         else
                             H | {RemovePartList_Aux {RemoveFirstNthElements T Length_SubList} SubList Length_SubList NextCharRemoveToo}
@@ -185,9 +185,9 @@ define
             Length_SubList = {Length SubList}
             if {FindPrefix List SubList} == true then
                 if NextCharRemoveToo == true then
-                    %%% Si on veut séparer comme ceci : "didn't" en "didn t" et pas en "didnt", il faut faire
+                    %%% Si on veut separer comme ceci : "didn't" en "didn t" et pas en "didnt", il faut faire
                     %%% H | 32 | {RemovePartList_Aux {RemoveFirstNthElements T Length_SubList+1} SubList Length_SubList NextCharRemoveToo}
-                    %%% à la place de la ligne en-dessous
+                    %%% A la place de la ligne en-dessous
                     {RemovePartList_Aux {RemoveFirstNthElements List Length_SubList+1} SubList Length_SubList NextCharRemoveToo}
                 else
                     {RemovePartList_Aux {RemoveFirstNthElements List Length_SubList} SubList Length_SubList NextCharRemoveToo}
@@ -703,7 +703,7 @@ define
 	proc {CallPress}
 		local ResultPress ProbableWords MaxFreq in
             
-            % But de Tree_Over : bloquer le programme le temps que la structure soit crée
+            % But de Tree_Over : bloquer le programme le temps que la structure soit cree
             if Tree_Over == true then
 
                 ResultPress = {Press}
@@ -735,9 +735,9 @@ define
 
 
     %%% ================================================================================ %%%
-    %%% /!\ Fonction testee /!\  %%% /!\ Fonction testee /!\ %%% /!\ Fonction testee /!\ %%%
-    %%% /!\ Fonction testee /!\  %%% /!\ Fonction testee /!\ %%% /!\ Fonction testee /!\ %%%
-    %%% /!\ Fonction testee /!\  %%% /!\ Fonction testee /!\ %%% /!\ Fonction testee /!\ %%%
+    %%% /! Fonction testee /!  %%% /! Fonction testee /! %%% /! Fonction testee /! %%%
+    %%% /! Fonction testee /!  %%% /! Fonction testee /! %%% /! Fonction testee /! %%%
+    %%% /! Fonction testee /!  %%% /! Fonction testee /! %%% /! Fonction testee /! %%%
     %%% ================================================================================ %%%
 
     %%%
@@ -759,7 +759,7 @@ define
             
 			SplittedText = {String.tokens {InputText getText(p(1 0) 'end' $)} & }
             
-            if {Length SplittedText} < 2 then % Pourrait optimisé pour ne pas devoir appelé {Length List}
+            if {Length SplittedText} < 2 then % Pourrait optimise pour ne pas devoir appele {Length List}
                 none
             else
                 Last = {String.tokens {List.last SplittedText} &\n}.1
@@ -768,7 +768,7 @@ define
                 Key = {String.toAtom {Append {Append BeforeLast [32]} Last}}
                 Tree_Value = {LookingUp Main_Tree Key}
                 
-                {System.show Tree_Value}
+                % {System.show Tree_Value}
 
                 if Tree_Value == notfound then
                     ProbableWords_Probability = {TraverseToGetProbability leaf}
@@ -820,7 +820,7 @@ define
                         Start = (X - 1) * Current_Nber_Iter1 + 1
                     else
                         Current_Nber_Iter1 = Basic_Nber_Iter
-                        %% Permet de répartir le mieux possible le travail entre les threads ! Formule trouvé par de la logique
+                        %% Permet de repartir le mieux possible le travail entre les threads ! Formule trouve par de la logique
                         Start = Rest_Nber_Iter * (Current_Nber_Iter1 + 1) + (X - 1 - Rest_Nber_Iter) * Current_Nber_Iter1 + 1
                     end
 
@@ -829,13 +829,13 @@ define
                     for Y in Start..End do
 
                         local File ThreadReader ThreadParser L P in
-                               
                             File = {GetFilename TweetsFolder_Name List_PathName_Tweets Y}
                             thread ThreadReader = {Reader File} L=1 end
                             thread {Wait L} ThreadParser = {ParseAllLines ThreadReader fun {$ Str_Line} {RemoveEmptySpace {ParseLine Str_Line}} end} P=1 end
                             {Wait P}
                             {Send Port ThreadParser}
                         end
+                        
                     end
                 end
             end
@@ -877,7 +877,7 @@ define
 
             {Property.put print foo(width:1000 depth:1000)}  % for stdout siz
 
-            % Création de l'interface graphique
+            % Creation de l'interface graphique
             Description=td(
                 title: "Text predictor"
                 lr(text(handle:InputText width:50 height:10 background:white foreground:black wrap:word) button(text:"Predict" width:15 action:CallPress))
@@ -885,7 +885,7 @@ define
                 action:proc{$} {Application.exit 0} end % Quitte le programme quand la fenetre est fermee
                 )
             
-            % Création de la fenêtre
+            % Creation de la fenÃªtre
             Window = {QTk.build Description}
             {Window show}
             
@@ -893,18 +893,18 @@ define
             {InputText bind(event:"<Control-s>" action:CallPress)} % You can also bind events
             {OutputText set("You must wait until the database is parsed.\nA message will notify you.\nDon't press the 'predict' button until the message appears!\n")}
 
-            %%% On créer le Port %%%
+            %%% On creer le Port %%%
             SeparatedWordsPort = {NewPort SeparatedWordsStream}
             
-            %%% On lance les threads de lecture et de parsing%%%
+            %%% On lance les threads de lecture et de parsing %%%
             {LaunchThreads SeparatedWordsPort NbThreads}
 
-            %%% On récupère les informations dans le Stream du Port %%%
+            %%% On recupere les informations dans le Stream du Port %%%
             List_Line_Parsed = {Get_ListFromPortStream SeparatedWordsStream}
 
             {OutputText tk(insert p(6 0) "Step 1 Over : Reading + Parsing\n")} % Pour la position, c'est du test essais-erreur
             
-            %%% On créer l'arbre principale avec tout les sous-arbres en valeur %%%
+            %%% On creer l'arbre principale avec tout les sous-arbres en valeur %%%
             Main_Tree = {TraverseAndChange {CreateTree List_Line_Parsed} fun {$ Tree Key Value} {Insert Tree Key {CreateSubtree Value}} end}
             Tree_Over = true % CallPress can work now
 
