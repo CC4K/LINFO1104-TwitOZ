@@ -191,7 +191,7 @@ define
 
                         local File ThreadReader ThreadParser L P in
                             File = {Reader.getfilename TweetsFolder_Name List_PathName_Tweets Y}
-                            thread ThreadReader = {Reader File} L=1 end
+                            thread ThreadReader = {Reader.reader File} L=1 end
                             thread {Wait L} ThreadParser = {Parser.parsealllines ThreadReader fun {$ Str_Line} {Parser.removeemptyspace {Parser.parseline Str_Line}} end} P=1 end
                             {Wait P}
                             {Send Port ThreadParser}

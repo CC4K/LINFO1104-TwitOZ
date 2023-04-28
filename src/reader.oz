@@ -5,6 +5,7 @@ import
 export
     getfilename:GetFilename
     findprefix:FindPrefix
+    reader:Reader
 define
 
     %%%
