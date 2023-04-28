@@ -642,8 +642,8 @@ define
                 of leaf then [TotalFreq MaxFreq ListWord]
                 [] tree(key:Key value:Value t_left:TLeft t_right:TRight) then
                     local T1 T2 in
-                        T1 = {TraverseToGetProbability_Aux TLeft TotalFreq+Key Key Value}
-                        T2 = {TraverseToGetProbability_Aux TRight T1.1+Key Key Value}
+                        T1 = {TraverseToGetProbability_Aux TLeft ({Length Value}*Key)+TotalFreq Key Value}
+                        T2 = {TraverseToGetProbability_Aux TRight ({Length Value}*Key)+T1.1 Key Value}
                     end
                 end
             end
@@ -707,7 +707,7 @@ define
             if Tree_Over == true then
 
                 ResultPress = {Press}
-                % {Browse ResultPress}
+                {Browse ResultPress}
 
                 if ResultPress == none then
                     {OutputText set("You must write minimum 2 words.")}
