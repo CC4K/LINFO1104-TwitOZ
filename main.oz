@@ -44,9 +44,9 @@ define
             else
                 % The last argument of the anonymous function is set to true because we
                 % also need to remove the next letter because the substrings we want to remove are :
-                %      Substring n°1 = "â\x80\x99" (represent ')
-                %      Substring n°2 = "â\x80\x9C" (represent " from one side)
-                %      Substring n°3 = "â\x80\x9D" (represent " on the other side)
+                %      Substring 1 = "â\x80\x99" (represent ')
+                %      Substring 2 = "â\x80\x9C" (represent " from one side)
+                %      Substring 3 = "â\x80\x9D" (represent " on the other side)
                 % [226 128] represent "â\x80\x9" (found after test)
                 {CleanUp Line fun {$ LineStr} {RemovePartList LineStr [226 128] true} end} | {GetLine TextFile}
             end
@@ -313,15 +313,6 @@ define
     %%%
     % Structure of the recursive binary tree : 
     %     tree := leaf | tree(key:Key value:Value t_left:TLeft t_right:TRight)
-    %
-    % Example usage: 
-    %     T = tree(key:horse value:cheval
-    %               t_left:tree(key:dog value:chien
-    %                   t_left:tree(key:cat value:chat t_left:leaf t_right:leaf)
-    %                   t_right:tree(key:elephant value:elephant t_left:leaf t_right:leaf))
-    %               t_right:tree(key:mouse value:souris
-    %                   t_left:tree(key:monkey value:singe t_left:leaf t_right:leaf)
-    %                   t_right:tree(key:tiger value:tigre t_left:leaf t_right:leaf)))
     %%%
 
     %%%
@@ -397,13 +388,14 @@ define
     % @return: a new updated list
     %%%
     fun {UpdateList L NewElem}
-        case L 
-        of nil then (NewElem#1)|nil 
+        case L
+        of notfound then (NewElem#1) | nil
+        [] nil then (NewElem#1) | nil 
         [] H|T then 
             case H 
             of H1#H2 then 
                 if H1 == NewElem then (H1#(H2+1))|T 
-                else H|{UpdateList T NewElem} end 
+                else H |{ UpdateList T NewElem} end 
             end
         end
     end
@@ -429,35 +421,53 @@ define
     end
 
     %%%
-    %%%%%%%%%%%%%%%%%%%%%%%%%% TODO DOC %%%%%%%%%%%%%%%%%%%%%%%%%%
+    % Applies a function that changes the value of an element into a binary tree
+    %
+    % Example usage:
+    % Checks the example for the UpdateValue_ElemOfTree function (repeats that for each elements of the list)
+    %
+    % @param Tree: a binary tree
+    % @param List_Keys: a list of keys (a key representing a location in the binary tree)
+    % @return: the new updated tree with all the value updated (at the location of each key in List_Keys)
     %%%
-    fun {AddLineToTree Tree ListBiGrams}
-        case ListBiGrams
-        of nil then Tree
-        [] H|nil then Tree
-        [] H|T then
-            if T.1 \= nil andthen H \= nil then
-                local List_Value Value_to_Insert Key NewList in
-                    Key = H % ATOME : Représente un double mot (example 'i am' ou 'must go')
-                    Value_to_Insert = {String.toAtom {GetStrAfterDelimiter {Atom.toString T.1} 32}} % ATOME : Représente le prochain mot (example 'ready' ou 'now')
+    fun {UpdateElementsOfTree Tree List_Keys}
+        local
+
+            %%%
+            % Changes the value with a new specified one at the location of a specified key in a binary tree
+            %
+            % Example usage:  tree(key: value: t_left: t_right:)
+            % In: Tree = tree(key:'character too' value:['hard'#2 'special'#1] t_left:tree(key:'amical friend' value:['for'#1] t_left:leaf t_right:leaf) t_right:leaf)
+            %     Key = 'i am'
+            %     ListOfKeys = ['am the' 'the boss']
+            % Out: tree(key:'i am' value:['the'#1] t_left:tree(key:'amical friend' value:['for'#1] t_left:leaf t_right:leaf) t_right:tree(key:['character too'] value:['hard'#2 'special'#1] t_left:leaf t_right:leaf))
+            %
+            % @param Tree: a binary tree
+            % @param Key: a value representing a location in the binary tree
+            % @param List_Keys: a list of key (the next one after Key)
+            % @return: the new updated tree with one value updated
+            %%%
+            fun {UpdateValue_ElemOfTree Tree Key List_Keys}
+
+                local Value_to_Insert List_Value New_List_Value in
+                    Value_to_Insert = {String.toAtom {GetStrAfterDelimiter {Atom.toString List_Keys.1} 32}} % atom that represent the next word of the Key (example : Key = 'must go' => Value_to_Insert = ['ready' 'now'])
                     List_Value = {LookingUp Tree Key}
-
-                    % The first word is not in the main tree
-                    if List_Value == notfound then
-                        {AddLineToTree {Insert Tree Key [Value_to_Insert#1]} T} % Appel récursif
-
-                    % The first word is in the main tree
-                    else
-                        NewList = {UpdateList List_Value Value_to_Insert}
-                        {AddLineToTree {Insert Tree Key NewList} T} % Appel récursif
-                    end
+                    New_List_Value = {UpdateList List_Value Value_to_Insert}
+                    {Insert Tree Key New_List_Value}
                 end
+            end
+        in
+            case List_Keys
+            of nil then Tree
+            [] H|nil then Tree
+            [] H|T then
+                {UpdateElementsOfTree {UpdateValue_ElemOfTree Tree H T} T}
             end
         end
     end
 
     %%%
-    % Creates a bi-grams list from a list of words
+    % Creates a bi-grams list from a list of words (representing the list of the keys of the main binary tree)
     %
     % Example usage:
     % In: ["i" "am" "hungry" "get" "some" "food"]
@@ -493,7 +503,7 @@ define
                 case L
                 of nil then Tree
                 [] H|T then
-                    {CreateTreeAux {AddLineToTree Tree {BiGrams {String.tokens H 32}}} T}
+                    {CreateTreeAux {UpdateElementsOfTree Tree {BiGrams {String.tokens H 32}}} T}
                 end
             end
         in
@@ -539,31 +549,36 @@ define
     end
 
     %%%
-    %%%%%%%%%%%%%%%%%%%%%%%%%% TODO DOC %%%%%%%%%%%%%%%%%%%%%%%%%%
+    % 
+    %
+    % Example usage:
+    % In: 
+    % Out: 
+    %
+    % @param Tree: 
+    % @param UpdaterTree_ChangerValue: 
+    % @return: 
     %%%
-    fun {TraverseAndChange Tree}
+    fun {TraverseAndChange Tree UpdaterTree_ChangerValue}
         local
-            fun {TraverseAndChangeAux Tree CopyTree}
+            fun {TraverseAndChangeAux Tree UpdaterTree_ChangerValue UpdatedTree}
                 case Tree
-                of leaf then CopyTree
+                of leaf then UpdatedTree
                 [] tree(key:Key value:Value t_left:TLeft t_right:TRight) then
-                    local NewValue NewTree T1 T2 in
-                    % Pre-Order traversal
-                        NewValue = {CreateSubtree Value}
-                        NewTree = {Insert CopyTree Key NewValue}
-                        
-                        T1 = {TraverseAndChangeAux TLeft NewTree}
-                        T2 = {TraverseAndChangeAux TRight T1}
+                    local T1 T2 in
+                        % Pre-Order traversal
+                        T1 = {TraverseAndChangeAux TLeft UpdaterTree_ChangerValue {UpdaterTree_ChangerValue UpdatedTree Key Value}}
+                        T2 = {TraverseAndChangeAux TRight UpdaterTree_ChangerValue T1}
                     end
                 end
             end
         in
-            {TraverseAndChangeAux Tree Tree}
+            {TraverseAndChangeAux Tree UpdaterTree_ChangerValue Tree}
         end
     end
 
     %%%
-    %%%%%%%%%%%%%%%%%%%%%%%%%% TODO DOC %%%%%%%%%%%%%%%%%%%%%%%%%%
+    %%% To remove if we do with probability and not frequency %%%
     %%%
     fun {GetTreeMaxFreq Tree}
         case Tree
@@ -816,7 +831,7 @@ define
             {OutputText tk(insert p(6 0) "Step 1 Over : Reading + Parsing\n")} % Pour la position, c'est du test essais-erreur
             
             %%% On créer l'arbre principale avec tout les sous-arbres en valeur %%%
-            Main_Tree = {TraverseAndChange {CreateTree List_Line_Parsed}}
+            Main_Tree = {TraverseAndChange {CreateTree List_Line_Parsed} fun {$ Tree Key Value} {Insert Tree Key {CreateSubtree Value}} end}
             Tree_Over = true % CallPress can work now
 
             {OutputText tk(insert p(7 0) "Step 2 Over : Stocking datas\n")} % Pour la position, c'est du test essais-erreur
