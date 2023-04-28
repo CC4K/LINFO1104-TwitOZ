@@ -65,12 +65,9 @@ define
                 {TextFile close}
                 nil
             else
-                local FirstCleanLine in
-                    % [226 128] is a character that is not recognised by UTF-8 (the follow char too). That's why the last argument is set to true.
-                    {CleanUp Line fun {$ LineStr} {RemovePartList LineStr [226 128] true} end} | {GetLine TextFile}
-                    % FirstCleanLine = {CleanUp Line fun {$ LineStr} {RemovePartList LineStr [226 128] true} end}
-                    % {FoldR {String.tokens FirstCleanLine 39} fun {$ L1 L2} {Append L1 L2} end [32]} | {GetLine TextFile}
-                end
+                % [226 128] is a character that is not recognised by UTF-8 (the follow char too). That's why the last argument is set to true.
+                % {Browse {String.toAtom {CleanUp Line fun {$ LineStr} {RemovePartList LineStr [226 128] true} end}}}
+                {CleanUp Line fun {$ LineStr} {RemovePartList LineStr [226 128] true} end} | {GetLine TextFile}
             end
         end
     in
@@ -176,21 +173,14 @@ define
                 [] H|T then
                     if {FindPrefix T SubList} == true then
                         if NextCharRemoveToo == true then
-                            %%% Si on veut separer comme ceci : "didn't" en "didn t" et pas en "didnt", il faut faire
-                            %%% H | 32 | {RemovePartList_Aux {RemoveFirstNthElements T Length_SubList+1} SubList Length_SubList NextCharRemoveToo}
-                            %%% A la place de la ligne en-dessous
-                            
-                            % 153 => Remove le 's -> don
-                            % 156 => Remove le 's -> don
-                            % 157 => Colle 'dont'
-                            % 153 156 157
-                            if {Nth T Length_SubList+1} == 157 then
-                                H | {RemovePartList_Aux T SubList Length_SubList NextCharRemoveToo}
-                            else
+                            % 153 => = ' special not the basic => basic one is 39
+                            if {Nth T Length_SubList+1} == 153 then
                                 H | 39 | {RemovePartList_Aux {RemoveFirstNthElements T Length_SubList+1} SubList Length_SubList NextCharRemoveToo}
+                            else
+                                H | 32 | {RemovePartList_Aux {RemoveFirstNthElements T Length_SubList+1} SubList Length_SubList NextCharRemoveToo}
                             end
                         else
-                            H | {RemovePartList_Aux {RemoveFirstNthElements T Length_SubList} SubList Length_SubList NextCharRemoveToo}
+                            H | 32 | {RemovePartList_Aux {RemoveFirstNthElements T Length_SubList} SubList Length_SubList NextCharRemoveToo}
                         end
                     else
                         H | {RemovePartList_Aux T SubList Length_SubList NextCharRemoveToo}
@@ -201,9 +191,6 @@ define
             Length_SubList = {Length SubList}
             if {FindPrefix List SubList} == true then
                 if NextCharRemoveToo == true then
-                    %%% Si on veut separer comme ceci : "didn't" en "didn t" et pas en "didnt", il faut faire
-                    %%% H | 32 | {RemovePartList_Aux {RemoveFirstNthElements T Length_SubList+1} SubList Length_SubList NextCharRemoveToo}
-                    %%% A la place de la ligne en-dessous
                     {RemovePartList_Aux {RemoveFirstNthElements List Length_SubList+1} SubList Length_SubList NextCharRemoveToo}
                 else
                     {RemovePartList_Aux {RemoveFirstNthElements List Length_SubList} SubList Length_SubList NextCharRemoveToo}
@@ -247,6 +234,7 @@ define
         case List
         of nil then nil
         [] H|T then
+            % {Browse {String.toAtom {Parser H}}}
             {Parser H} | {ParseAllLines T Parser}
         end
     end
@@ -328,14 +316,21 @@ define
     % @return: a list of length 2 : [the new character    the boolean]
     %%%
     fun {GetNewChar Char}
-        if 97 =< Char andthen Char =< 122 then
-            [Char true]
-        elseif 48 =< Char andthen Char =< 57 then
-            [Char true]
-        elseif 65 =< Char andthen Char =< 90 then
-            [Char+32 true]
-        else
-            [32 false]
+        local New_Char Bool in
+            if 97 =< Char andthen Char =< 122 then
+                New_Char = Char 
+                Bool = true
+            elseif 48 =< Char andthen Char =< 57 then
+                New_Char = Char 
+                Bool = true
+            elseif 65 =< Char andthen Char =< 90 then
+                New_Char = Char + 32
+                Bool = true
+            else
+                New_Char = 32 
+                Bool = false
+            end
+            [New_Char Bool]
         end
     end
 
@@ -354,6 +349,8 @@ define
         case Line
         of H|T then
             local New_H Result_List in
+                % 39 is the character ' => keep it only if the previous and the future
+                % character is a letter or a digit (not a special character!)
                 if H == 39 andthen PreviousGoodChar == true then
                     if T \= nil then
                         if T.1 == {GetNewChar T.1}.1 then
@@ -796,6 +793,23 @@ define
         {Location_Text set(Text)}
     end
 
+    fun {ParseInputUser Str_Line}
+        local
+            fun {ParseCharUser Char}
+                local New_Char in
+                    New_Char = {GetNewChar Char}.1
+                    if New_Char == 32 then Char
+                    else New_Char end
+                end
+            end
+        in
+            case Str_Line
+            of nil then nil
+            [] H|T then
+                {ParseCharUser H} | {ParseInputUser T}
+            end
+        end
+    end
 
 
     %%% ================================================================================ %%%
@@ -819,7 +833,7 @@ define
     %%%
     fun {Press}
 		
-		local ProbableWords_Probability TreeMaxFreq SplittedText BeforeLast Last Key Tree_Value in
+		local ProbableWords_Probability TreeMaxFreq SplittedText BeforeLast Last Key Parsed_Key Tree_Value in
             
 			SplittedText = {String.tokens {InputText getText(p(1 0) 'end' $)} & }
             
@@ -830,9 +844,12 @@ define
                 BeforeLast = {Nth SplittedText {Length SplittedText} - 1}
 
                 Key = {String.toAtom {Append {Append BeforeLast [32]} Last}}
-                Tree_Value = {LookingUp Main_Tree Key}
+
+                Parsed_Key = {String.toAtom {ParseInputUser {Atom.toString Key}}}
+
+                Tree_Value = {LookingUp Main_Tree Parsed_Key}
                 
-                % {System.show Tree_Value}
+                {System.show Tree_Value}
 
                 if Tree_Value == notfound then
                     ProbableWords_Probability = {TraverseToGetProbability leaf}
@@ -878,7 +895,9 @@ define
                     for Y in Start..End do
 
                         local File_Parsed File LineToParsed Thread_Reader_Parser L P in
+
                             File = {GetFilename TweetsFolder_Name List_PathName_Tweets Y}
+                            % File = "tweets/custom.txt"
 
                             thread Thread_Reader_Parser =
                                 LineToParsed = {Reader File}
@@ -889,7 +908,7 @@ define
                             end
 
                             {Send Port_Waiting_Threads P}
-                            {Send Port Thread_Reader_Parser}
+                            {Send Port File_Parsed}
                         end
                         
                     end
@@ -941,6 +960,7 @@ define
         List_PathName_Tweets = {OS.getDir TweetsFolder_Name}
 
         NberFiles = {Length List_PathName_Tweets}
+        % NberFiles = 1
 
         if NberFiles < 10 then
             NbThreads = NberFiles
