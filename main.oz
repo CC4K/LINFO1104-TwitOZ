@@ -7,11 +7,17 @@ import
     Property
     Browser
 
-    Function at 'bin/function.ozf'
-    Interface at 'bin/interface.ozf'
-    Parser at 'bin/parser.ozf'
-    Tree at 'bin/tree.ozf'
-    Reader at 'bin/reader.ozf'
+    Function at 'function.ozf'
+    Interface at 'interface.ozf'
+    Parser at 'parser.ozf'
+    Tree at 'tree.ozf'
+    Reader at 'reader.ozf'
+
+    % Function at 'bin/function.ozf'
+    % Interface at 'bin/interface.ozf'
+    % Parser at 'bin/parser.ozf'
+    % Tree at 'bin/tree.ozf'
+    % Reader at 'bin/reader.ozf'
 define
 
     % Global variables

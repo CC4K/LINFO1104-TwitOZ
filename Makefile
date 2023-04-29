@@ -1,6 +1,6 @@
 TWEETS_FOLDER="tweets"
 UNAME_S := $(shell uname -s)
-ENTRY_POINT=main.ozf
+ENTRY_POINT=bin/main.ozf
 
 ifeq ($(UNAME_S),Darwin)
 	OZC = /Applications/Mozart2.app/Contents/Resources/bin/ozc
@@ -13,7 +13,7 @@ endif
 all : $(ENTRY_POINT)
 
 # J'ai ajouté cette partie (sauf la dernière ligne)
-main.ozf : main.oz src/reader.oz src/parser.oz src/tree.oz
+main : main.oz src/reader.oz src/parser.oz src/tree.oz
 	if [ ! -d "bin" ]; then mkdir bin; fi
 	$(OZC) -c src/function.oz -o bin/function.ozf
 	$(OZC) -c src/interface.oz -o bin/interface.ozf
@@ -21,7 +21,7 @@ main.ozf : main.oz src/reader.oz src/parser.oz src/tree.oz
 	$(OZC) -c src/tree.oz -o bin/tree.ozf
 	$(OZC) -c src/reader.oz -o bin/reader.ozf
 
-	$(OZC) -c main.oz -o main.ozf
+	$(OZC) -c main.oz -o bin/main.ozf
 
 %.ozf: %.oz
 	$(OZC) -c $< -o "$@"
@@ -31,6 +31,5 @@ run: $(ENTRY_POINT)
 
 # J'ai ajouté les deux dernière ligne
 clean :
-	rm -f *.ozf
 	rm -f bin/*.ozf
 	rm -rf bin

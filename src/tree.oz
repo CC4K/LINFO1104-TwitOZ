@@ -1,7 +1,6 @@
 functor
 import
     System
-
     Function at 'function.ozf'
 export
     CreateSubtree
