@@ -565,27 +565,32 @@ define
         end
     end
 
-    %%%
 
-    %%%%%%%%% TODO MUST CHANGE DOC => INPUT HAS CHANGED %%%%%%%%%%%%%%
-    %%%%%%%%% TODO MUST CHANGE DOC => INPUT HAS CHANGED %%%%%%%%%%%%%%
-    %%%%%%%%% TODO MUST CHANGE DOC => INPUT HAS CHANGED %%%%%%%%%%%%%%
-    %%%%%%%%% TODO MUST CHANGE DOC => INPUT HAS CHANGED %%%%%%%%%%%%%%
-
-    % Creates a binary tree structure to store the data
+    % Creates the all binary tree structure (to store the datas).
+    % To do it, the function 'Update_Tree' is applied on all
+    % the element of the list given as parameter.
+    % Check the docstring of 'Update_Tree' to see an example usage.
     %
-    % Example usage:
-    % In: L = [['i am the boss man'] ['no problem sir'] ["the boss is here"] ["the boss is here"]]
-    % Out: tree(key:'i am' value:['the'#1] t_left:tree(key:'boss is' value:['here'#2] t_left:
-    %      tree(key:'am the' value:['boss'#1] t_left:leaf t_right:leaf) t_right:leaf) t_right:
-    %      tree(key:'no problem' value:['sir'#1] t_left:leaf t_right:tree(key:'the boss' value:['man'#1 'is'#2] t_left:leaf t_right:leaf)))
-    %
-    % @param L: a list of lists of strings representing a line parsed (from a file)
-    % @return: a binary tree with all the data added
+    % @param List_List_Line: a list of lists of lists of strings
+    % @return: the all binary tree with all the datas added
     %%%
     fun {CreateTree List_List_Line}
         
         local
+
+            %%%
+            % Creates a part of the complete binary tree structure (to store the datas)
+            %
+            % Example usage:
+            % In: L = [["i am the boss man"] ["no problem sir"] ["the boss is here"] ["the boss is here"]]
+            % Out: tree(key:'i am' value:['the'#1] t_left:tree(key:'boss is' value:['here'#2] t_left:
+            %      tree(key:'am the' value:['boss'#1] t_left:leaf t_right:leaf) t_right:leaf) t_right:
+            %      tree(key:'no problem' value:['sir'#1] t_left:leaf t_right:tree(key:'the boss' value:['man'#1 'is'#2] t_left:leaf t_right:leaf)))
+            %
+            % @param List_Line: a list of lists of strings representing a line parsed (from a file)
+            % @param NewTree: the new binary tree initialized to 'leaf' that will be update
+            % @return: the new binary tree with some datas added
+            %%%
             fun {Update_Tree List_Line NewTree}
                 case List_Line
                 of nil then NewTree
@@ -724,23 +729,15 @@ define
     %%% ================= MAIN SECTION ================= %%%
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-
-
     %%%
-
-    %%%%%%%%% TODO MUST CHANGE DOC => INPUT HAS CHANGED %%%%%%%%%%%%%%
-    %%%%%%%%% TODO MUST CHANGE DOC => INPUT HAS CHANGED %%%%%%%%%%%%%%
-    %%%%%%%%% TODO MUST CHANGE DOC => INPUT HAS CHANGED %%%%%%%%%%%%%%
-    %%%%%%%%% TODO MUST CHANGE DOC => INPUT HAS CHANGED %%%%%%%%%%%%%%
-
-    % Concatenates a list of strings from a stream associated with a port
+    % Get the list of strings from a stream associated with a port
     %
     % Example usage:
     % In: ['i am good and you']|['i am very good thanks']|['wow this is a port']|_ 
-    % Out: ['i am good and you i am very good thanks wow this is a port']
+    % Out: ['i am good and you']|['i am very good thanks']|['wow this is a port']
     %
     % @param Stream: a stream associated with a port that contains a list of parsed lines
-    % @return: a list with all the elements of the stream concatenated together
+    % @return: the list of strings (from the stream 'Stream' associated with the port 'Port' (= global variable))
     %%%
     fun {Get_ListFromPortStream Stream}
         local
@@ -833,9 +830,14 @@ define
 
 
     %%%
-    %%%%%%%%%%%%%%%%%%%%% TODO DOC %%%%%%%%%%%%%%%%%%%%%
-    %%%%%%%%%%%%%%%%%%%%% TODO DOC %%%%%%%%%%%%%%%%%%%%%
-    %%%%%%%%%%%%%%%%%%%%% TODO DOC %%%%%%%%%%%%%%%%%%%%%
+    % Parses the input of the user to set all the upercase letters to its lowercase letters.
+    %
+    % Example usage:
+    % In1: "I aM"   In2: "you know"  In3: "WOW MAN"
+    % Out2: "i am"  In2: "you know"  In3: "wow man" 
+    %
+    % @param Str_Line: a string (the input user) to be parsed
+    % @return: the string parsed
     %%%
     fun {ParseInputUser Str_Line}
         local
@@ -1019,7 +1021,7 @@ define
         List_PathName_Tweets = {OS.getDir TweetsFolder_Name}
 
         NberFiles = {Length List_PathName_Tweets}
-        % NberFiles = 5
+        % NberFiles = 1
 
         % Need to do some tests to see the best number of threads
         NbThreads = 50
@@ -1035,7 +1037,7 @@ define
                 text(handle:OutputText width:50 height:10 background:black foreground:white glue:w wrap:word)
                 action:proc{$} {Application.exit 0} end % Quitte le programme quand la fenetre est fermee
                 )
-            
+
             % Creation of the graphical user interface
             Window = {QTk.build Description}
             {Window show}
@@ -1046,14 +1048,14 @@ define
 
             % Create the Port
             SeparatedWordsPort = {NewPort SeparatedWordsStream}
-            
+
             % Launch all threads to reads and parses the files
             {LaunchThreads SeparatedWordsPort NbThreads}
 
             % We retrieve the information (parsed lines of the files) from the port's stream
             List_Line_Parsed = {Get_ListFromPortStream SeparatedWordsStream}
             {InsertText_Window OutputText 6 0 none "Step 1 Over : Reading + Parsing\n"}
-    
+
             % Creation of the main binary tree (with all subtree as value)
             UpdaterTree = fun {$ Tree Key Value} {Insert Tree Key {CreateSubtree Value}} end
             Main_Tree = {TraverseAndChange {CreateTree List_Line_Parsed} UpdaterTree}
