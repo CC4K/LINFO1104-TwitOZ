@@ -2,18 +2,19 @@ functor
 import
     Function at 'function.ozf'
 export
-    removepartlist:RemovePartList
-    cleanup:CleanUp
-    parsealllines:ParseAllLines
-    removeemptyspace:RemoveEmptySpace
-    getnewchar:GetNewChar
-    parseline:ParseLine
+    CleanUp
+    CleaningUserInput
+    ParseInputUser
+    RemoveEmptySpace
+    RemovePartList
+    ParseLine
+    ParseAllLines
 define
 
 
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    %%%%%%%%%%%%%%%%%%%%% FUNCTIONS TO CLEAN THE FILES OF THE DATABASE %%%%%%%%%%%%%%%%%
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    %%%%%%%%%%%%%%%%%%%%% FUNCTIONS TO CLEAN THE FILES OF THE DATABASE %%%%%%%%%%%%%%%%%%%%%
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
     %%%

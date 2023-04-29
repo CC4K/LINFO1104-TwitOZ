@@ -1,13 +1,15 @@
 functor
 import
+    System
+
     Function at 'function.ozf'
 export
-    createtree:CreateTree
-    traverseandchange:TraverseAndChange
-    lookingup:LookingUp
-    traversetogetprobability:TraverseToGetProbability
-    createsubtree:CreateSubtree
-    insert:Insert
+    CreateSubtree
+    CreateTree
+    LookingUp
+    Insert
+    TraverseAndChange
+    TraverseToGetProbability
 define
 
     %%%
@@ -295,18 +297,18 @@ define
     %%%
     fun {TraverseAndChange Tree UpdaterTree_ChangerValue}
         local
-            fun {TraverseAndChange_Aux Tree UpdaterTree_ChangerValue UpdatedTree}
+            fun {TraverseAndChange_Aux Tree UpdatedTree}
                 case Tree
                 of leaf then UpdatedTree
                 [] tree(key:Key value:Value t_left:TLeft t_right:TRight) then
                     local T1 T2 in
-                        T1 = {TraverseAndChange_Aux TLeft UpdaterTree_ChangerValue {UpdaterTree_ChangerValue UpdatedTree Key Value}}
-                        T2 = {TraverseAndChange_Aux TRight UpdaterTree_ChangerValue T1}
+                        T1 = {TraverseAndChange_Aux TLeft {UpdaterTree_ChangerValue UpdatedTree Key Value}}
+                        T2 = {TraverseAndChange_Aux TRight T1}
                     end
                 end
             end
         in
-            {TraverseAndChange_Aux Tree UpdaterTree_ChangerValue Tree}
+            {TraverseAndChange_Aux Tree Tree}
         end
     end
 

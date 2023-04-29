@@ -2,14 +2,14 @@ functor
 import
     Browser
 export
-    append_list:Append_List
-    nth_list:Nth_List
-    tokens_string:Tokens_String
+    Append_List
+    Nth_List
+    Tokens_String
 
-    remove_list_firstnthelements:Remove_List_FirstNthElements
-    findprefix_inlist:FindPrefix_InList
-    get_twolastword_list:Get_TwoLastWord_List
-    get_listfromportstream:Get_ListFromPortStream
+    Remove_List_FirstNthElements
+    FindPrefix_InList
+    Get_TwoLastWord_List
+    Get_ListFromPortStream
 define
 
     %%%
@@ -165,7 +165,7 @@ define
         of nil then nil
         [] H|nil then nil
         [] H|T then
-            if T.2 == nil andthen {Function.tokens_String T.1 10} \= nil then
+            if T.2 == nil andthen {Tokens_String T.1 10} \= nil then
                 [H T.1]
             else
                 {Get_TwoLastWord_List T}
@@ -193,7 +193,6 @@ define
                 end
             end
         in
-            {Send SeparatedWordsPort nil}
             {Get_ListFromPortStream_Aux Stream nil}
         end
     end

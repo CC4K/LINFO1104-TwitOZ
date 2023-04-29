@@ -1,11 +1,10 @@
 functor
 import 
     Open
-    Parser at 'parser.ozf'
     Function at 'function.ozf'
 export
-    getfilename:GetFilename
-    read:Read
+    GetFilename
+    Read
 define
 
     %%%
@@ -33,11 +32,7 @@ define
                 {TextFile close}
                 ListLine
             else
-                % {Browse {String.toAtom Line}}
-                % {Browse {String.toAtom {CleanUp Line fun {$ LineStr} {RemovePartList LineStr [226 128] 32 true} end}}}
-
-                % [226 128] is a character that is not recognised by UTF-8 (the follow char too). That's why the last argument is set to true.
-                {GetLine TextFile {Parser.cleanUp Line fun {$ LineStr} {Parser.removePartList LineStr [226 128] 32 true} end}|ListLine}
+                {GetLine TextFile Line|ListLine}
             end
         end
     in

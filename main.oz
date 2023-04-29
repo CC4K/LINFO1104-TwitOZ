@@ -7,11 +7,11 @@ import
     Property
     Browser
 
-    Reader at 'bin/reader.ozf'
+    Function at 'bin/function.ozf'
+    Interface at 'bin/interface.ozf'
     Parser at 'bin/parser.ozf'
     Tree at 'bin/tree.ozf'
-    Function at 'function.ozf'
-    Interface at 'interface.ozf'
+    Reader at 'bin/reader.ozf'
 define
 
     % Global variables
@@ -127,13 +127,20 @@ define
                         thread Thread_Reader_Parser =
                             LineToParsed = {Reader.read File}
                             L=1
-                            {Wait L}
-                            File_Parsed = {Parser.parseAllLines LineToParsed fun {$ Str_Line} {Parser.removeEmptySpace {Parser.parseLine Str_Line false}} end}
-                            % File_Parsed = {Parser.parseAllLines LineToParsed fun {$ Str_Line} {Parser.removeEmptySpace {Parser.parseLine Str_Line false}} end}
+                            {Wait L} 
+                            File_Parsed = {Parser.parseAllLines LineToParsed fun {$ Str_Line}
+                                                                                    {Parser.removeEmptySpace
+                                                                                        {Parser.parseLine
+                                                                                            {Parser.cleanUp Str_Line
+                                                                                                fun {$ Line_Str} {Parser.removePartList Line_Str [226 128] 32 true} end
+                                                                                            }
+                                                                                        false}
+                                                                                    }
+                                                                              end}
                             P=1
+                            {Send Port File_Parsed}
                         end
-                    
-                        {Send Port File_Parsed}
+                        
                         {Launch_OneThread Start+1 End P|List_Waiting_Threads}
                     end
                 end
@@ -250,13 +257,14 @@ define
             {LaunchThreads SeparatedWordsPort NbThreads}
 
             % We retrieve the information (parsed lines of the files) from the port's stream
+            {Send SeparatedWordsPort nil}
             List_Line_Parsed = {Function.get_ListFromPortStream SeparatedWordsStream}
             {Interface.insertText_Window OutputText 6 0 none "Step 1 Over : Reading + Parsing\n"}
 
             % Creation of the main binary tree (with all subtree as value)
             UpdaterTree = fun {$ Tree Key Value} {Tree.insert Tree Key {Tree.createSubtree Value}} end
             Main_Tree = {Tree.traverseAndChange {Tree.createTree List_Line_Parsed} UpdaterTree}
-
+            
             % CallPress can work now because the structure is ready
             Tree_Over = true
 
