@@ -36,12 +36,12 @@ define
     end
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    %%% ====== IMPLEMENTATION OF BASIC FUNCTIONS TO MAKE THEM RECURSIVE TERMINAL SECTION ====== %%%
-    %%% ====== IMPLEMENTATION OF BASIC FUNCTIONS TO MAKE THEM RECURSIVE TERMINAL SECTION ====== %%%
+    %%% ====== IMPLEMENTATION OF BASIC FUNCTIONS TO MAKE THEM RECURSIVE TERMINAL : SECTION ====== %%%
+    %%% ====== IMPLEMENTATION OF BASIC FUNCTIONS TO MAKE THEM RECURSIVE TERMINAL : SECTION ====== %%%
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
     % NOTE : These implementations are maybe a little bit too slow but there are recursive terminal like asked for the project.
-        
+
     %%%
     % Implementation of the List.append function but in recursive terminal way.
     %%%
@@ -129,10 +129,10 @@ define
                 ListLine
             else
                 % {Browse {String.toAtom Line}}
-                % {Browse {String.toAtom {CleanUp Line fun {$ LineStr} {RemovePartList LineStr [226 128] true} end}}}
+                % {Browse {String.toAtom {CleanUp Line fun {$ LineStr} {RemovePartList LineStr [226 128] 32 true} end}}}
 
                 % [226 128] is a character that is not recognised by UTF-8 (the follow char too). That's why the last argument is set to true.
-                {GetLine TextFile {CleanUp Line fun {$ LineStr} {RemovePartList LineStr [226 128] true} end} | ListLine}
+                {GetLine TextFile {CleanUp Line fun {$ LineStr} {RemovePartList LineStr [226 128] 32 true} end} | ListLine}
             end
         end
     in
@@ -216,7 +216,7 @@ define
     % Example usage:
     % In1: "Jeui ui suis okuiui et je suis louisuiuiuiui" "ui" true
     % Out1: "Jes oket je s lo"
-    % In2: "    Je suis   ok  et je  suis louis    " " " false
+    % In2: "    Je suis   ok  et je  suis louis    " [32] false
     % Out2: "Je suis ok et je suis louis"
     %
     % @param SubList: a list from which to remove the specified sublist
@@ -226,7 +226,7 @@ define
     % @return: a new list with all instances of the specified sublist removed
     %          (and their next character too if 'removeNextChar' is set to true)
     %%%
-    fun {RemovePartList List SubList NextCharRemoveToo}
+    fun {RemovePartList List SubList Replacer NextCharRemoveToo}
         local
             Length_SubList
             fun {RemovePartList_Aux List NewList Length_List}
@@ -245,8 +245,12 @@ define
                                     NewList_Updated = 32 | NewList
                                 end
                             else
+                                if Replacer == none then
+                                    NewList_Updated = 32 | NewList
+                                else
+                                    NewList_Updated = NewList
+                                end
                                 List_Updated = {RemoveFirstNthElements List Length_SubList}
-                                NewList_Updated = 32 | NewList
                                 Length_List_Updated = Length_List - Length_SubList
                             end
                         else
@@ -269,7 +273,7 @@ define
     % Applies a cleaning function to a string
     %
     % Example usage:
-    % If Cleaner = fun {$ LineStr} {RemovePartList LineStr [226 128] true} end
+    % If Cleaner = fun {$ LineStr} {RemovePartList LineStr [226 128] 32 true} end
     %   In1: "Jeui ui suis okuiui et je suis louisuiuiuiui" "ui" true
     %   Out1: "Jes oket je s lo"
     %   In2: "    Je suis   ok  et je  suis louis    " " " false
@@ -344,6 +348,7 @@ define
                         if PreviousSpace == true then
                             {RemoveEmptySpace_Aux T NewLine true}
                         else
+                            
                             {RemoveEmptySpace_Aux T H|NewLine true}
                         end
                     else
@@ -843,20 +848,16 @@ define
                 ResultPress = {Press}
                 {Browse ResultPress}
 
-                if ResultPress == none then
-                    {SetText_Window OutputText "You must write minimum 2 words."}
+                ProbableWords = ResultPress.1
+                MaxFreq = ResultPress.2.1
+
+                % {Browse ProbableWords}
+                % {Browse MaxFreq}
+
+                if ProbableWords == nil then
+                    {SetText_Window OutputText "NO WORD FIND!"}
                 else
-                    ProbableWords = ResultPress.1
-                    MaxFreq = ResultPress.2.1
-
-                    % {Browse ProbableWords}
-                    % {Browse MaxFreq}
-
-                    if ProbableWords == nil then
-                        {SetText_Window OutputText "NO WORD FIND!"}
-                    else
-                        {SetText_Window OutputText ProbableWords.1}
-                    end
+                    {SetText_Window OutputText ProbableWords.1}
                 end
             else
                 % Will never be executed but need to put something
@@ -932,6 +933,42 @@ define
 
 
     %%%
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% TODO %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    %%%
+    fun {Get_TwoLastWord ListWords}
+        case ListWords
+        of nil then nil
+        [] H|nil then nil
+        [] H|T then
+            if T.2 == nil andthen {Tokens_String T.1 10} \= nil then
+                [H T.1]
+            else
+                {Get_TwoLastWord T}
+            end
+        end
+    end
+
+    %%%
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% TODO %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    %%%
+    fun {CleaningUserInput SplittedText}
+        local
+            fun {CleaningUserInput_Aux SplittedText NewSplittedText}
+                case SplittedText
+                of nil then {Filter NewSplittedText fun {$ X} X \= nil end}
+                [] H|T then
+                    local Clean_Text in
+                        Clean_Text  = {CleanUp H fun {$ X} {RemoveEmptySpace {RemovePartList X [10] 32 false}} end}
+                        {CleaningUserInput_Aux T Clean_Text|NewSplittedText}
+                    end
+                end
+            end
+        in 
+            {Reverse {CleaningUserInput_Aux SplittedText nil}}
+        end
+    end
+
+    %%%
     % Displays the most likely prediction of the next word based on the last two entered words.
     %
     % @pre: The threads are "ready".
@@ -945,35 +982,32 @@ define
     %               <probability/frequency> := <int> | <float>
     %%%
     fun {Press}
-		
-		local ProbableWords_Probability TreeMaxFreq SplittedText BeforeLast Last Key Parsed_Key Tree_Value in
-            
-			SplittedText = {Tokens_String {InputText getText(p(1 0) 'end' $)} & }
+		local SplittedText List_Words BeforeLast Last Key Parsed_Key Tree_Value in
 
-            %%%
-            % When the user pressed "word " => that count two words because there is a space
-            % Maybe change that system
-            %%%
+            % Clean the input user
+            {System.show {Tokens_String {InputText getText(p(1 0) 'end' $)} 32}}
+            SplittedText = {CleaningUserInput {Tokens_String {InputText getText(p(1 0) 'end' $)} 32}}
+            {System.show SplittedText}
 
-            % If the user did't write at least two words => return none
-            if SplittedText.2 == nil then [nil 0.0] % => no word or one word only
-            else
-                Last = {Tokens_String {List.last SplittedText} &\n}.1
-                BeforeLast = {Nth_List SplittedText {Length SplittedText} - 1}
+            List_Words = {Get_TwoLastWord SplittedText}
+
+            if List_Words \= nil then
+
+                BeforeLast = List_Words.1
+                Last = {Tokens_String List_Words.2.1 10}.1
 
                 Key = {String.toAtom {Append_List BeforeLast 32|Last}}
-
                 Parsed_Key = {String.toAtom {ParseInputUser {Atom.toString Key}}}
-
                 Tree_Value = {LookingUp Main_Tree Parsed_Key}
-                
-                % {System.show Tree_Value}
+                % {Browse Tree_Value}
 
                 if Tree_Value == notfound then
-                    ProbableWords_Probability = {TraverseToGetProbability leaf}
+                    {TraverseToGetProbability leaf}
                 else
-                    ProbableWords_Probability = {TraverseToGetProbability Tree_Value}
+                    {TraverseToGetProbability Tree_Value}
                 end
+            else % If the user did't write at least two words => return [nil 0.0]
+                [nil 0.0] % => no word or one word only
             end
 		end
     end
@@ -1089,11 +1123,12 @@ define
         TweetsFolder_Name = {GetSentenceFolder}
         List_PathName_Tweets = {OS.getDir TweetsFolder_Name}
 
-        NberFiles = {Length List_PathName_Tweets}
-        % NberFiles = 8
+        % NberFiles = {Length List_PathName_Tweets}
+        NberFiles = 6
 
         % Need to do some tests to see the best number of threads
-        NbThreads = 50
+        % NbThreads = 50
+        NbThreads = 6
 
         local UpdaterTree List_Line_Parsed Window Description in
 
