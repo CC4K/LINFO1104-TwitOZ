@@ -52,20 +52,22 @@ define
     % @return: a list of all lines in the file, where each line is a string
     %%%
     fun {Reader Filename}
-        fun {GetLine TextFile}
+        fun {GetLine TextFile ListLine}
             Line = {TextFile getS($)}
         in
             if Line == false then
                 {TextFile close}
-                nil
+                ListLine
             else
-                % [226 128] is a character that is not recognised by UTF-8 (the follow char too). That's why the last argument is set to true.
+                % {Browse {String.toAtom Line}}
                 % {Browse {String.toAtom {CleanUp Line fun {$ LineStr} {RemovePartList LineStr [226 128] true} end}}}
-                {CleanUp Line fun {$ LineStr} {RemovePartList LineStr [226 128] true} end} | {GetLine TextFile}
+
+                % [226 128] is a character that is not recognised by UTF-8 (the follow char too). That's why the last argument is set to true.
+                {GetLine TextFile {CleanUp Line fun {$ LineStr} {RemovePartList LineStr [226 128] true} end} | ListLine}
             end
         end
     in
-        {GetLine {New TextFile init(name:Filename flags:[read])}}
+        {GetLine {New TextFile init(name:Filename flags:[read])} nil}
     end
 
     %%%
@@ -81,10 +83,7 @@ define
     % @return: a string representing the desired filename (the Idxth filename in the list) preceded by the folder name + "/"
     %%%
     fun {GetFilename TweetsFolder_Name List_PathName Idx}
-        local PathName in
-            PathName = {Nth List_PathName Idx}
-            {Append {Append TweetsFolder_Name "/"} PathName}
-        end
+        {Append {Append TweetsFolder_Name "/"} {Nth List_PathName Idx}}
     end
 
 
@@ -161,39 +160,78 @@ define
     fun {RemovePartList List SubList NextCharRemoveToo}
         local
             Length_SubList
-            fun {RemovePartList_Aux List SubList Length_SubList NextCharRemoveToo}
-                case List
-                of nil then nil
-                [] H|T then
-                    if {FindPrefix T SubList} == true then
-                        if NextCharRemoveToo == true then
-                            % 153 => = ' special not the basic => basic one is 39
-                            if {Nth T Length_SubList+1} == 153 then
-                                H | 39 | {RemovePartList_Aux {RemoveFirstNthElements T Length_SubList+1} SubList Length_SubList NextCharRemoveToo}
+            fun {RemovePartList_Aux List NewList Length_List}
+                if Length_List < Length_SubList then NewList
+                elseif List == nil then NewList
+                else
+                    local List_Updated NewList_Updated Length_List_Updated in
+                        if {FindPrefix List SubList} == true then
+                            if NextCharRemoveToo == true then
+                                List_Updated = {RemoveFirstNthElements List Length_SubList+1}
+                                Length_List_Updated = Length_List - (Length_SubList + 1)
+                                % 153 => = ' special not the basic => basic one is 39
+                                if {Nth List Length_SubList+1} == 153 then
+                                    NewList_Updated = 39 | NewList
+                                else
+                                    NewList_Updated = 32 | NewList
+                                end
                             else
-                                H | 32 | {RemovePartList_Aux {RemoveFirstNthElements T Length_SubList+1} SubList Length_SubList NextCharRemoveToo}
+                                List_Updated = {RemoveFirstNthElements List Length_SubList}
+                                NewList_Updated = 32 | NewList
+                                Length_List_Updated = Length_List - Length_SubList
                             end
                         else
-                            H | 32 | {RemovePartList_Aux {RemoveFirstNthElements T Length_SubList} SubList Length_SubList NextCharRemoveToo}
+                            List_Updated = List.2
+                            NewList_Updated = List.1 | NewList
+                            Length_List_Updated = Length_List
                         end
-                    else
-                        H | {RemovePartList_Aux T SubList Length_SubList NextCharRemoveToo}
+
+                        {RemovePartList_Aux List_Updated NewList_Updated Length_List_Updated}
                     end
                 end
             end
         in
             Length_SubList = {Length SubList}
-            if {FindPrefix List SubList} == true then
-                if NextCharRemoveToo == true then
-                    {RemovePartList_Aux {RemoveFirstNthElements List Length_SubList+1} SubList Length_SubList NextCharRemoveToo}
-                else
-                    {RemovePartList_Aux {RemoveFirstNthElements List Length_SubList} SubList Length_SubList NextCharRemoveToo}
-                end
-            else
-                {RemovePartList_Aux List SubList Length_SubList NextCharRemoveToo}
-            end
+            {Reverse {RemovePartList_Aux List nil {Length List}}}
         end
     end
+
+    % fun {RemovePartList List SubList NextCharRemoveToo}
+    %     local
+    %         Length_SubList
+    %         fun {RemovePartList_Aux List SubList Length_SubList NextCharRemoveToo}
+    %             case List
+    %             of nil then nil
+    %             [] H|T then
+    %                 if {FindPrefix T SubList} == true then
+    %                     if NextCharRemoveToo == true then
+    %                         % 153 => = ' special not the basic => basic one is 39
+    %                         if {Nth T Length_SubList+1} == 153 then
+    %                             H | 39 | {RemovePartList_Aux {RemoveFirstNthElements T Length_SubList+1} SubList Length_SubList NextCharRemoveToo}
+    %                         else
+    %                             H | 32 | {RemovePartList_Aux {RemoveFirstNthElements T Length_SubList+1} SubList Length_SubList NextCharRemoveToo}
+    %                         end
+    %                     else
+    %                         H | 32 | {RemovePartList_Aux {RemoveFirstNthElements T Length_SubList} SubList Length_SubList NextCharRemoveToo}
+    %                     end
+    %                 else
+    %                     H | {RemovePartList_Aux T SubList Length_SubList NextCharRemoveToo}
+    %                 end
+    %             end
+    %         end
+    %     in
+    %         Length_SubList = {Length SubList}
+    %         if {FindPrefix List SubList} == true then
+    %             if NextCharRemoveToo == true then
+    %                 {RemovePartList_Aux {RemoveFirstNthElements List Length_SubList+1} SubList Length_SubList NextCharRemoveToo}
+    %             else
+    %                 {RemovePartList_Aux {RemoveFirstNthElements List Length_SubList} SubList Length_SubList NextCharRemoveToo}
+    %             end
+    %         else
+    %             {RemovePartList_Aux List SubList Length_SubList NextCharRemoveToo}
+    %         end
+    %     end
+    % end
 
     %%%
     % Applies a cleaning function to a string
@@ -229,6 +267,7 @@ define
         of nil then nil
         [] H|T then
             % {Browse {String.toAtom {Parser H}}}
+            % {Browse {String.toAtom H}}
             local ParsedLine in
                 ParsedLine = {Parser H}
                 % nil represent the empty atom like this : ''.
@@ -980,19 +1019,21 @@ define
         List_PathName_Tweets = {OS.getDir TweetsFolder_Name}
 
         NberFiles = {Length List_PathName_Tweets}
-        % NberFiles = 1
+        % NberFiles = 5
 
-        if NberFiles < 10 then
-            NbThreads = NberFiles
-        else
-            NbThreads = NberFiles div 2
-        end
+        % if NberFiles < 10 then
+        %     NbThreads = NberFiles
+        % else
+        %     NbThreads = NberFiles div 2
+        % end
+
+        NbThreads = 50
 
         local UpdaterTree List_Line_Parsed Window Description in
 
             {Property.put print foo(width:1000 depth:1000)}  % for stdout siz
 
-            % Creation de l'interface graphique
+            % Description of the graphical user interface
             Description=td(
                 title: "Text predictor"
                 lr(text(handle:InputText width:50 height:10 background:white foreground:black wrap:word) button(text:"Predict" width:15 action:CallPress))
@@ -1000,7 +1041,7 @@ define
                 action:proc{$} {Application.exit 0} end % Quitte le programme quand la fenetre est fermee
                 )
             
-            % Creation of the graphical user interface"
+            % Creation of the graphical user interface
             Window = {QTk.build Description}
             {Window show}
 
