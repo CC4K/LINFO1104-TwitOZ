@@ -784,7 +784,7 @@ define
                 end
             end
         in
-            if Tree == leaf then [nil 0.0]
+            if Tree == leaf then [[nil] 0.0]
             else
                 List = {TraverseToGetProbability_Aux Tree 0 0 nil}
                 TotalFreq = List.1 div 2
@@ -846,7 +846,7 @@ define
             if Tree_Over == true then
 
                 ResultPress = {Press}
-                {Browse ResultPress}
+                % {System.show ResultPress}
 
                 ProbableWords = ResultPress.1
                 MaxFreq = ResultPress.2.1
@@ -854,7 +854,7 @@ define
                 % {Browse ProbableWords}
                 % {Browse MaxFreq}
 
-                if ProbableWords == nil then
+                if ProbableWords == [nil] then
                     {SetText_Window OutputText "NO WORD FIND!"}
                 else
                     {SetText_Window OutputText ProbableWords.1}
@@ -998,7 +998,7 @@ define
 
             % Clean the input user
             SplittedText = {CleaningUserInput {Tokens_String {InputText getText(p(1 0) 'end' $)} 32}}
-            
+            % {Browse SplittedText}
             List_Words = {Get_TwoLastWord SplittedText}
 
             if List_Words \= nil then
@@ -1008,16 +1008,17 @@ define
 
                 Key = {String.toAtom {Append_List BeforeLast 32|Last}}
                 Parsed_Key = {String.toAtom {ParseInputUser {Atom.toString Key}}}
+
                 Tree_Value = {LookingUp Main_Tree Parsed_Key}
                 % {Browse Tree_Value}
 
                 if Tree_Value == notfound then
-                    {TraverseToGetProbability leaf}
+                    [[nil] 0.0]
                 else
                     {TraverseToGetProbability Tree_Value}
                 end
-            else % If the user did't write at least two words => return [nil 0.0]
-                [nil 0.0] % => no word or one word only
+            else % If the user did't write at least two words => return [[nil] 0.0]
+                [[nil] 0.0] % => no word or one word only
             end
 		end
     end
@@ -1051,6 +1052,7 @@ define
                             L=1
                             {Wait L}
                             File_Parsed = {ParseAllLines LineToParsed fun {$ Str_Line} {RemoveEmptySpace {ParseLine Str_Line false}} end}
+                            % File_Parsed = {ParseAllLines LineToParsed fun {$ Str_Line} {RemoveEmptySpace {ParseLine Str_Line false}} end}
                             P=1
                         end
                     
@@ -1133,12 +1135,16 @@ define
         TweetsFolder_Name = {GetSentenceFolder}
         List_PathName_Tweets = {OS.getDir TweetsFolder_Name}
 
-        % NberFiles = {Length List_PathName_Tweets}
-        NberFiles = 6
+        NberFiles = {Length List_PathName_Tweets}
+        % NberFiles = 6
 
         % Need to do some tests to see the best number of threads
-        % NbThreads = 50
-        NbThreads = 6
+        if 50 > NberFiles then
+            NbThreads = NberFiles
+        else
+            NbThreads = 50
+        end
+        % NbThreads = 6
 
         local UpdaterTree List_Line_Parsed Window Description in
 
