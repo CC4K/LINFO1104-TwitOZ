@@ -10,50 +10,13 @@ import
     Reader at 'bin/reader.ozf'
     Parser at 'bin/parser.ozf'
     Tree at 'bin/tree.ozf'
+    Function at 'function.ozf'
+    Interface at 'interface.ozf'
 define
 
     % Global variables
 	InputText OutputText TweetsFolder_Name List_PathName_Tweets Main_Tree Tree_Over NberFiles NbThreads SeparatedWordsStream SeparatedWordsPort
 
-    %%%
-    % Procedure used to display some datas
-    %
-    % Example usage:
-    % In: 'hello there, please display me'
-    % Out: Display on a window : 'hello there, please display me'
-    %
-    % @param Buf: The data that we want to display on a window.
-    %             The data can be a list, a string, an atom,...
-    % @return: /
-    %%%
-    proc {Browse Buf}
-        {Browser.browse Buf}
-    end
-
-    %%%
-    % Concatenates a list of strings from a stream associated with a port
-    %
-    % Example usage:
-    % In: ['i am good and you']|['i am very good thanks']|['wow this is a port']|_ 
-    % Out: ['i am good and you i am very good thanks wow this is a port']
-    %
-    % @param Stream: a stream associated with a port that contains a list of parsed lines
-    % @return: a list with all the elements of the stream concatenated together
-    %%%
-    fun {Get_ListFromPortStream Stream}
-        local
-            fun {Get_ListFromPortStreamAux Stream}
-                case Stream
-                of nil|T then nil
-                [] H|T then
-                    {Append H {Get_ListFromPortStreamAux T}}
-                end
-            end
-        in
-            {Send SeparatedWordsPort nil}
-            {Get_ListFromPortStreamAux Stream}
-        end
-    end
 
     %%%
     % Function called when the user pressed the button 'predict'.
@@ -65,41 +28,34 @@ define
 	proc {CallPress}
 		local ResultPress ProbableWords MaxFreq in
             
-            % But de Tree_Over : bloquer le programme le temps que la structure soit cree
+            % Goal of Tree_Over : Block this bloc of instruction until the structure is created.
+            % If {CallPress} is called (= if the user pressed the button "predict") and the structure
+            % to stock datas is not ready yet, the program wait here because Tree_Over is only bind
+            % when the structure is over and ready.
             if Tree_Over == true then
 
                 ResultPress = {Press}
-                % {Browse ResultPress}
+                % {System.show ResultPress}
 
-                if ResultPress == none then
-                    {OutputText set("You must write minimum 2 words.")}
+                ProbableWords = ResultPress.1
+                MaxFreq = ResultPress.2.1
+
+                % {Browse ProbableWords}
+                % {Browse MaxFreq}
+
+                if ProbableWords == [nil] then
+                    {Interface.setText_Window OutputText "NO WORD FIND!"}
                 else
-                    ProbableWords = ResultPress.1
-                    MaxFreq = ResultPress.2.1
-
-                    % {Browse ProbableWords}
-                    % {Browse MaxFreq}
-
-                    if ProbableWords == nil then
-                        {OutputText set("NO WORD FIND!")}
-                    else
-                        {OutputText set(ProbableWords.1)} % Faut-il renvoyer le premier si y'en a plusieurs ?
-                    end
+                    {Interface.setText_Window OutputText ProbableWords.1}
                 end
             else
-                % Never executed
-                {OutputText set("Will never be display.")}
+                % Will never be executed but need to put something
+                skip
+                % {Interface.setText_Window OutputText "Will never be display."}
             end
 		end
 	end
 
-
-
-    %%% ================================================================================ %%%
-    %%% /! Fonction testee /!  %%% /! Fonction testee /! %%% /! Fonction testee /! %%%
-    %%% /! Fonction testee /!  %%% /! Fonction testee /! %%% /! Fonction testee /! %%%
-    %%% /! Fonction testee /!  %%% /! Fonction testee /! %%% /! Fonction testee /! %%%
-    %%% ================================================================================ %%%
 
     %%%
     % Displays the most likely prediction of the next word based on the last two entered words.
@@ -115,48 +71,36 @@ define
     %               <probability/frequency> := <int> | <float>
     %%%
     fun {Press}
-		
-		local ProbableWords_Probability TreeMaxFreq SplittedText BeforeLast Last Key Tree_Value in
-            
-			SplittedText = {String.tokens {InputText getText(p(1 0) 'end' $)} & }
-            
-            if {Length SplittedText} < 2 then % Pourrait optimise pour ne pas devoir appele {Length List}
-                none
-            else
-                Last = {String.tokens {List.last SplittedText} &\n}.1
-                BeforeLast = {Nth SplittedText {Length SplittedText} - 1}
+		local SplittedText List_Words BeforeLast Last Key Parsed_Key Tree_Value in
 
-                Key = {String.toAtom {Append {Append BeforeLast [32]} Last}}
-                Tree_Value = {Tree.lookingup Main_Tree Key}
-                
-                % {System.show Tree_Value}
+            % Clean the input user
+            SplittedText = {Parser.cleaningUserInput {Function.tokens_String {InputText getText(p(1 0) 'end' $)} 32}}
+            % {Browse SplittedText}
+            List_Words = {Function.get_TwoLastWord_List SplittedText}
+
+            if List_Words \= nil then
+
+                BeforeLast = List_Words.1
+                Last = {Function.tokens_String List_Words.2.1 10}.1
+
+                Key = {String.toAtom {Function.append_List BeforeLast 32|Last}}
+                Parsed_Key = {String.toAtom {Parser.parseInputUser {Atom.toString Key}}}
+
+                Tree_Value = {Tree.lookingUp Main_Tree Parsed_Key}
+                % {Browse Tree_Value}
 
                 if Tree_Value == notfound then
-                    ProbableWords_Probability = {Tree.traversetogetprobability leaf}
+                    [[nil] 0.0]
                 else
-                    ProbableWords_Probability = {Tree.traversetogetprobability Tree_Value}
+                    {Tree.traverseToGetProbability Tree_Value}
                 end
-                
-                %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-                %%%%%%%%%%%% To remove if we sure that we do with probability and not frequency %%%%%%%%%
-                %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-                %%% To have frequence and not the probability %%%
-
-                % TreeMaxFreq = {Tree.getTreeMaxFreq Tree_Value}
-
-                % if TreeMaxFreq == leaf then
-                %     [nil 0]
-                % else
-                %     {Browse TreeMaxFreq.value}
-                %     {Browse TreeMaxFreq.key}
-                %     [TreeMaxFreq.value TreeMaxFreq.key]
-                % end
-
+            else % If the user did't write at least two words => return [[nil] 0.0]
+                [[nil] 0.0] % => no word or one word only
             end
 		end
     end
 
+    
     %%%
     % Launches N reading and parsing threads that will read and process all the files.
     % The parsing threads send their results to the Port.
@@ -166,42 +110,80 @@ define
     % @return: /
     %%%
     proc {LaunchThreads Port N}
-        
-        local Basic_Nber_Iter Rest_Nber_Iter Current_Nber_Iter in
 
-            Basic_Nber_Iter = NberFiles div N
-            Rest_Nber_Iter = NberFiles mod N
+        local
+            List_Waiting_Threads
+            Basic_Nber_Iter
+            Rest_Nber_Iter
+            fun {Launch_OneThread Start End List_Waiting_Threads}
 
-            for X in 1..N do
+                if Start == End+1 then List_Waiting_Threads
+                else
+                    local File_Parsed File LineToParsed Thread_Reader_Parser L P in
 
-                local Current_Nber_Iter1 Start End in
-                    
-                    if Rest_Nber_Iter - X >= 0 then
-                        Current_Nber_Iter1 = Basic_Nber_Iter + 1
-                        Start = (X - 1) * Current_Nber_Iter1 + 1
-                    else
-                        Current_Nber_Iter1 = Basic_Nber_Iter
-                        %% Permet de repartir le mieux possible le travail entre les threads ! Formule trouve par de la logique
-                        Start = Rest_Nber_Iter * (Current_Nber_Iter1 + 1) + (X - 1 - Rest_Nber_Iter) * Current_Nber_Iter1 + 1
-                    end
+                        File = {Reader.getFilename TweetsFolder_Name List_PathName_Tweets Start}
+                        % File = "tweets/custom.txt"
 
-                    End = Start + Current_Nber_Iter1 - 1
-
-                    for Y in Start..End do
-
-                        local File ThreadReader ThreadParser L P in
-                            File = {Reader.getfilename TweetsFolder_Name List_PathName_Tweets Y}
-                            thread ThreadReader = {Reader.reader File} L=1 end
-                            thread {Wait L} ThreadParser = {Parser.parsealllines ThreadReader fun {$ Str_Line} {Parser.removeemptyspace {Parser.parseline Str_Line}} end} P=1 end
-                            {Wait P}
-                            {Send Port ThreadParser}
+                        thread Thread_Reader_Parser =
+                            LineToParsed = {Reader.read File}
+                            L=1
+                            {Wait L}
+                            File_Parsed = {Parser.parseAllLines LineToParsed fun {$ Str_Line} {Parser.removeEmptySpace {Parser.parseLine Str_Line false}} end}
+                            % File_Parsed = {Parser.parseAllLines LineToParsed fun {$ Str_Line} {Parser.removeEmptySpace {Parser.parseLine Str_Line false}} end}
+                            P=1
                         end
-                        
+                    
+                        {Send Port File_Parsed}
+                        {Launch_OneThread Start+1 End P|List_Waiting_Threads}
                     end
                 end
             end
+                
+            fun {Launch_AllThreads List_Waiting_Threads Nber_Iter}
+                
+                if Nber_Iter == 0 then List_Waiting_Threads
+                else
+                    local Current_Nber_Iter1 Start End in
+
+                        % Those formulas are used to split (in the best way) the work between threads.
+                        % Those formulas are complicated to find but the idea is here:
+                        % Example : if we have 6 threads and 23 files to read and process, the repartition will be [4 4 4 4 4 3].
+                        %           A naive version will do a repartition like this [3 3 3 3 3 8].
+                        %           This is a bad version because the last thread will slow down the program
+                        %%%
+                        if Rest_Nber_Iter - Nber_Iter >= 0 then
+                            Current_Nber_Iter1 = Basic_Nber_Iter + 1
+                            Start = (Nber_Iter - 1) * Current_Nber_Iter1 + 1
+                        else
+                            Current_Nber_Iter1 = Basic_Nber_Iter
+                            Start = Rest_Nber_Iter * (Current_Nber_Iter1 + 1) + (Nber_Iter - 1 - Rest_Nber_Iter) * Current_Nber_Iter1 + 1
+                        end
+        
+                        End = Start + Current_Nber_Iter1 - 1
+
+                        {Launch_AllThreads {Launch_OneThread Start End nil} Nber_Iter-1}
+
+                    end
+                end
+
+            end
+        in 
+            % Usefull to do the repartition of the work between threads
+            Basic_Nber_Iter = NberFiles div N
+            Rest_Nber_Iter = NberFiles mod N
+
+            % Launch all the threads
+            % The parsing files are stocked in the Port
+            % The variables to Wait all the threads are stocked in List_Waiting_Threads
+            List_Waiting_Threads = {Launch_AllThreads nil N}
+            
+            % Wait for all the threads
+            % When a thread have finished, the value P associated to this thread
+            % is bind and the program can move on 
+            {ForAll List_Waiting_Threads proc {$ P} {Wait P} end}
         end
     end
+
 
     %%%
     % Fetches Tweets Folder specified in the command line arguments
@@ -214,6 +196,7 @@ define
     in
         Args.'folder'
     end
+
 
     %%%
     % Main procedure that creates the Qtk window and calls differents functions/procedures to make the program functional.
@@ -230,56 +213,68 @@ define
         List_PathName_Tweets = {OS.getDir TweetsFolder_Name}
 
         NberFiles = {Length List_PathName_Tweets}
-        NbThreads = 5
+        % NberFiles = 6
 
-        local List_Line_Parsed Window Description in
+        % Need to do some tests to see the best number of threads
+        if 50 > NberFiles then
+            NbThreads = NberFiles
+        else
+            NbThreads = 50
+        end
+        % NbThreads = 6
+
+        local UpdaterTree List_Line_Parsed Window Description in
 
             {Property.put print foo(width:1000 depth:1000)}  % for stdout siz
 
-            % Creation de l'interface graphique
+            % Description of the graphical user interface
             Description=td(
                 title: "Text predictor"
                 lr(text(handle:InputText width:50 height:10 background:white foreground:black wrap:word) button(text:"Predict" width:15 action:CallPress))
                 text(handle:OutputText width:50 height:10 background:black foreground:white glue:w wrap:word)
                 action:proc{$} {Application.exit 0} end % Quitte le programme quand la fenetre est fermee
                 )
-            
-            % Creation de la fenÃªtre
+
+            % Creation of the graphical user interface
             Window = {QTk.build Description}
             {Window show}
-            
-            {InputText tk(insert 'end' "Loading... Please wait.")}
-            {InputText bind(event:"<Control-s>" action:CallPress)} % You can also bind events
-            {OutputText set("You must wait until the database is parsed.\nA message will notify you.\nDon't press the 'predict' button until the message appears!\n")}
 
-            %%% On creer le Port %%%
+            {Interface.insertText_Window InputText 0 0 'end' "Loading... Please wait."}
+            {InputText bind(event:"<Control-s>" action:CallPress)} % You can also bind events
+            {Interface.insertText_Window OutputText 0 0 'end' "You must wait until the database is parsed.\nA message will notify you.\nDon't press the 'predict' button until the message appears!\n"}
+
+            % Create the Port
             SeparatedWordsPort = {NewPort SeparatedWordsStream}
-            
-            %%% On lance les threads de lecture et de parsing %%%
+
+            % Launch all threads to reads and parses the files
             {LaunchThreads SeparatedWordsPort NbThreads}
 
-            %%% On recupere les informations dans le Stream du Port %%%
-            List_Line_Parsed = {Get_ListFromPortStream SeparatedWordsStream}
+            % We retrieve the information (parsed lines of the files) from the port's stream
+            List_Line_Parsed = {Function.get_ListFromPortStream SeparatedWordsStream}
+            {Interface.insertText_Window OutputText 6 0 none "Step 1 Over : Reading + Parsing\n"}
 
-            {OutputText tk(insert p(6 0) "Step 1 Over : Reading + Parsing\n")} % Pour la position, c'est du test essais-erreur
-            
-            %%% On creer l'arbre principale avec tout les sous-arbres en valeur %%%
-            Main_Tree = {Tree.traverseandchange {Tree.createtree List_Line_Parsed} fun {$ Tree Key Value} {Tree.insert Tree Key {Tree.createsubtree Value}} end}
-            Tree_Over = true % CallPress can work now
+            % Creation of the main binary tree (with all subtree as value)
+            UpdaterTree = fun {$ Tree Key Value} {Tree.insert Tree Key {Tree.createSubtree Value}} end
+            Main_Tree = {Tree.traverseAndChange {Tree.createTree List_Line_Parsed} UpdaterTree}
 
-            {OutputText tk(insert p(7 0) "Step 2 Over : Stocking datas\n")} % Pour la position, c'est du test essais-erreur
-            {OutputText tk(insert p(9 0) "The database is now parsed.\nYou can write and predict!")} % Pour la position, c'est du test essais-erreur
-            
-            if {Reader.findprefix {InputText getText(p(1 0) 'end' $)} "Loading... Please wait."} then
-                {InputText tk(delete p(1 0) p(1 23))} % Remove the first 23 characters (= "Loading... Please wait.")
+            % CallPress can work now because the structure is ready
+            Tree_Over = true
+
+            % Display and remove some strings
+            {Interface.insertText_Window OutputText 7 0 none "Step 2 Over : Stocking datas\n"}
+            {Interface.insertText_Window OutputText 9 0 none "The database is now parsed.\nYou can write and predict!"}
+
+            if {Function.findPrefix_InList {InputText getText(p(1 0) 'end' $)} "Loading... Please wait."} then
+                % Remove the first 23 characters (= "Loading... Please wait.")
+                {InputText tk(delete p(1 0) p(1 23))}
             else
-                {InputText set("")} % Remove all because the user add some texts between or before the line : "Loading... Please wait."
+                % Remove all because the user add some texts between or before the line : "Loading... Please wait."
+                {Interface.setText_Window InputText ""}
             end
         end
         %%ENDOFCODE%%
     end
 
-    % Appelle la procedure principale
+    % Call the main procedure
     {Main}
-
 end

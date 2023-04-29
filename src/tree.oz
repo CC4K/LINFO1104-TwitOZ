@@ -1,11 +1,10 @@
 functor
 import
-    System
+    Function at 'function.ozf'
 export
     createtree:CreateTree
     traverseandchange:TraverseAndChange
     lookingup:LookingUp
-    gettreemaxfreq:GetTreeMaxFreq
     traversetogetprobability:TraverseToGetProbability
     createsubtree:CreateSubtree
     insert:Insert
@@ -88,16 +87,22 @@ define
     % @param NewElem: the element whose frequency we want to increase by one
     % @return: a new updated list
     %%%
-    fun {UpdateList L NewElem}
-        case L
-        of notfound then (NewElem#1) | nil
-        [] nil then (NewElem#1) | nil 
-        [] H|T then 
-            case H 
-            of H1#H2 then 
-                if H1 == NewElem then (H1#(H2+1))|T 
-                else H |{ UpdateList T NewElem} end 
+    fun {UpdateList List NewElem}
+        local
+            fun {UpdateList_Aux List NewList NewElem}
+                case List
+                of notfound then (NewElem#1)|nil % Special case if the List of value hasn't be found in the tree
+                [] nil then (NewElem#1)|NewList
+                [] H|T then 
+                    case H 
+                    of H1#H2 then 
+                        if H1 == NewElem then (H1#(H2+1))|{Function.append_List T NewList}
+                        else {UpdateList_Aux T H|NewList NewElem} end 
+                    end
+                end
             end
+        in
+            {UpdateList_Aux List nil NewElem}
         end
     end
 
@@ -178,37 +183,63 @@ define
     % @return: a list of bi-grams (atom, not string) created from adjacent words in the input list
     %%%
     fun {BiGrams List}
-        case List
-        of nil then nil
-        [] H|nil then nil
-        [] H|T then
-            {String.toAtom {Append {Append H [32]} T.1}} | {BiGrams T}
-        end
-    end
-
-    %%%
-    % Creates a binary tree structure to store the data
-    %
-    % Example usage:
-    % In: L = [['i am the boss man'] ['no problem sir'] ["the boss is here"] ["the boss is here"]]
-    % Out: tree(key:'i am' value:['the'#1] t_left:tree(key:'boss is' value:['here'#2] t_left:
-    %      tree(key:'am the' value:['boss'#1] t_left:leaf t_right:leaf) t_right:leaf) t_right:
-    %      tree(key:'no problem' value:['sir'#1] t_left:leaf t_right:tree(key:'the boss' value:['man'#1 'is'#2] t_left:leaf t_right:leaf)))
-    %
-    % @param L: a list of lists of strings representing a line parsed (from a file)
-    % @return: a binary tree with all the data added
-    %%%
-    fun {CreateTree L}
         local
-            fun {CreateTreeAux Tree L}
-                case L
-                of nil then Tree
+            fun {BiGrams_Aux List NewList}
+                case List
+                of nil then NewList
+                [] H|nil then NewList
                 [] H|T then
-                    {CreateTreeAux {UpdateElementsOfTree Tree {BiGrams {String.tokens H 32}}} T}
+                    {BiGrams_Aux T {String.toAtom {Function.append_List H 32|T.1}}|NewList}
                 end
             end
         in
-            {CreateTreeAux leaf L}
+            {Reverse {BiGrams_Aux List nil}}
+        end
+    end
+
+
+    % Creates the all binary tree structure (to store the datas).
+    % To do it, the function 'Update_Tree' is applied on all
+    % the element of the list given as parameter.
+    % Check the docstring of 'Update_Tree' to see an example usage.
+    %
+    % @param List_List_Line: a list of lists of lists of strings
+    % @return: the all binary tree with all the datas added
+    %%%
+    fun {CreateTree List_List_Line}
+        
+        local
+
+            %%%
+            % Creates a part of the complete binary tree structure (to store the datas)
+            %
+            % Example usage:
+            % In: L = [["i am the boss man"] ["no problem sir"] ["the boss is here"] ["the boss is here"]]
+            % Out: tree(key:'i am' value:['the'#1] t_left:tree(key:'boss is' value:['here'#2] t_left:
+            %      tree(key:'am the' value:['boss'#1] t_left:leaf t_right:leaf) t_right:leaf) t_right:
+            %      tree(key:'no problem' value:['sir'#1] t_left:leaf t_right:tree(key:'the boss' value:['man'#1 'is'#2] t_left:leaf t_right:leaf)))
+            %
+            % @param List_Line: a list of lists of strings representing a line parsed (from a file)
+            % @param NewTree: the new binary tree initialized to 'leaf' that will be update
+            % @return: the new binary tree with some datas added
+            %%%
+            fun {Update_Tree List_Line NewTree}
+                case List_Line
+                of nil then NewTree
+                [] H|T then
+                    {Update_Tree T {UpdateElementsOfTree NewTree {BiGrams {Function.tokens_String H 32}}}}
+                end
+            end
+
+            fun {CreateTree_Aux List_List_Line UpdaterTree NewTree}
+                case List_List_Line
+                of nil then NewTree
+                [] H|T then
+                    {CreateTree_Aux T UpdaterTree {UpdaterTree H NewTree}}
+                end
+            end
+        in
+            {CreateTree_Aux List_List_Line fun {$ List_Line NewTree} {Update_Tree List_Line NewTree} end leaf}
         end
     end
 
@@ -227,7 +258,7 @@ define
     %%%
     fun {CreateSubtree List_Value}
         local
-            fun {CreateSubtreeAux SubTree List_Value}
+            fun {CreateSubtree_Aux SubTree List_Value}
                 case List_Value
                 of nil then SubTree
                 [] H|T then
@@ -236,16 +267,16 @@ define
                         local Value in
                             Value = {LookingUp SubTree Freq}
                             if Value == notfound then
-                                {CreateSubtreeAux {Insert SubTree Freq [Word]} T}
+                                {CreateSubtree_Aux {Insert SubTree Freq [Word]} T}
                             else
-                                {CreateSubtreeAux {Insert SubTree Freq {Append Value [Word]}} T}
+                                {CreateSubtree_Aux {Insert SubTree Freq Word|Value} T}
                             end
                         end
                     end
                 end
             end
         in
-            {CreateSubtreeAux leaf List_Value}
+            {CreateSubtree_Aux leaf List_Value}
         end
     end
 
@@ -264,34 +295,18 @@ define
     %%%
     fun {TraverseAndChange Tree UpdaterTree_ChangerValue}
         local
-            fun {TraverseAndChangeAux Tree UpdaterTree_ChangerValue UpdatedTree}
+            fun {TraverseAndChange_Aux Tree UpdaterTree_ChangerValue UpdatedTree}
                 case Tree
                 of leaf then UpdatedTree
                 [] tree(key:Key value:Value t_left:TLeft t_right:TRight) then
                     local T1 T2 in
-                        % Pre-Order traversal
-                        T1 = {TraverseAndChangeAux TLeft UpdaterTree_ChangerValue {UpdaterTree_ChangerValue UpdatedTree Key Value}}
-                        T2 = {TraverseAndChangeAux TRight UpdaterTree_ChangerValue T1}
+                        T1 = {TraverseAndChange_Aux TLeft UpdaterTree_ChangerValue {UpdaterTree_ChangerValue UpdatedTree Key Value}}
+                        T2 = {TraverseAndChange_Aux TRight UpdaterTree_ChangerValue T1}
                     end
                 end
             end
         in
-            {TraverseAndChangeAux Tree UpdaterTree_ChangerValue Tree}
-        end
-    end
-
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    %%%%%%%%%%%% To remove if we sure that we do with probability and not frequency %%%%%%%%%
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    fun {GetTreeMaxFreq Tree}
-        case Tree
-        of notfound then leaf
-        [] tree(key:K value:V t_left:TLeft t_right:TRight) then
-            if TRight \= leaf then
-                {GetTreeMaxFreq TRight}
-            else
-                tree(key:K value:V t_left:TLeft t_right:TRight)
-            end
+            {TraverseAndChange_Aux Tree UpdaterTree_ChangerValue Tree}
         end
     end
 
@@ -321,13 +336,13 @@ define
                 of leaf then [TotalFreq MaxFreq ListWord]
                 [] tree(key:Key value:Value t_left:TLeft t_right:TRight) then
                     local T1 T2 in
-                        T1 = {TraverseToGetProbability_Aux TLeft TotalFreq+Key Key Value}
-                        T2 = {TraverseToGetProbability_Aux TRight T1.1+Key Key Value}
+                        T1 = {TraverseToGetProbability_Aux TLeft ({Length Value}*Key)+TotalFreq Key Value}
+                        T2 = {TraverseToGetProbability_Aux TRight ({Length Value}*Key)+T1.1 Key Value}
                     end
                 end
             end
         in
-            if Tree == leaf then [nil 0]
+            if Tree == leaf then [[nil] 0.0]
             else
                 List = {TraverseToGetProbability_Aux Tree 0 0 nil}
                 TotalFreq = List.1 div 2
