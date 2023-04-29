@@ -1,6 +1,5 @@
 functor
 import
-    System
     Function at 'function.ozf'
 export
     CreateSubtree
@@ -33,11 +32,11 @@ define
     fun {LookingUp Tree Key}
         case Tree
         of leaf then notfound
-        [] tree(key:K value:V t_left:TLeft t_right:TRight) andthen K == Key
+        [] tree(key:K value:V t_left:_ t_right:_) andthen K == Key
             then V
-        [] tree(key:K value:V t_left:TLeft t_right:TRight) andthen K > Key
+        [] tree(key:K value:_ t_left:TLeft t_right:_) andthen K > Key
             then {LookingUp TLeft Key}
-        [] tree(key:K value:V t_left:TLeft t_right:TRight) andthen K < Key
+        [] tree(key:K value:_ t_left:_ t_right:TRight) andthen K < Key
             then {LookingUp TRight Key}
         end
     end
@@ -64,7 +63,7 @@ define
     fun {Insert Tree Key Value}
         case Tree
         of leaf then tree(key:Key value:Value t_left:leaf t_right:leaf)
-        [] tree(key:K value:V t_left:TLeft t_right:TRight) andthen K == Key then
+        [] tree(key:K value:_ t_left:TLeft t_right:TRight) andthen K == Key then
             tree(key:Key value:Value t_left:TLeft t_right:TRight)
         [] tree(key:K value:V t_left:TLeft t_right:TRight) andthen K < Key then
             tree(key:K value:V t_left:TLeft t_right:{Insert TRight Key Value})
@@ -166,7 +165,7 @@ define
         in
             case List_Keys
             of nil then Tree
-            [] H|nil then Tree
+            [] _|nil then Tree
             [] H|T then
                 {UpdateElementsOfTree {UpdateValue_ElemOfTree Tree H T} T}
             end
@@ -188,7 +187,7 @@ define
             fun {BiGrams_Aux List NewList}
                 case List
                 of nil then NewList
-                [] H|nil then NewList
+                [] _|nil then NewList
                 [] H|T then
                     {BiGrams_Aux T {String.toAtom {Function.append_List H 32|T.1}}|NewList}
                 end
@@ -300,9 +299,9 @@ define
                 case Tree
                 of leaf then UpdatedTree
                 [] tree(key:Key value:Value t_left:TLeft t_right:TRight) then
-                    local T1 T2 in
+                    local T1 in
                         T1 = {TraverseAndChange_Aux TLeft {UpdaterTree_ChangerValue UpdatedTree Key Value}}
-                        T2 = {TraverseAndChange_Aux TRight T1}
+                        _ = {TraverseAndChange_Aux TRight T1}
                     end
                 end
             end
@@ -336,9 +335,9 @@ define
                 case Tree
                 of leaf then [TotalFreq MaxFreq ListWord]
                 [] tree(key:Key value:Value t_left:TLeft t_right:TRight) then
-                    local T1 T2 in
+                    local T1 in
                         T1 = {TraverseToGetProbability_Aux TLeft ({Length Value}*Key)+TotalFreq Key Value}
-                        T2 = {TraverseToGetProbability_Aux TRight ({Length Value}*Key)+T1.1 Key Value}
+                        _ = {TraverseToGetProbability_Aux TRight ({Length Value}*Key)+T1.1 Key Value}
                     end
                 end
             end

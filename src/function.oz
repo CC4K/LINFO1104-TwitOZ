@@ -2,6 +2,7 @@ functor
 import
     Browser
 export
+    Browse
     Append_List
     Nth_List
     Tokens_String
@@ -40,7 +41,7 @@ define
             fun {AppendList_Aux L1 NewList}
                 case L1
                 of nil then NewList
-                [] H|T then
+                [] _|_ then
                     {AppendList_Aux L1.2 L1.1|NewList}
                 end
             end
@@ -116,7 +117,7 @@ define
     fun {Remove_List_FirstNthElements List Nth}
         case List
         of nil then nil
-        [] H|T then
+        [] _|T then
             if Nth == 1 then T
             else
                 {Remove_List_FirstNthElements T Nth-1}
@@ -162,7 +163,7 @@ define
     fun {Get_TwoLastWord_List ListWords}
         case ListWords
         of nil then nil
-        [] H|nil then nil
+        [] _|nil then nil
         [] H|T then
             if T.2 == nil andthen {Tokens_String T.1 10} \= nil then
                 [H T.1]
@@ -186,7 +187,7 @@ define
         local
             fun {Get_ListFromPortStream_Aux Stream NewList}
                 case Stream
-                of nil|T then NewList
+                of nil|_ then NewList
                 [] H|T then
                     {Get_ListFromPortStream_Aux T H|NewList}
                 end

@@ -1,6 +1,4 @@
-functor
-import
-    Browser  
+functor 
 export
     InsertText_Window 
     SetText_Window

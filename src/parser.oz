@@ -11,11 +11,9 @@ export
     ParseAllLines
 define
 
-
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %%%%%%%%%%%%%%%%%%%%% FUNCTIONS TO CLEAN THE FILES OF THE DATABASE %%%%%%%%%%%%%%%%%%%%%
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
 
     %%%
     % Remove a specified sublist from a given list
@@ -226,23 +224,30 @@ define
             fun {ParseLine_Aux Line NewLine PreviousGoodChar}
                 case Line
                 of H|T then
-                    local New_H Result_List in
+                    local New_H Bool Next_Line Result_GetNewChar in
                         % 39 is the character ' => keep it only if the previous and the future
                         % character is a letter or a digit (not a special character!)
+
+                        Next_Line = T
                         if H == 39 andthen PreviousGoodChar == true then
                             if T \= nil then
                                 if T.1 == {GetNewChar T.1}.1 then
-                                    {ParseLine_Aux T H|NewLine true}
+                                    New_H = H
+                                    Bool = true
                                 else
-                                    {ParseLine_Aux T 32|NewLine false}
+                                    New_H = 32
+                                    Bool = false
                                 end
                             else
-                                {ParseLine_Aux T 32|NewLine false}
+                                New_H = 32
+                                Bool = false
                             end
                         else
-                            Result_List = {GetNewChar H}
-                            {ParseLine_Aux T Result_List.1|NewLine Result_List.2.1}
+                            Result_GetNewChar = {GetNewChar H}
+                            New_H = Result_GetNewChar.1
+                            Bool = Result_GetNewChar.2.1
                         end
+                        {ParseLine_Aux Next_Line New_H|NewLine Bool}
                     end
                 [] nil then NewLine
                 end

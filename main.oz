@@ -1,28 +1,21 @@
 functor
 import 
     QTk at 'x-oz://system/wp/QTk.ozf'
-    System
     Application
     OS
     Property
-    Browser
+    % System
+    % Browser
 
     Function at 'function.ozf'
     Interface at 'interface.ozf'
     Parser at 'parser.ozf'
     Tree at 'tree.ozf'
     Reader at 'reader.ozf'
-
-    % Function at 'bin/function.ozf'
-    % Interface at 'bin/interface.ozf'
-    % Parser at 'bin/parser.ozf'
-    % Tree at 'bin/tree.ozf'
-    % Reader at 'bin/reader.ozf'
 define
 
     % Global variables
-	InputText OutputText TweetsFolder_Name List_PathName_Tweets Main_Tree Tree_Over NberFiles NbThreads SeparatedWordsStream SeparatedWordsPort
-
+	InputText OutputText TweetsFolder_Name List_PathName_Tweets Main_Tree Tree_Over NberFiles NbThreads SeparatedWordsPort
 
     %%%
     % Function called when the user pressed the button 'predict'.
@@ -224,9 +217,7 @@ define
         
         TweetsFolder_Name = {GetSentenceFolder}
         List_PathName_Tweets = {OS.getDir TweetsFolder_Name}
-
         NberFiles = {Length List_PathName_Tweets}
-        % NberFiles = 6
 
         % Need to do some tests to see the best number of threads
         if 50 > NberFiles then
@@ -234,19 +225,18 @@ define
         else
             NbThreads = 50
         end
-        % NbThreads = 6
 
-        local UpdaterTree List_Line_Parsed Window Description in
+        local Window Description List_Line_Parsed SeparatedWordsStream in
 
             {Property.put print foo(width:1000 depth:1000)}  % for stdout siz
 
             % Description of the graphical user interface
-            Description=td(
+            Description = td(
                 title: "Text predictor"
                 lr(text(handle:InputText width:50 height:10 background:white foreground:black wrap:word) button(text:"Predict" width:15 action:CallPress))
                 text(handle:OutputText width:50 height:10 background:black foreground:white glue:w wrap:word)
                 action:proc{$} {Application.exit 0} end % Quitte le programme quand la fenetre est fermee
-                )
+            )
 
             % Creation of the graphical user interface
             Window = {QTk.build Description}
@@ -268,8 +258,9 @@ define
             {Interface.insertText_Window OutputText 6 0 none "Step 1 Over : Reading + Parsing\n"}
 
             % Creation of the main binary tree (with all subtree as value)
-            UpdaterTree = fun {$ Tree Key Value} {Tree.insert Tree Key {Tree.createSubtree Value}} end
-            Main_Tree = {Tree.traverseAndChange {Tree.createTree List_Line_Parsed} UpdaterTree}
+            Main_Tree = {Tree.traverseAndChange {Tree.createTree List_Line_Parsed} fun {$ Tree Key Value}
+                                                                                        {Tree.insert Tree Key {Tree.createSubtree Value}}
+                                                                                   end}
             
             % CallPress can work now because the structure is ready
             Tree_Over = true
