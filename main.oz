@@ -933,7 +933,14 @@ define
 
 
     %%%
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% TODO %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % Gets the last word and the word before the last one of a list.
+    %
+    % Example usage:
+    % In: ["hello" "i am okay" "where is" "here"]
+    % Out: ["where is" "here"]
+    %
+    % @param ListWords: a list of strings
+    % return: a list of length 2 : [before_last_word   last_word]
     %%%
     fun {Get_TwoLastWord ListWords}
         case ListWords
@@ -949,7 +956,15 @@ define
     end
 
     %%%
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% TODO %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % Removes all the "\n" character and the unnecessary " " character.
+    %
+    % Example usage:
+    % In: ["hello       i am  okay 
+    %      " "  you are   nice    "]
+    % Out: ["hello i am okay" "you are nice"]
+    %
+    % @param SplittedText: a list of strings to be parsed
+    % return: the new list with all the string parsed.
     %%%
     fun {CleaningUserInput SplittedText}
         local
@@ -957,10 +972,7 @@ define
                 case SplittedText
                 of nil then {Filter NewSplittedText fun {$ X} X \= nil end}
                 [] H|T then
-                    local Clean_Text in
-                        Clean_Text  = {CleanUp H fun {$ X} {RemoveEmptySpace {RemovePartList X [10] 32 false}} end}
-                        {CleaningUserInput_Aux T Clean_Text|NewSplittedText}
-                    end
+                    {CleaningUserInput_Aux T {CleanUp H fun {$ X} {RemoveEmptySpace {RemovePartList X [10] 32 false}} end}|NewSplittedText}
                 end
             end
         in 
@@ -985,10 +997,8 @@ define
 		local SplittedText List_Words BeforeLast Last Key Parsed_Key Tree_Value in
 
             % Clean the input user
-            {System.show {Tokens_String {InputText getText(p(1 0) 'end' $)} 32}}
             SplittedText = {CleaningUserInput {Tokens_String {InputText getText(p(1 0) 'end' $)} 32}}
-            {System.show SplittedText}
-
+            
             List_Words = {Get_TwoLastWord SplittedText}
 
             if List_Words \= nil then
