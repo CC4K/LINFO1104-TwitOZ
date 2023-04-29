@@ -12,6 +12,7 @@ define
     % Global variables
 	InputText OutputText TweetsFolder_Name List_PathName_Tweets Main_Tree Tree_Over NberFiles NbThreads SeparatedWordsStream SeparatedWordsPort
 
+
     %%%
     % Procedure used to display some datas
     %
@@ -34,7 +35,75 @@ define
         from Open.file Open.text
     end
 
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    %%% ====== IMPLEMENTATION OF BASIC FUNCTIONS TO MAKE THEM RECURSIVE TERMINAL SECTION ====== %%%
+    %%% ====== IMPLEMENTATION OF BASIC FUNCTIONS TO MAKE THEM RECURSIVE TERMINAL SECTION ====== %%%
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+    % NOTE : These implementations are maybe a little bit too slow but there are recursive terminal like asked for the project.
+        
+    %%%
+    % Implementation of the List.append function but in recursive terminal way.
+    %%%
+    fun {Append_List L1 L2}
+        local
+            fun {AppendList_Aux L1 NewList}
+                case L1
+                of nil then NewList
+                [] H|T then
+                    {AppendList_Aux L1.2 L1.1|NewList}
+                end
+            end
+        in
+            {AppendList_Aux {Reverse L1} L2}
+        end
+    end
+
+    %%%
+    % Implementation of the List.append function but in recursive terminal way.
+    %%%
+    fun {Nth_List List N}
+        local
+            fun {Nth_List_Aux List N}
+                case List
+                of nil then nil
+                [] H|T then
+                    if N == 1 then H
+                    else {Nth_List T N-1} end
+                end
+            end
+        in
+            if N =< 0 then nil
+            else {Nth_List_Aux List N} end
+        end
+    end
+
+    fun {Tokens_String Str Char_Delimiter}
+        local
+            fun {Tokens_String_Aux Str SubList NewList}
+                case Str
+                of nil then
+                    if SubList \= nil then
+                        {Reverse {Reverse SubList}|NewList}
+                    else
+                        {Reverse NewList}
+                    end
+                [] H|T then
+                    if H == Char_Delimiter then
+                        if SubList \= nil then
+                            {Tokens_String_Aux T nil {Reverse SubList}|NewList}
+                        else
+                            {Tokens_String_Aux T nil NewList}
+                        end
+                    else
+                        {Tokens_String_Aux T H|SubList NewList}
+                    end
+                end
+            end
+        in
+            {Tokens_String_Aux Str nil nil}
+        end
+    end
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %%% ================= READING SECTION ================= %%%
@@ -83,7 +152,7 @@ define
     % @return: a string representing the desired filename (the Idxth filename in the list) preceded by the folder name + "/"
     %%%
     fun {GetFilename TweetsFolder_Name List_PathName Idx}
-        {Append TweetsFolder_Name 47 | {Nth List_PathName Idx}}
+        {Append_List TweetsFolder_Name 47|{Nth_List List_PathName Idx}}
     end
 
 
@@ -170,7 +239,7 @@ define
                                 List_Updated = {RemoveFirstNthElements List Length_SubList+1}
                                 Length_List_Updated = Length_List - (Length_SubList + 1)
                                 % 153 => = ' special not the basic => basic one is 39
-                                if {Nth List Length_SubList+1} == 153 then
+                                if {Nth_List List Length_SubList+1} == 153 then
                                     NewList_Updated = 39 | NewList
                                 else
                                     NewList_Updated = 32 | NewList
@@ -464,7 +533,7 @@ define
                 [] H|T then 
                     case H 
                     of H1#H2 then 
-                        if H1 == NewElem then (H1#(H2+1))|{Append T NewList}
+                        if H1 == NewElem then (H1#(H2+1))|{Append_List T NewList}
                         else {UpdateList_Aux T H|NewList NewElem} end 
                     end
                 end
@@ -557,7 +626,7 @@ define
                 of nil then NewList
                 [] H|nil then NewList
                 [] H|T then
-                    {BiGrams_Aux T {String.toAtom {Append H 32|T.1}}|NewList}
+                    {BiGrams_Aux T {String.toAtom {Append_List H 32|T.1}}|NewList}
                 end
             end
         in
@@ -595,7 +664,7 @@ define
                 case List_Line
                 of nil then NewTree
                 [] H|T then
-                    {Update_Tree T {UpdateElementsOfTree NewTree {BiGrams {String.tokens H 32}}}}
+                    {Update_Tree T {UpdateElementsOfTree NewTree {BiGrams {Tokens_String H 32}}}}
                 end
             end
 
@@ -879,7 +948,7 @@ define
 		
 		local ProbableWords_Probability TreeMaxFreq SplittedText BeforeLast Last Key Parsed_Key Tree_Value in
             
-			SplittedText = {String.tokens {InputText getText(p(1 0) 'end' $)} & }
+			SplittedText = {Tokens_String {InputText getText(p(1 0) 'end' $)} & }
 
             %%%
             % When the user pressed "word " => that count two words because there is a space
@@ -889,10 +958,10 @@ define
             % If the user did't write at least two words => return none
             if SplittedText.2 == nil then [nil 0.0] % => no word or one word only
             else
-                Last = {String.tokens {List.last SplittedText} &\n}.1
-                BeforeLast = {Nth SplittedText {Length SplittedText} - 1}
+                Last = {Tokens_String {List.last SplittedText} &\n}.1
+                BeforeLast = {Nth_List SplittedText {Length SplittedText} - 1}
 
-                Key = {String.toAtom {Append {Append BeforeLast [32]} Last}}
+                Key = {String.toAtom {Append_List BeforeLast 32|Last}}
 
                 Parsed_Key = {String.toAtom {ParseInputUser {Atom.toString Key}}}
 
@@ -1021,7 +1090,7 @@ define
         List_PathName_Tweets = {OS.getDir TweetsFolder_Name}
 
         NberFiles = {Length List_PathName_Tweets}
-        % NberFiles = 1
+        % NberFiles = 8
 
         % Need to do some tests to see the best number of threads
         NbThreads = 50
