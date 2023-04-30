@@ -111,6 +111,30 @@ define
     end
 
     %%%
+    % Changes the value with a new specified one at the location of a specified key in a binary tree
+    %
+    % Example usage:  tree(key: value: t_left: t_right:)
+    % In: Tree = tree(key:'character too' value:['hard'#2 'special'#1] t_left:tree(key:'amical friend' value:['for'#1] t_left:leaf t_right:leaf) t_right:leaf)
+    %     Key = "i am"
+    %     ListOfKeys = ["am the" "the boss"]
+    % Out: tree(key:'i am' value:['the'#1] t_left:tree(key:'amical friend' value:['for'#1] t_left:leaf t_right:leaf) t_right:tree(key:['character too'] value:['hard'#2 'special'#1] t_left:leaf t_right:leaf))
+    %
+    % @param Tree: a binary tree
+    % @param Key: a value representing a location in the binary tree
+    % @param List_Keys: a list of key (the next one after Key)
+    % @return: the new updated tree with one value updated
+    %%%
+    fun {UpdateValue_ElemOfTree Tree Key List_Keys}
+
+        local Value_to_Insert List_Value New_List_Value in %[i have been    "have been saying word" 3 => saying =>["been saying word bro"]
+            Value_to_Insert = {String.toAtom {Reverse {Function.tokens_String List_Keys.1 32}}.1} % atom that represent the next word of the Key (example : Key = 'must go' => Value_to_Insert = ['ready' 'now'])
+            List_Value = {LookingUp Tree Key}
+            New_List_Value = {UpdateList List_Value Value_to_Insert}
+            {Insert Tree Key New_List_Value}
+        end
+    end
+
+    %%%
     % Applies a function that changes the value of an element into a binary tree
     %
     % Example usage:
@@ -120,42 +144,15 @@ define
     % @param List_Keys: a list of keys (a key representing a location in the binary tree)
     % @return: the new updated tree with all the value updated (at the location of each key in List_Keys)
     %%%
-    fun {UpdateElementsOfTree Tree List_Keys N_Of_N_Grams}
-        local
-
-            %%%
-            % Changes the value with a new specified one at the location of a specified key in a binary tree
-            %
-            % Example usage:  tree(key: value: t_left: t_right:)
-            % In: Tree = tree(key:'character too' value:['hard'#2 'special'#1] t_left:tree(key:'amical friend' value:['for'#1] t_left:leaf t_right:leaf) t_right:leaf)
-            %     Key = "i am"
-            %     ListOfKeys = ["am the" "the boss"]
-            % Out: tree(key:'i am' value:['the'#1] t_left:tree(key:'amical friend' value:['for'#1] t_left:leaf t_right:leaf) t_right:tree(key:['character too'] value:['hard'#2 'special'#1] t_left:leaf t_right:leaf))
-            %
-            % @param Tree: a binary tree
-            % @param Key: a value representing a location in the binary tree
-            % @param List_Keys: a list of key (the next one after Key)
-            % @return: the new updated tree with one value updated
-            %%%
-            fun {UpdateValue_ElemOfTree Tree Key List_Keys}
-
-                local Value_to_Insert List_Value New_List_Value in %[i have been    "have been saying word" 3 => saying =>["been saying word bro"]
-                    Value_to_Insert = {String.toAtom {Reverse {Function.tokens_String List_Keys.1 32}}.1} % atom that represent the next word of the Key (example : Key = 'must go' => Value_to_Insert = ['ready' 'now'])
-                    List_Value = {LookingUp Tree Key}
-                    New_List_Value = {UpdateList List_Value Value_to_Insert}
-                    {Insert Tree Key New_List_Value}
-                end
-            end
-        in
-            case List_Keys
-            of nil then Tree
-            [] _|nil then Tree
-            [] H|T then
-                {UpdateElementsOfTree {UpdateValue_ElemOfTree Tree {String.toAtom H} T} T N_Of_N_Grams}
-            end
+    fun {UpdateElementsOfTree Tree Updater_Value List_Keys N_Of_N_Grams}
+        case List_Keys
+        of nil then Tree
+        [] _|nil then Tree
+        [] H|T then
+            {UpdateElementsOfTree {Updater_Value Tree {String.toAtom H} T} Updater_Value T N_Of_N_Grams}
         end
     end
-
+    
 
     % Creates the all binary tree structure (to store the datas).
     % To do it, the function 'Update_Tree' is applied on all
@@ -183,19 +180,11 @@ define
             % @return: the new binary tree with some datas added
             %%%
 
-            % fun {Update_Tree List_Line NewTree}
-            %     case List_Line
-            %     of nil then NewTree
-            %     [] H|T then
-            %         {Update_Tree T {UpdateElementsOfTree NewTree {BiGrams {Function.tokens_String H 32}}}}
-            %     end
-            % end
-
             fun {Update_Tree_Extension List_Line NewTree N}
                 case List_Line
                 of nil then NewTree
                 [] H|T then
-                    {Update_Tree_Extension T {UpdateElementsOfTree NewTree {Extensions.n_Grams {Function.tokens_String H 32} N_Of_N_Grams} N_Of_N_Grams} N_Of_N_Grams}
+                    {Update_Tree_Extension T {UpdateElementsOfTree NewTree fun {$ Tree Key List_Keys} {UpdateValue_ElemOfTree Tree Key List_Keys} end {Extensions.n_Grams {Function.tokens_String H 32} N_Of_N_Grams} N_Of_N_Grams} N_Of_N_Grams}
                 end
             end
 

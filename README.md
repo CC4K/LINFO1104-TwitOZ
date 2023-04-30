@@ -8,3 +8,6 @@ Extensions :
 
 # Propose more than N-Grammes to the user
     Into {CallPress}, the function to call is : {ProposeAllTheWords ...}
+
+# N-Grammes implementation
+    Must change N_For_N_Grams variable

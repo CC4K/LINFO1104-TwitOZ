@@ -2,6 +2,8 @@ functor
 import
     Function at 'function.ozf'
     Interface at 'interface.ozf'
+    Parser at 'parser.ozf'
+    Tree at 'tree.ozf'
 export
     ProposeAllTheWords
     N_Grams
@@ -69,6 +71,68 @@ define
             end
         in
             {Reverse {N_Grams_Aux List_N_Grams nil}}
+        end
+    end
+
+
+    %%% DATABASE ADDER SENTENCES IMPLEMENTATION %%%
+
+    fun {UpdateSubTreeValue Main_Tree Key Value}
+        local
+            Old_Value
+            NewValue
+            fun {UpdateSubTreeValue Main_Tree Key Value NewValue}
+                case Value
+                of nil then NewValue
+                [] H|T then
+                    if H == Value then NewValue
+                    else {UpdateSubTreeValue Main_Tree Key T H|NewValue} end
+                end
+            end
+        in
+            NewValue = {UpdateSubTreeValue Main_Tree Key Value nil}
+            if {Length NewValue} == {Length Value} then Main_Tree
+            else
+                {Tree.insert Main_Tree Key NewValue}
+                Old_Value = {Tree.lookingUp Main_Tree Key+1}
+                if Old_Value == notfound then {Tree.insert Main_Tree Key+1 Value}
+                else {Tree.insert Main_Tree Key+1 Value|Old_Value} end
+            end
+        end
+    end
+
+    fun {UpdateSubTree Main_Tree Key List_Keys N_Of_N_Grams}
+
+        local Value in
+            Value = {Tree.lookingUp Main_Tree Key}
+            if Value == notfound then {Tree.insert Main_Tree Key {Function.get_Last_Nth_Word_List List_Keys.1 N_Of_N_Grams}}
+            else
+                {Tree.traverseAndChange Main_Tree fun {$ Main_Tree Key Value} {UpdateSubTreeValue Main_Tree Key Value} end}
+            end
+        end
+    end
+
+    fun {AddDatas_ToTree Main_Tree N_Of_N_Grams LocationText}
+
+        local SplittedText SplittedText_Cleaned List_NGrams New_Main_Tree Updater_Value in
+
+            % Clean the input user
+            SplittedText = {Parser.cleaningUserInput {Function.tokens_String {LocationText getText(p(1 0) 'end' $)} 32}}
+            SplittedText_Cleaned = {Map SplittedText proc {$ Str_Line}
+                                    {Parser.removeEmptySpace
+                                        {Parser.parseLine
+                                            {Parser.cleanUp Str_Line
+                                                fun {$ Line_Str} {Parser.removePartList Line_Str [226 128] 32 true} end
+                                            }
+                                        false}
+                                    }
+                                end}
+
+            List_NGrams = {N_Grams SplittedText_Cleaned N_Of_N_Grams}
+
+            Updater_Value = fun {$ Tree Key List_Keys} {UpdateSubTree Tree Key List_Keys N_Of_N_Grams} end
+            New_Main_Tree = {Tree.updateElementsOfTree Main_Tree Updater_Value List_NGrams N_Of_N_Grams}
+            New_Main_Tree
         end
     end
 
