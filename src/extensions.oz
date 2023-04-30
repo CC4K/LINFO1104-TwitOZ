@@ -4,7 +4,12 @@ import
     Interface at 'interface.ozf'
 export
     ProposeAllTheWords
+    N_Grams
 define
+
+
+
+    %%% PROPOSE ALL THE MOST PROBABLE WORDS + FREQUENCE + PROBABILITY %%%
 
     proc {ProposeAllTheWords List_MostProbableWords Frequency Probability LocationText}
         local
@@ -40,6 +45,30 @@ define
 
             {Interface.insertText_Window LocationText Row 0 none {Append "The frequency of the/these word(s) is : " {Append Str_Frequency "\n"}}}
             {Interface.insertText_Window LocationText Row+1 0 none {Append "The probability of the/these word(s) is : " Str_Probability}}
+        end
+    end
+
+
+
+    %%% N-GRAMME IMPLEMENTATION %%%
+
+    fun {N_Grams List_N_Grams N}
+        local
+            fun {N_Grams_Aux List_N_Grams NewList}
+                case List_N_Grams
+                of nil then NewList
+                [] H|T then
+                    local SplittedList in
+                        SplittedList = {Function.splitList_AtIdx List_N_Grams N}
+                        if SplittedList == none then NewList
+                        else
+                            {N_Grams_Aux T {Function.concatenateElemOfList SplittedList.1 32}|NewList}
+                        end
+                    end
+                end
+            end
+        in
+            {Reverse {N_Grams_Aux List_N_Grams nil}}
         end
     end
 

@@ -1,6 +1,7 @@
 functor
 import
     Function at 'function.ozf'
+    Extensions at 'extensions.ozf'
 export
     CreateSubtree
     CreateTree
@@ -110,26 +111,6 @@ define
     end
 
     %%%
-    % Returns the part of the string after a specified delimiter character
-    %
-    % Example usage:
-    % In: "i am alone"
-    % Out: "am alone" if the delimiter is " " (32 in ASCII code)
-    %
-    % @param Str_Line: a string
-    % @param Delimiter_Char: a delimiter character to separate the string
-    % @return: the substring of the input string after the delimiter character
-    %%%
-    fun {GetStrAfterDelimiter Str_Line Delimiter_Char}
-        case Str_Line
-        of nil then nil
-        [] H|T then
-            if H == Delimiter_Char then T
-            else {GetStrAfterDelimiter T Delimiter_Char} end
-        end
-    end
-
-    %%%
     % Applies a function that changes the value of an element into a binary tree
     %
     % Example usage:
@@ -139,7 +120,7 @@ define
     % @param List_Keys: a list of keys (a key representing a location in the binary tree)
     % @return: the new updated tree with all the value updated (at the location of each key in List_Keys)
     %%%
-    fun {UpdateElementsOfTree Tree List_Keys}
+    fun {UpdateElementsOfTree Tree List_Keys N_Of_N_Grams}
         local
 
             %%%
@@ -147,8 +128,8 @@ define
             %
             % Example usage:  tree(key: value: t_left: t_right:)
             % In: Tree = tree(key:'character too' value:['hard'#2 'special'#1] t_left:tree(key:'amical friend' value:['for'#1] t_left:leaf t_right:leaf) t_right:leaf)
-            %     Key = 'i am'
-            %     ListOfKeys = ['am the' 'the boss']
+            %     Key = "i am"
+            %     ListOfKeys = ["am the" "the boss"]
             % Out: tree(key:'i am' value:['the'#1] t_left:tree(key:'amical friend' value:['for'#1] t_left:leaf t_right:leaf) t_right:tree(key:['character too'] value:['hard'#2 'special'#1] t_left:leaf t_right:leaf))
             %
             % @param Tree: a binary tree
@@ -158,8 +139,8 @@ define
             %%%
             fun {UpdateValue_ElemOfTree Tree Key List_Keys}
 
-                local Value_to_Insert List_Value New_List_Value in
-                    Value_to_Insert = {String.toAtom {GetStrAfterDelimiter {Atom.toString List_Keys.1} 32}} % atom that represent the next word of the Key (example : Key = 'must go' => Value_to_Insert = ['ready' 'now'])
+                local Value_to_Insert List_Value New_List_Value in %[i have been    "have been saying word" 3 => saying =>["been saying word bro"]
+                    Value_to_Insert = {String.toAtom {Reverse {Function.tokens_String List_Keys.1 32}}.1} % atom that represent the next word of the Key (example : Key = 'must go' => Value_to_Insert = ['ready' 'now'])
                     List_Value = {LookingUp Tree Key}
                     New_List_Value = {UpdateList List_Value Value_to_Insert}
                     {Insert Tree Key New_List_Value}
@@ -170,33 +151,8 @@ define
             of nil then Tree
             [] _|nil then Tree
             [] H|T then
-                {UpdateElementsOfTree {UpdateValue_ElemOfTree Tree H T} T}
+                {UpdateElementsOfTree {UpdateValue_ElemOfTree Tree {String.toAtom H} T} T N_Of_N_Grams}
             end
-        end
-    end
-
-    %%%
-    % Creates a bi-grams list from a list of words (representing the list of the main binary tree's keys)
-    %
-    % Example usage:
-    % In: ["i" "am" "hungry" "get" "some" "food"]
-    % Out: ['i am' 'am hungry' 'hungry get' 'get some' 'some food']
-    % 
-    % @param List: a list of strings representing words
-    % @return: a list of bi-grams (atom, not string) created from adjacent words in the input list
-    %%%
-    fun {BiGrams List}
-        local
-            fun {BiGrams_Aux List NewList}
-                case List
-                of nil then NewList
-                [] _|nil then NewList
-                [] H|T then
-                    {BiGrams_Aux T {String.toAtom {Function.append_List H 32|T.1}}|NewList}
-                end
-            end
-        in
-            {Reverse {BiGrams_Aux List nil}}
         end
     end
 
@@ -209,7 +165,7 @@ define
     % @param List_List_Line: a list of lists of lists of strings
     % @return: the all binary tree with all the datas added
     %%%
-    fun {CreateTree List_List_Line}
+    fun {CreateTree List_List_Line N_Of_N_Grams}
         
         local
 
@@ -226,11 +182,20 @@ define
             % @param NewTree: the new binary tree initialized to 'leaf' that will be update
             % @return: the new binary tree with some datas added
             %%%
-            fun {Update_Tree List_Line NewTree}
+
+            % fun {Update_Tree List_Line NewTree}
+            %     case List_Line
+            %     of nil then NewTree
+            %     [] H|T then
+            %         {Update_Tree T {UpdateElementsOfTree NewTree {BiGrams {Function.tokens_String H 32}}}}
+            %     end
+            % end
+
+            fun {Update_Tree_Extension List_Line NewTree N}
                 case List_Line
                 of nil then NewTree
                 [] H|T then
-                    {Update_Tree T {UpdateElementsOfTree NewTree {BiGrams {Function.tokens_String H 32}}}}
+                    {Update_Tree_Extension T {UpdateElementsOfTree NewTree {Extensions.n_Grams {Function.tokens_String H 32} N_Of_N_Grams} N_Of_N_Grams} N_Of_N_Grams}
                 end
             end
 
@@ -242,7 +207,10 @@ define
                 end
             end
         in
-            {CreateTree_Aux List_List_Line fun {$ List_Line NewTree} {Update_Tree List_Line NewTree} end leaf}
+            {CreateTree_Aux List_List_Line fun {$ List_Line NewTree} {Update_Tree_Extension List_Line NewTree N_Of_N_Grams} end leaf}
+
+            %%% Version basique %%%
+            % {CreateTree_Aux List_List_Line fun {$ List_Line NewTree} {Update_Tree List_Line NewTree} end leaf}
         end
     end
 

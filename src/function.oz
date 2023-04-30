@@ -8,8 +8,11 @@ export
     Tokens_String
     Remove_List_FirstNthElements
     FindPrefix_InList
-    Get_TwoLastWord_List
+    Get_Last_Nth_Word_List
     Get_ListFromPortStream
+    SplitList_AtIdx
+    AddReversedWord_ToString
+    ConcatenateElemOfList
 define
 
     %%%
@@ -150,26 +153,71 @@ define
         end
     end
 
-    %%%
-    % Gets the last word and the word before the last one of a list.
-    %
-    % Example usage:
-    % In: ["hello" "i am okay" "where is" "here"]
-    % Out: ["where is" "here"]
-    %
-    % @param ListWords: a list of strings
-    % return: a list of length 2 : [before_last_word   last_word]
-    %%%
-    fun {Get_TwoLastWord_List ListWords}
-        case ListWords
-        of nil then nil
-        [] _|nil then nil
-        [] H|T then
-            if T.2 == nil andthen {Tokens_String T.1 10} \= nil then
-                [H T.1]
-            else
-                {Get_TwoLastWord_List T}
+
+    fun {Get_Last_Nth_Word_List ListWords Nth}
+        local
+            fun {Get_Last_Nth_Word_List_Aux ListWords N}
+                case ListWords
+                of nil then nil
+                [] _|T then
+                    if N == 0 then ListWords
+                    else
+                        {Get_Last_Nth_Word_List_Aux T N-1}
+                    end
+                end
             end
+        in                         
+            {Get_Last_Nth_Word_List_Aux ListWords {Length ListWords}-Nth}
+        end
+    end
+
+    fun {SplitList_AtIdx List Idx}
+        local 
+            fun {SplitList_AtIdx_Aux List NewList Idx}
+                case List
+                of nil then none
+                [] H|T then
+                    if Idx == 1 then [{Reverse H|NewList} T]
+                    else {SplitList_AtIdx_Aux T H|NewList Idx-1} end
+                end
+            end
+        in
+            {SplitList_AtIdx_Aux List nil Idx}
+        end
+    end
+
+    fun {AddReversedWord_ToString Str Word}
+        local
+            fun {AddReversedWord_ToString NewStr Word}
+                case Word
+                of nil then NewStr
+                [] H|T then
+                {AddReversedWord_ToString H|NewStr T}
+                end
+            end
+        in
+            {AddReversedWord_ToString nil Word}
+        end
+    end
+     
+    fun {ConcatenateElemOfList List Delimiter}
+        local
+            String_To_Cleaned
+            fun {ConcatenateElemOfList_Aux List List_Str}
+                case List
+                of nil then List_Str
+                [] H|T then
+                    if Delimiter == none then
+                        {ConcatenateElemOfList_Aux T {Append {AddReversedWord_ToString "" H} List_Str}}
+                     else
+                        {ConcatenateElemOfList_Aux T {Append {AddReversedWord_ToString "" H} Delimiter|List_Str}}
+                     end
+                end
+            end
+        in
+            String_To_Cleaned = {Reverse {ConcatenateElemOfList_Aux List ""}}
+            if String_To_Cleaned.1 == 32 then String_To_Cleaned.2
+            else String_To_Cleaned end
         end
     end
 

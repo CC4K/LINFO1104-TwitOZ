@@ -4,7 +4,7 @@ import
     Application
     OS
     Property
-    % System
+    System
     Function at 'function.ozf'
     Interface at 'interface.ozf'
     Extensions at 'extensions.ozf'
@@ -14,7 +14,7 @@ import
 define
 
     % Global variables
-	InputText OutputText TweetsFolder_Name List_PathName_Tweets Main_Tree Tree_Over NberFiles NbThreads SeparatedWordsPort
+	InputText OutputText TweetsFolder_Name List_PathName_Tweets Main_Tree Tree_Over NberFiles NbThreads SeparatedWordsPort N_For_N_Grams
 
 
     %%%
@@ -37,17 +37,22 @@ define
 
                 % Clean the input user
                 SplittedText = {Parser.cleaningUserInput {Function.tokens_String {InputText getText(p(1 0) 'end' $)} 32}}
-                List_Words = {Function.get_TwoLastWord_List SplittedText}
+                List_Words = {Function.get_Last_Nth_Word_List SplittedText N_For_N_Grams}
 
                 if List_Words \= nil then
 
-                    BeforeLast = List_Words.1
-                    Last = {Function.tokens_String List_Words.2.1 10}.1
+                    Key = {Function.concatenateElemOfList List_Words 32}
 
-                    Key = {String.toAtom {Function.append_List BeforeLast 32|Last}}
-                    Parsed_Key = {String.toAtom {Parser.parseInputUser {Atom.toString Key}}}
+                    %%% Basic version %%%
+                    % BeforeLast = List_Words.1
+                    % Last = {Function.tokens_String List_Words.2.1 10}.1
+                    % Key = {String.toAtom {Function.append_List BeforeLast 32|Last}}
 
+                    Parsed_Key = {String.toAtom {Parser.parseInputUser Key}}
+
+                    {System.show Parsed_Key}
                     Tree_Value = {Tree.lookingUp Main_Tree Parsed_Key}
+                    {System.show Tree_Value}
 
                     if Tree_Value == notfound then
                         {Interface.setText_Window OutputText "NO WORD FIND!"}
@@ -203,6 +208,9 @@ define
         List_PathName_Tweets = {OS.getDir TweetsFolder_Name}
         NberFiles = {Length List_PathName_Tweets}
 
+        %%% To Chose the value (input user) %%%
+        N_For_N_Grams = 2
+
         % Need to do some tests to see the best number of threads
         if 50 > NberFiles then
             NbThreads = NberFiles
@@ -242,9 +250,17 @@ define
             {Interface.insertText_Window OutputText 6 0 none "Step 1 Over : Reading + Parsing\n"}
 
             % Creation of the main binary tree (with all subtree as value)
-            Main_Tree = {Tree.traverseAndChange {Tree.createTree List_Line_Parsed} fun {$ NewTree Key Value}
-                                                                                        {Tree.insert NewTree Key {Tree.createSubtree Value}}
-                                                                                   end}
+            
+            Main_Tree = {Tree.traverseAndChange {Tree.createTree List_Line_Parsed N_For_N_Grams} fun {$ NewTree Key Value}
+                {Tree.insert NewTree Key {Tree.createSubtree Value}}
+            end}
+
+            {System.show Main_Tree}
+            
+            %%% VERSION Basique
+            % Main_Tree = {Tree.traverseAndChange {Tree.createTree List_Line_Parsed} fun {$ NewTree Key Value}
+            %                                                                             {Tree.insert NewTree Key {Tree.createSubtree Value}}
+            %                                                                        end}
             
             % {Press} can work now because the structure is ready
             Tree_Over = true
