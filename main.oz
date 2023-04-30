@@ -230,16 +230,20 @@ define
             % Description of the GUI
             Description=td(
                 title: "Text predictor"
-                lr( td( text(handle:InputText width:85 height:12 background:white foreground:black wrap:word)
-                        text(handle:OutputText width:85 height:12 background:black foreground:white glue:w wrap:word)
+                lr( td( text(handle:InputText width:75 height:12 background:white foreground:black wrap:word tdscrollbar:false)
+                        text(handle:OutputText width:75 height:12 background:black foreground:white glue:w wrap:word tdscrollbar:false)
                         )
-                    td( button(text:"Predict" width:15 glue:we action:proc{$} _ = {Press} end) % add a reload_tree function on each press (reminder)
-                        button(text:"Save in database" width:15 glue:we action:Extensions.saveText)
-                        button(text:"Load file as input" width:15 glue:we action:Extensions.loadText)
+                    td( label(image:{QTk.newImage photo(url:"./twit.png")} borderwidth:0 width:200)
+                        button(text:"Predict" background:c(29 125 242) borderwidth:2 foreground:white activebackground:white activeforeground:black cursor:hand2 height:2 glue:we action:proc{$} _={Press} end)
+                        button(text:"Save in database" background:c(29 125 242) borderwidth:2 foreground:white activebackground:white activeforeground:black cursor:hand2 height:2 glue:we action:Extensions.saveText)
+                        button(text:"Load file as input" background:c(29 125 242) borderwidth:2 foreground:white activebackground:white activeforeground:black cursor:hand2 height:2 glue:we action:Extensions.loadText)
+                        button(text:"Quit" background:c(29 125 242) relief:sunken borderwidth:2 foreground:white activebackground:white activeforeground:black cursor:hand2 height:2 glue:we action:proc{$} {Application.exit 0} end)
                         )
-                    glue:nw)
+                glue:nw
+                background:c(29 161 242)
+                )
                 action:proc{$} {Application.exit 0} end
-            )
+                )
 
             %%% Basic version %%%
             % Description = td(
