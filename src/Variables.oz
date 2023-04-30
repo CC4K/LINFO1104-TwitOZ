@@ -12,7 +12,8 @@ export
     SeparatedWordsPort
 define
 
-    % Global variables
+    % Global variables that will not be modify during the execution of the program.
+    % Except for Main_Tree but idk how to do it yet.
 	InputText
     OutputText
     Main_Tree

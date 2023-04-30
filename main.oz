@@ -37,9 +37,8 @@ define
                 % Clean the input user
                 SplittedText = {Parser.cleaningUserInput {Function.tokens_String {Variables.inputText getText(p(1 0) 'end' $)} 32}}
                 List_Words = {Function.get_Last_Nth_Word_List SplittedText Variables.idx_N_Grams}
-
-                if List_Words \= nil then
-
+                    
+                if {Length List_Words} >= Variables.idx_N_Grams then
                     Key = {Function.concatenateElemOfList List_Words 32}
                     Parsed_Key = {String.toAtom {Parser.parseInputUser Key}}
                     
@@ -59,7 +58,7 @@ define
                         Frequency = ResultPress.2.2.1
 
                         if ProbableWords == [nil] then
-                            {Interface.setText_Window Variables.outputText "NO WORD FIND!"}
+                            {Interface.setText_Window Variables.outputText "No words found."}
                             [[nil] 0] % => no words found
                         else
                             {Extensions.proposeAllTheWords ProbableWords Frequency Probability}
@@ -69,7 +68,8 @@ define
                             % {Interface.setText_Window OutputText ProbableWords.1}
                         end
                     end
-                else % If the user did't write at least two words => return [[nil] 0]
+                else
+                    {Interface.setText_Window Variables.outputText {Append "Need at least " {Append {Int.toString Variables.idx_N_Grams} " words to predict the next one."}}}
                     [[nil] 0] % => no word or one word only
                 end
             end
@@ -220,7 +220,8 @@ define
                         )
                     td( %label(image:{QTk.newImage photo(url:"./twit.png")} borderwidth:0 width:275)
                         button(text:"Predict" background:c(29 125 242) borderwidth:2 font:{QTk.newFont font(family:"Verdana" size:14)} foreground:white activebackground:white activeforeground:black cursor:hand2 height:2 glue:we action:proc{$} _={Press} end) % add a reload_tree function on each press (reminder)
-                        button(text:"Save in database" background:c(29 125 242) borderwidth:2 font:{QTk.newFont font(family:"Verdana" size:14)} foreground:white activebackground:white activeforeground:black cursor:hand2 height:2 glue:we action:Extensions.saveText)
+                        button(text:"Save file .txt" background:c(29 125 242) borderwidth:2 font:{QTk.newFont font(family:"Verdana" size:14)} foreground:white activebackground:white activeforeground:black cursor:hand2 height:2 glue:we action:Extensions.saveText)
+                        button(text:"Save file into the database" background:c(29 125 242) borderwidth:2 font:{QTk.newFont font(family:"Verdana" size:14)} foreground:white activebackground:white activeforeground:black cursor:hand2 height:2 glue:we action:Extensions.saveText_Database)
                         button(text:"Load file as input" background:c(29 125 242) borderwidth:2 font:{QTk.newFont font(family:"Verdana" size:14)} foreground:white activebackground:white activeforeground:black cursor:hand2 height:2 glue:we action:Extensions.loadText)
                         button(text:"Quit" background:c(29 125 242) relief:sunken borderwidth:2 font:{QTk.newFont font(family:"Verdana" size:14)} foreground:white activebackground:white activeforeground:black cursor:hand2 height:2 glue:we action:proc{$} {Application.exit 0} end)
                         )

@@ -156,6 +156,7 @@ define
 
     fun {Get_Last_Nth_Word_List ListWords Nth}
         local
+            Result
             fun {Get_Last_Nth_Word_List_Aux ListWords N}
                 case ListWords
                 of nil then nil
@@ -166,8 +167,10 @@ define
                     end
                 end
             end
-        in                         
-            {Get_Last_Nth_Word_List_Aux ListWords {Length ListWords}-Nth}
+        in                      
+            Result = {Get_Last_Nth_Word_List_Aux ListWords {Length ListWords}-Nth}
+            if Result == nil then ListWords
+            else Result end
         end
     end
 

@@ -15,6 +15,7 @@ export
     AddDatas_ToTree
     SaveText
     LoadText
+    SaveText_Database
 define
 
     %%% PROPOSE ALL THE MOST PROBABLE WORDS + FREQUENCE + PROBABILITY %%%
@@ -112,7 +113,7 @@ define
         end
     end
 
-    fun {UpdateSubTree Main_Tree Key List_Keys}
+    fun {UpdateSubTree Main_Tree Key List_Keys} %TODO
 
         local Value in
             Value = {Tree.lookingUp Main_Tree Key}
@@ -122,7 +123,7 @@ define
             end
         end
     end
-
+    
     fun {AddDatas_ToTree Tree TextUserInput}
 
         local SplittedText SplittedText_Cleaned List_NGrams Updater_Value in
@@ -162,20 +163,34 @@ define
     % @return: /
     %%%
     proc {SaveText}
-        local File Name_File Contents in
-            Name_File = {QTk.dialogbox save(defaultextension:"txt"
-                                       filetypes:q(q("Txt files" q(".txt")) q("All files" q("*"))) $)}
-            
-            try 
-                File = {New Open.file init(name:Name)}
-                Contents = {File read(list:$ size:all)}
-                _={AddDatas_ToTree Variables.main_Tree Contents}
-            in 
-                {Variables.inputText set(Contents)}
-                {File close}
-            catch _ then {Application.exit} end
-        end
+        Name = {QTk.dialogbox save(   defaultextension:"txt"
+                                    filetypes:q(q("Txt files" q(".txt")) q("All files" q("*"))) $)}
+    in 
+        try 
+            User_File = {New Open.file init(name:Name flags:[write create truncate])}
+            Contents = {Variables.inputText get($)}
+        in 
+            {User_File write(vs:Contents)}
+            {User_File close}
+        catch _ then {Application.exit} end 
     end
+
+
+    %%% TODO : Implement this function
+    proc {SaveText_Database}
+        Name = {QTk.dialogbox save(   defaultextension:"txt"
+                                    filetypes:q(q("Txt files" q(".txt")) q("All files" q("*"))) $)}
+    in 
+        try 
+            DataBase_File = {New Open.file init(name:{Append {Append "tweets/" Name} ".txt"} flags:[write create truncate])}
+            Contents = {Variables.inputText get($)}
+            _ = {AddDatas_ToTree Variables.main_Tree Contents} % Useless now (I don't know how to save the tree)
+        in 
+            {DataBase_File write(vs:Contents)}
+            {DataBase_File close}
+        catch _ then {Application.exit} end 
+    end
+
 
     %%%
     % Loads a text file as prediction input in the app window
