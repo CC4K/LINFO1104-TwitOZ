@@ -51,18 +51,18 @@ define
                         {Interface.setText_Window Variables.outputText "NO WORD FIND!"}
                         [[nil] 0] % => no words found
                     else
-                        ResultPress = {Tree.traverseToGetProbability Tree_Value}
+                        ResultPress = {Tree.get_Result_Prediction Tree_Value}
 
                         ProbableWords = ResultPress.1
                         Probability = ResultPress.2.1
                         Frequency = ResultPress.2.2.1
 
-                        if ProbableWords == [nil] then
+                        if ProbableWords == nil then
                             {Interface.setText_Window Variables.outputText "No words found."}
                             [[nil] 0] % => no words found
                         else
                             {Extensions.proposeAllTheWords ProbableWords Frequency Probability}
-                            [ProbableWords Probability] % => no words found
+                            [ProbableWords Probability]
 
                             %% Basic version %%
                             % {Interface.setText_Window OutputText ProbableWords.1}
@@ -259,8 +259,8 @@ define
             {Interface.insertText_Window Variables.outputText 6 0 none "Step 1 Over : Reading + Parsing\n"}
 
             % Creation of the main binary tree (with all subtree as value)
-            Variables.main_Tree = {Tree.traverseAndChange {Tree.createTree List_Line_Parsed} fun {$ NewTree Key Value}
-                {Tree.insert NewTree Key {Tree.createSubtree Value}}
+            Variables.main_Tree = {Tree.updateAll_Tree {Tree.createTree List_Line_Parsed} fun {$ NewTree Key Value}
+                {Tree.insert NewTree Key {Tree.createSubTree Value}}
             end}
             
             % {Press} can work now because the structure is ready

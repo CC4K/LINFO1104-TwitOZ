@@ -119,7 +119,7 @@ define
             Value = {Tree.lookingUp Main_Tree Key}
             if Value == notfound then {Tree.insert Main_Tree Key {Function.get_Last_Nth_Word_List List_Keys.1 Variables.idx_N_Grams}}
             else
-                {Tree.traverseAndChange Main_Tree fun {$ Tree Key Value} {UpdateSubTreeValue Tree Key Value} end}
+                {Tree.updateAll_Tree Main_Tree fun {$ Tree Key Value} {UpdateSubTreeValue Tree Key Value} end}
             end
         end
     end
