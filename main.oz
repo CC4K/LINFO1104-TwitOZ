@@ -11,10 +11,15 @@ import
     Parser at 'parser.ozf'
     Tree at 'tree.ozf'
     Reader at 'reader.ozf'
+export
+    InputText
+    OutputText
+    Main_Tree
+    N_Of_N_Grams
 define
 
     % Global variables
-	InputText OutputText TweetsFolder_Name List_PathName_Tweets Main_Tree Tree_Over NberFiles NbThreads SeparatedWordsPort N_For_N_Grams
+	InputText OutputText TweetsFolder_Name List_PathName_Tweets Main_Tree Tree_Over NberFiles NbThreads SeparatedWordsPort N_Of_N_Grams
 
 
     %%%
@@ -37,7 +42,7 @@ define
 
                 % Clean the input user
                 SplittedText = {Parser.cleaningUserInput {Function.tokens_String {InputText getText(p(1 0) 'end' $)} 32}}
-                List_Words = {Function.get_Last_Nth_Word_List SplittedText N_For_N_Grams}
+                List_Words = {Function.get_Last_Nth_Word_List SplittedText N_Of_N_Grams}
 
                 if List_Words \= nil then
 
@@ -70,7 +75,7 @@ define
                             {Interface.setText_Window OutputText "NO WORD FIND!"}
                             [[nil] 0] % => no words found
                         else
-                            {Extensions.proposeAllTheWords ProbableWords Frequency Probability OutputText}
+                            {Extensions.proposeAllTheWords ProbableWords Frequency Probability}
                             [ProbableWords Probability] % => no words found
 
                             %% Basic version %%
@@ -203,13 +208,13 @@ define
     % @return: /
     %%%
     proc {Main}
+
+        %%% To Chose the value (input user) %%%
+        N_Of_N_Grams = 2
         
         TweetsFolder_Name = {GetSentenceFolder}
         List_PathName_Tweets = {OS.getDir TweetsFolder_Name}
         NberFiles = {Length List_PathName_Tweets}
-
-        %%% To Chose the value (input user) %%%
-        N_For_N_Grams = 2
 
         % Need to do some tests to see the best number of threads
         if 50 > NberFiles then
@@ -222,15 +227,29 @@ define
 
             {Property.put print foo(width:1000 depth:1000)}  % for stdout siz
 
-            % Description of the graphical user interface
-            Description = td(
+            % Description of the GUI
+            Description=td(
                 title: "Text predictor"
-                lr(text(handle:InputText width:50 height:10 background:white foreground:black wrap:word) button(text:"Predict" width:15 action:proc {$} _ = {Press} end))
-                text(handle:OutputText width:50 height:10 background:black foreground:white glue:w wrap:word)
-                action:proc{$} {Application.exit 0} end % Quitte le programme quand la fenetre est fermee
+                lr( td( text(handle:InputText width:85 height:12 background:white foreground:black wrap:word)
+                        text(handle:OutputText width:85 height:12 background:black foreground:white glue:w wrap:word)
+                        )
+                    td( button(text:"Predict" width:15 glue:we action:proc{$} _ = {Press} end) % add a reload_tree function on each press (reminder)
+                        button(text:"Save in database" width:15 glue:we action:Extensions.saveText)
+                        button(text:"Load file as input" width:15 glue:we action:Extensions.loadText)
+                        )
+                    glue:nw)
+                action:proc{$} {Application.exit 0} end
             )
 
-            % Creation of the graphical user interface
+            %%% Basic version %%%
+            % Description = td(
+            %     title: "Text predictor"
+            %     lr(text(handle:InputText width:50 height:10 background:white foreground:black wrap:word) button(text:"Predict" width:15 action:proc {$} _ = {Press} end))
+            %     text(handle:OutputText width:50 height:10 background:black foreground:white glue:w wrap:word)
+            %     action:proc{$} {Application.exit 0} end % Quitte le programme quand la fenetre est fermee
+            % )
+
+            % Creation of the GUI
             Window = {QTk.build Description}
             {Window show}
 
@@ -250,12 +269,12 @@ define
             {Interface.insertText_Window OutputText 6 0 none "Step 1 Over : Reading + Parsing\n"}
 
             % Creation of the main binary tree (with all subtree as value)
-            
-            Main_Tree = {Tree.traverseAndChange {Tree.createTree List_Line_Parsed N_For_N_Grams} fun {$ NewTree Key Value}
+            {System.show {Tree.createTree List_Line_Parsed}}
+            Main_Tree = {Tree.traverseAndChange {Tree.createTree List_Line_Parsed} fun {$ NewTree Key Value}
                 {Tree.insert NewTree Key {Tree.createSubtree Value}}
             end}
 
-            {System.show Main_Tree}
+            % {System.show Main_Tree}
             
             %%% VERSION Basique
             % Main_Tree = {Tree.traverseAndChange {Tree.createTree List_Line_Parsed} fun {$ NewTree Key Value}

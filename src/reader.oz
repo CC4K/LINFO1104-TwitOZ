@@ -1,6 +1,7 @@
 functor
 import 
     Open
+    Application
     Function at 'function.ozf'
 export
     GetFilename
@@ -25,18 +26,33 @@ define
     % @return: a list of all lines in the file, where each line is a string
     %%%
     fun {Read Filename}
-        fun {GetLine TextFile ListLine}
-            Line = {TextFile getS($)}
-        in
-            if Line == false then
-                {TextFile close}
-                ListLine
-            else
-                {GetLine TextFile Line|ListLine}
+        local
+            fun {GetLine TextFile}
+                try 
+                    {TextFile getS($)}
+                catch _ then
+                    {Application.exit}
+                end
             end
+
+            fun {Read_Aux TextFile ListLine}
+                local Line in
+                    Line = {GetLine TextFile}
+                    if Line == false then
+                        try 
+                            {TextFile close}
+                            ListLine
+                        catch _ then {Application.exit} end
+                    else
+                        {Read_Aux TextFile Line|ListLine}
+                    end
+                end
+            end
+        in
+            try 
+                {Read_Aux {New TextFile init(name:Filename flags:[read])} nil}
+            catch _ then {Application.exit} end
         end
-    in
-        {GetLine {New TextFile init(name:Filename flags:[read])} nil}
     end
     
 

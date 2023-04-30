@@ -1,36 +1,42 @@
 functor
 import
+    QTk at 'x-oz://system/wp/QTk.ozf'
+    Application
+    Open
+    System
     Function at 'function.ozf'
     Interface at 'interface.ozf'
     Parser at 'parser.ozf'
     Tree at 'tree.ozf'
+    Main at 'main.ozf'
 export
     ProposeAllTheWords
     N_Grams
+    AddDatas_ToTree
+    SaveText
+    LoadText
 define
-
-
 
     %%% PROPOSE ALL THE MOST PROBABLE WORDS + FREQUENCE + PROBABILITY %%%
 
-    proc {ProposeAllTheWords List_MostProbableWords Frequency Probability LocationText}
+    proc {ProposeAllTheWords List_MostProbableWords Frequency Probability}
         local
             proc {ProposeAllTheWords_Aux List_MostProbableWords LastPos}
                 case List_MostProbableWords
-                of nil then {Interface.insertText_Window LocationText 1 LastPos none " ]\n"}
+                of nil then {Interface.insertText_Window Main.outputText 1 LastPos none " ]\n"}
                 [] H|T then
-                    {Interface.insertText_Window LocationText 1 LastPos none 32|{Atom.toString H}}
+                    {Interface.insertText_Window Main.outputText 1 LastPos none 32|{Atom.toString H}}
                     {ProposeAllTheWords_Aux T LastPos+1+{Length {Atom.toString H}}}
                 end
             end
         in
-            {Interface.setText_Window LocationText "The most probable word(s) : ["}
+            {Interface.setText_Window Main.outputText "The most probable word(s) : ["}
             {ProposeAllTheWords_Aux List_MostProbableWords 30}
-            {DisplayFreq_And_Probability LocationText 2 Frequency Probability}
+            {DisplayFreq_And_Probability 2 Frequency Probability}
         end
     end
 
-    proc {DisplayFreq_And_Probability LocationText Row Frequency Probability}
+    proc {DisplayFreq_And_Probability Row Frequency Probability}
         local Str_Frequency Str_Probability in
 
             if {Float.is Frequency} == true then
@@ -45,8 +51,8 @@ define
                 Str_Probability = {Int.toString Probability}
             end
 
-            {Interface.insertText_Window LocationText Row 0 none {Append "The frequency of the/these word(s) is : " {Append Str_Frequency "\n"}}}
-            {Interface.insertText_Window LocationText Row+1 0 none {Append "The probability of the/these word(s) is : " Str_Probability}}
+            {Interface.insertText_Window Main.outputText Row 0 none {Append "The frequency of the/these word(s) is : " {Append Str_Frequency "\n"}}}
+            {Interface.insertText_Window Main.outputText Row+1 0 none {Append "The probability of the/these word(s) is : " Str_Probability}}
         end
     end
 
@@ -54,17 +60,21 @@ define
 
     %%% N-GRAMME IMPLEMENTATION %%%
 
-    fun {N_Grams List_N_Grams N}
+    fun {N_Grams List_N_Grams}
         local
             fun {N_Grams_Aux List_N_Grams NewList}
+                {System.show List_N_Grams}
                 case List_N_Grams
                 of nil then NewList
                 [] H|T then
                     local SplittedList in
-                        SplittedList = {Function.splitList_AtIdx List_N_Grams N}
+                        {System.show T}
+                        {System.show 'hello'}
+                        SplittedList = {Function.splitList_AtIdx T Main.n_of_NGram-1}
+                        {System.show 'okkkkk'}
                         if SplittedList == none then NewList
                         else
-                            {N_Grams_Aux T {Function.concatenateElemOfList SplittedList.1 32}|NewList}
+                            {N_Grams_Aux T {Function.concatenateElemOfList H|SplittedList.1 32}|NewList}
                         end
                     end
                 end
@@ -101,23 +111,23 @@ define
         end
     end
 
-    fun {UpdateSubTree Main_Tree Key List_Keys N_Of_N_Grams}
+    fun {UpdateSubTree Main_Tree Key List_Keys}
 
         local Value in
             Value = {Tree.lookingUp Main_Tree Key}
-            if Value == notfound then {Tree.insert Main_Tree Key {Function.get_Last_Nth_Word_List List_Keys.1 N_Of_N_Grams}}
+            if Value == notfound then {Tree.insert Main_Tree Key {Function.get_Last_Nth_Word_List List_Keys.1 Main.n_Of_N_Grams}}
             else
-                {Tree.traverseAndChange Main_Tree fun {$ Main_Tree Key Value} {UpdateSubTreeValue Main_Tree Key Value} end}
+                {Tree.traverseAndChange Main_Tree fun {$ Tree Key Value} {UpdateSubTreeValue Tree Key Value} end}
             end
         end
     end
 
-    fun {AddDatas_ToTree Main_Tree N_Of_N_Grams LocationText}
+    fun {AddDatas_ToTree Tree TextUserInput}
 
-        local SplittedText SplittedText_Cleaned List_NGrams New_Main_Tree Updater_Value in
+        local SplittedText SplittedText_Cleaned List_NGrams Updater_Value in
 
             % Clean the input user
-            SplittedText = {Parser.cleaningUserInput {Function.tokens_String {LocationText getText(p(1 0) 'end' $)} 32}}
+            SplittedText = {Parser.cleaningUserInput {Function.tokens_String TextUserInput 32}}
             SplittedText_Cleaned = {Map SplittedText proc {$ Str_Line}
                                     {Parser.removeEmptySpace
                                         {Parser.parseLine
@@ -128,12 +138,62 @@ define
                                     }
                                 end}
 
-            List_NGrams = {N_Grams SplittedText_Cleaned N_Of_N_Grams}
+            List_NGrams = {N_Grams SplittedText_Cleaned}
 
-            Updater_Value = fun {$ Tree Key List_Keys} {UpdateSubTree Tree Key List_Keys N_Of_N_Grams} end
-            New_Main_Tree = {Tree.updateElementsOfTree Main_Tree Updater_Value List_NGrams N_Of_N_Grams}
-            New_Main_Tree
+            Updater_Value = fun {$ Tree Key List_Keys} {UpdateSubTree Tree Key List_Keys} end
+
+            % The new main_tree updated
+            {Tree.updateElementsOfTree Tree Updater_Value List_NGrams}
         end
+    end
+
+
+
+
+
+    %%% IMPROVE GUI %%% %%% IMPROVE GUI %%% %%% IMPROVE GUI %%% %%% IMPROVE GUI %%%
+
+
+    %%%
+    % Saves an input text from the app window as a text file on the computer
+    %
+    % @param: /
+    % @return: /
+    %%%
+    proc {SaveText}
+        local File Name_File Contents in
+            Name_File = {QTk.dialogbox save(defaultextension:"txt"
+                                       filetypes:q(q("Txt files" q(".txt")) q("All files" q("*"))) $)}
+            
+            try 
+                File = {New Open.file init(name:Name)}
+                Contents = {File read(list:$ size:all)}
+                _={AddDatas_ToTree Main.main_Tree Contents}
+            in 
+                {Main.inputText set(Contents)}
+                {File close}
+            catch _ then {Application.exit} end
+        end
+    end
+
+    %%%
+    % Loads a text file as prediction input in the app window
+    %
+    % @param: /
+    % @return: /
+    %%%
+    proc {LoadText}
+        Name = {QTk.dialogbox load(defaultextension:"txt"
+                                 filetypes:q(q("Txt files" q(".txt")) q("All files" q("*"))) $)}
+        Contents = {Main.inputText get($)}
+    in 
+        try 
+            File = {New Open.file init(name:Name)}
+            Contents = {File read(list:$ size:all)}
+        in 
+            {Main.inputText set(Contents)}
+            {File close}
+        catch _ then {Application.exit} end 
     end
 
 end

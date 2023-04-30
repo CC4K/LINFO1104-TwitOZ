@@ -1,7 +1,9 @@
 functor
 import
+    System
     Function at 'function.ozf'
     Extensions at 'extensions.ozf'
+    Main at 'main.ozf'
 export
     CreateSubtree
     CreateTree
@@ -125,8 +127,8 @@ define
     % @return: the new updated tree with one value updated
     %%%
     fun {UpdateValue_ElemOfTree Tree Key List_Keys}
-
-        local Value_to_Insert List_Value New_List_Value in %[i have been    "have been saying word" 3 => saying =>["been saying word bro"]
+        {System.show 3}
+        local Value_to_Insert List_Value New_List_Value in
             Value_to_Insert = {String.toAtom {Reverse {Function.tokens_String List_Keys.1 32}}.1} % atom that represent the next word of the Key (example : Key = 'must go' => Value_to_Insert = ['ready' 'now'])
             List_Value = {LookingUp Tree Key}
             New_List_Value = {UpdateList List_Value Value_to_Insert}
@@ -144,12 +146,36 @@ define
     % @param List_Keys: a list of keys (a key representing a location in the binary tree)
     % @return: the new updated tree with all the value updated (at the location of each key in List_Keys)
     %%%
-    fun {UpdateElementsOfTree Tree Updater_Value List_Keys N_Of_N_Grams}
+    fun {UpdateElementsOfTree Tree Updater_Value List_Keys}
+        {System.show List_Keys}
         case List_Keys
         of nil then Tree
         [] _|nil then Tree
         [] H|T then
-            {UpdateElementsOfTree {Updater_Value Tree {String.toAtom H} T} Updater_Value T N_Of_N_Grams}
+            {UpdateElementsOfTree {Updater_Value Tree {String.toAtom H} T} Updater_Value T}
+        end
+    end
+
+    %%%
+    % Creates a part of the complete binary tree structure (to store the datas)
+    %
+    % Example usage:
+    % In: L = [["i am the boss man"] ["no problem sir"] ["the boss is here"] ["the boss is here"]]
+    % Out: tree(key:'i am' value:['the'#1] t_left:tree(key:'boss is' value:['here'#2] t_left:
+    %      tree(key:'am the' value:['boss'#1] t_left:leaf t_right:leaf) t_right:leaf) t_right:
+    %      tree(key:'no problem' value:['sir'#1] t_left:leaf t_right:tree(key:'the boss' value:['man'#1 'is'#2] t_left:leaf t_right:leaf)))
+    %
+    % @param List_Line: a list of lists of strings representing a line parsed (from a file)
+    % @param NewTree: the new binary tree initialized to 'leaf' that will be update
+    % @return: the new binary tree with some datas added
+    %%%
+
+    fun {Update_Tree List_Line NewTree}
+        {System.show 1}
+        case List_Line
+        of nil then NewTree
+        [] H|T then
+            {Update_Tree T {UpdateElementsOfTree NewTree fun {$ Tree Key List_Keys} {UpdateValue_ElemOfTree Tree Key List_Keys} end {Extensions.n_Grams {Function.tokens_String H 32}}}}
         end
     end
     
@@ -162,44 +188,18 @@ define
     % @param List_List_Line: a list of lists of lists of strings
     % @return: the all binary tree with all the datas added
     %%%
-    fun {CreateTree List_List_Line N_Of_N_Grams}
-        
+    fun {CreateTree List_List_Line}
         local
-
-            %%%
-            % Creates a part of the complete binary tree structure (to store the datas)
-            %
-            % Example usage:
-            % In: L = [["i am the boss man"] ["no problem sir"] ["the boss is here"] ["the boss is here"]]
-            % Out: tree(key:'i am' value:['the'#1] t_left:tree(key:'boss is' value:['here'#2] t_left:
-            %      tree(key:'am the' value:['boss'#1] t_left:leaf t_right:leaf) t_right:leaf) t_right:
-            %      tree(key:'no problem' value:['sir'#1] t_left:leaf t_right:tree(key:'the boss' value:['man'#1 'is'#2] t_left:leaf t_right:leaf)))
-            %
-            % @param List_Line: a list of lists of strings representing a line parsed (from a file)
-            % @param NewTree: the new binary tree initialized to 'leaf' that will be update
-            % @return: the new binary tree with some datas added
-            %%%
-
-            fun {Update_Tree_Extension List_Line NewTree N}
-                case List_Line
-                of nil then NewTree
-                [] H|T then
-                    {Update_Tree_Extension T {UpdateElementsOfTree NewTree fun {$ Tree Key List_Keys} {UpdateValue_ElemOfTree Tree Key List_Keys} end {Extensions.n_Grams {Function.tokens_String H 32} N_Of_N_Grams} N_Of_N_Grams} N_Of_N_Grams}
-                end
-            end
-
-            fun {CreateTree_Aux List_List_Line UpdaterTree NewTree}
+            UpdaterTree_Custom = fun {$ List_Line Tree} {Update_Tree List_Line Tree} end
+            fun {CreateTree_Aux List_List_Line UpdatedTree}
                 case List_List_Line
-                of nil then NewTree
+                of nil then UpdatedTree
                 [] H|T then
-                    {CreateTree_Aux T UpdaterTree {UpdaterTree H NewTree}}
+                    {CreateTree_Aux T {UpdaterTree_Custom H UpdatedTree}}
                 end
             end
         in
-            {CreateTree_Aux List_List_Line fun {$ List_Line NewTree} {Update_Tree_Extension List_Line NewTree N_Of_N_Grams} end leaf}
-
-            %%% Version basique %%%
-            % {CreateTree_Aux List_List_Line fun {$ List_Line NewTree} {Update_Tree List_Line NewTree} end leaf}
+            {CreateTree_Aux List_List_Line leaf}
         end
     end
 
