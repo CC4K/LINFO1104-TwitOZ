@@ -20,6 +20,7 @@ main : main.oz src/reader.oz src/parser.oz src/tree.oz
 	$(OZC) -c src/parser.oz -o bin/parser.ozf
 	$(OZC) -c src/tree.oz -o bin/tree.ozf
 	$(OZC) -c src/reader.oz -o bin/reader.ozf
+	$(OZC) -c src/extensions.oz -o bin/extensions.ozf
 
 	$(OZC) -c main.oz -o bin/main.ozf
 

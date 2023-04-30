@@ -5,10 +5,9 @@ import
     OS
     Property
     % System
-    % Browser
-
     Function at 'function.ozf'
     Interface at 'interface.ozf'
+    Extensions at 'extensions.ozf'
     Parser at 'parser.ozf'
     Tree at 'tree.ozf'
     Reader at 'reader.ozf'
@@ -16,39 +15,6 @@ define
 
     % Global variables
 	InputText OutputText TweetsFolder_Name List_PathName_Tweets Main_Tree Tree_Over NberFiles NbThreads SeparatedWordsPort
-
-    %%%
-    % Function called when the user pressed the button 'predict'.
-    % Call the function {Press} to get the most probable word to predict and display it on the window.
-    %
-    % @param: /
-    % @return: /
-    %%%
-	proc {CallPress}
-		local ResultPress ProbableWords MaxFreq in
-            
-            % Goal of Tree_Over : Block this bloc of instruction until the structure is created.
-            % If {CallPress} is called (= if the user pressed the button "predict") and the structure
-            % to stock datas is not ready yet, the program wait here because Tree_Over is only bind
-            % when the structure is over and ready.
-            if Tree_Over == true then
-
-                ResultPress = {Press}
-                {Function.browse ResultPress}
-
-                ProbableWords = ResultPress.1
-                MaxFreq = ResultPress.2.1
-
-                if ProbableWords == [nil] then
-                    {Interface.setText_Window OutputText "NO WORD FIND!"}
-                else
-                    {Interface.setText_Window OutputText ProbableWords.1}
-                end
-            else
-                skip
-            end
-		end
-	end
 
 
     %%%
@@ -65,31 +31,54 @@ define
     %               <probability/frequency> := <int> | <float>
     %%%
     fun {Press}
-		local SplittedText List_Words BeforeLast Last Key Parsed_Key Tree_Value in
 
-            % Clean the input user
-            SplittedText = {Parser.cleaningUserInput {Function.tokens_String {InputText getText(p(1 0) 'end' $)} 32}}
-            List_Words = {Function.get_TwoLastWord_List SplittedText}
+        if Tree_Over == true then
+            local ResultPress ProbableWords Frequency Probability SplittedText List_Words BeforeLast Last Key Parsed_Key Tree_Value in
 
-            if List_Words \= nil then
+                % Clean the input user
+                SplittedText = {Parser.cleaningUserInput {Function.tokens_String {InputText getText(p(1 0) 'end' $)} 32}}
+                List_Words = {Function.get_TwoLastWord_List SplittedText}
 
-                BeforeLast = List_Words.1
-                Last = {Function.tokens_String List_Words.2.1 10}.1
+                if List_Words \= nil then
 
-                Key = {String.toAtom {Function.append_List BeforeLast 32|Last}}
-                Parsed_Key = {String.toAtom {Parser.parseInputUser {Atom.toString Key}}}
+                    BeforeLast = List_Words.1
+                    Last = {Function.tokens_String List_Words.2.1 10}.1
 
-                Tree_Value = {Tree.lookingUp Main_Tree Parsed_Key}
+                    Key = {String.toAtom {Function.append_List BeforeLast 32|Last}}
+                    Parsed_Key = {String.toAtom {Parser.parseInputUser {Atom.toString Key}}}
 
-                if Tree_Value == notfound then
-                    [[nil] 0]
-                else
-                    {Tree.traverseToGetProbability Tree_Value}
+                    Tree_Value = {Tree.lookingUp Main_Tree Parsed_Key}
+
+                    if Tree_Value == notfound then
+                        {Interface.setText_Window OutputText "NO WORD FIND!"}
+                        [[nil] 0] % => no words found
+                    elseif Tree_Value == leaf then
+                        [[nil] 0] % => no words found
+                    else
+                        ResultPress = {Tree.traverseToGetProbability Tree_Value}
+
+                        ProbableWords = ResultPress.1
+                        Probability = ResultPress.2.1
+                        Frequency = ResultPress.2.2.1
+
+                        if ProbableWords == [nil] then
+                            {Interface.setText_Window OutputText "NO WORD FIND!"}
+                            [[nil] 0] % => no words found
+                        else
+                            {Extensions.proposeAllTheWords ProbableWords Frequency Probability OutputText}
+                            [ProbableWords Probability] % => no words found
+
+                            %% Basic version %%
+                            % {Interface.setText_Window OutputText ProbableWords.1}
+                        end
+                    end
+                else % If the user did't write at least two words => return [[nil] 0]
+                    [[nil] 0] % => no word or one word only
                 end
-            else % If the user did't write at least two words => return [[nil] 0]
-                [[nil] 0] % => no word or one word only
             end
-		end
+        else
+            [[nil] 0] % => no tree created yet
+        end
     end
 
     
@@ -228,7 +217,7 @@ define
             % Description of the graphical user interface
             Description = td(
                 title: "Text predictor"
-                lr(text(handle:InputText width:50 height:10 background:white foreground:black wrap:word) button(text:"Predict" width:15 action:CallPress))
+                lr(text(handle:InputText width:50 height:10 background:white foreground:black wrap:word) button(text:"Predict" width:15 action:proc {$} _ = {Press} end))
                 text(handle:OutputText width:50 height:10 background:black foreground:white glue:w wrap:word)
                 action:proc{$} {Application.exit 0} end % Quitte le programme quand la fenetre est fermee
             )
@@ -238,7 +227,7 @@ define
             {Window show}
 
             {Interface.insertText_Window InputText 0 0 'end' "Loading... Please wait."}
-            {InputText bind(event:"<Control-s>" action:CallPress)} % You can also bind events
+            {InputText bind(event:"<Control-s>" action:proc {$} _ = {Press} end)} % You can also bind events
             {Interface.insertText_Window OutputText 0 0 'end' "You must wait until the database is parsed.\nA message will notify you.\nDon't press the 'predict' button until the message appears!\n"}
 
             % Create the Port
@@ -257,7 +246,7 @@ define
                                                                                         {Tree.insert NewTree Key {Tree.createSubtree Value}}
                                                                                    end}
             
-            % CallPress can work now because the structure is ready
+            % {Press} can work now because the structure is ready
             Tree_Over = true
 
             % Display and remove some strings

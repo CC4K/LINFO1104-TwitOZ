@@ -345,17 +345,12 @@ define
                 end
             end
         in
-            if Tree == leaf then [[nil] 0.0]
-            else
-                List = {TraverseToGetProbability_Aux Tree 0 0 nil}
-                TotalFreq = List.1 div 2
-                MaxFreq = List.2.1
-                {Function.browse List.2.2}
-                List_Word = List.2.2.1
-                {Function.browse MaxFreq}
-                Probability = {Int.toFloat MaxFreq} / {Int.toFloat TotalFreq}
-                [List_Word Probability]
-            end
+            List = {TraverseToGetProbability_Aux Tree 0 0 nil}
+            TotalFreq = List.1 div 2
+            MaxFreq = List.2.1
+            List_Word = List.2.2.1
+            Probability = {Int.toFloat MaxFreq} / {Int.toFloat TotalFreq}
+            [List_Word Probability MaxFreq]
         end
     end
 
