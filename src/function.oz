@@ -1,6 +1,7 @@
 functor
 import
     Browser
+    System
 export
     Browse
     Append_List
@@ -11,7 +12,6 @@ export
     Get_Last_Nth_Word_List
     Get_ListFromPortStream
     SplitList_AtIdx
-    AddReversedWord_ToString
     ConcatenateElemOfList
 define
 
@@ -182,7 +182,8 @@ define
                 end
             end
         in
-            {SplitList_AtIdx_Aux List nil Idx}
+            if Idx == 0 then List
+            else {SplitList_AtIdx_Aux List nil Idx} end
         end
     end
 

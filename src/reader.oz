@@ -5,7 +5,7 @@ import
     Function at 'function.ozf'
 export
     GetFilename
-    Read
+    Read   
 define
 
     %%%

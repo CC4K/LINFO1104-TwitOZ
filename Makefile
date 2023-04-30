@@ -15,6 +15,7 @@ all : $(ENTRY_POINT)
 # J'ai ajouté cette partie (sauf la dernière ligne)
 main : main.oz src/reader.oz src/parser.oz src/tree.oz
 	if [ ! -d "bin" ]; then mkdir bin; fi
+	$(OZC) -c src/Variables.oz -o bin/Variables.ozf
 	$(OZC) -c src/function.oz -o bin/function.ozf
 	$(OZC) -c src/interface.oz -o bin/interface.ozf
 	$(OZC) -c src/parser.oz -o bin/parser.ozf

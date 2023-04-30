@@ -1,7 +1,9 @@
 functor 
 export
-    InsertText_Window 
+    InsertText_Window
     SetText_Window
+    % inserttext_window:InsertText_Window
+    % settext_window:SetText_Window
 define
 
     %%%

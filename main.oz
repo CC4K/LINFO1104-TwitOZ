@@ -5,22 +5,16 @@ import
     OS
     Property
     System
+
     Function at 'function.ozf'
     Interface at 'interface.ozf'
     Extensions at 'extensions.ozf'
     Parser at 'parser.ozf'
     Tree at 'tree.ozf'
     Reader at 'reader.ozf'
-export
-    InputText
-    OutputText
-    Main_Tree
-    N_Of_N_Grams
+    Variables at 'Variables.ozf'
+
 define
-
-    % Global variables
-	InputText OutputText TweetsFolder_Name List_PathName_Tweets Main_Tree Tree_Over NberFiles NbThreads SeparatedWordsPort N_Of_N_Grams
-
 
     %%%
     % Displays the most likely prediction of the next word based on the last two entered words.
@@ -37,32 +31,25 @@ define
     %%%
     fun {Press}
 
-        if Tree_Over == true then
+        if Variables.tree_Over == true then
             local ResultPress ProbableWords Frequency Probability SplittedText List_Words BeforeLast Last Key Parsed_Key Tree_Value in
 
                 % Clean the input user
-                SplittedText = {Parser.cleaningUserInput {Function.tokens_String {InputText getText(p(1 0) 'end' $)} 32}}
-                List_Words = {Function.get_Last_Nth_Word_List SplittedText N_Of_N_Grams}
+                SplittedText = {Parser.cleaningUserInput {Function.tokens_String {Variables.inputText getText(p(1 0) 'end' $)} 32}}
+                List_Words = {Function.get_Last_Nth_Word_List SplittedText Variables.idx_N_Grams}
 
                 if List_Words \= nil then
 
                     Key = {Function.concatenateElemOfList List_Words 32}
-
-                    %%% Basic version %%%
-                    % BeforeLast = List_Words.1
-                    % Last = {Function.tokens_String List_Words.2.1 10}.1
-                    % Key = {String.toAtom {Function.append_List BeforeLast 32|Last}}
-
                     Parsed_Key = {String.toAtom {Parser.parseInputUser Key}}
-
-                    {System.show Parsed_Key}
-                    Tree_Value = {Tree.lookingUp Main_Tree Parsed_Key}
-                    {System.show Tree_Value}
+                    
+                    Tree_Value = {Tree.lookingUp Variables.main_Tree Parsed_Key}
 
                     if Tree_Value == notfound then
-                        {Interface.setText_Window OutputText "NO WORD FIND!"}
+                        {Interface.setText_Window Variables.outputText "NO WORD FIND!"}
                         [[nil] 0] % => no words found
                     elseif Tree_Value == leaf then
+                        {Interface.setText_Window Variables.outputText "NO WORD FIND!"}
                         [[nil] 0] % => no words found
                     else
                         ResultPress = {Tree.traverseToGetProbability Tree_Value}
@@ -72,7 +59,7 @@ define
                         Frequency = ResultPress.2.2.1
 
                         if ProbableWords == [nil] then
-                            {Interface.setText_Window OutputText "NO WORD FIND!"}
+                            {Interface.setText_Window Variables.outputText "NO WORD FIND!"}
                             [[nil] 0] % => no words found
                         else
                             {Extensions.proposeAllTheWords ProbableWords Frequency Probability}
@@ -112,7 +99,7 @@ define
                 else
                     local File_Parsed File LineToParsed Thread_Reader_Parser L P in
 
-                        File = {Reader.getFilename TweetsFolder_Name List_PathName_Tweets Start}
+                        File = {Reader.getFilename Variables.tweetsFolder_Name Variables.list_PathName_Tweets Start}
                         % File = "tweets/custom.txt"
 
                         thread Thread_Reader_Parser =
@@ -169,8 +156,8 @@ define
             end
         in 
             % Usefull to do the repartition of the work between threads
-            Basic_Nber_Iter = NberFiles div N
-            Rest_Nber_Iter = NberFiles mod N
+            Basic_Nber_Iter = Variables.nberFiles div N
+            Rest_Nber_Iter = Variables.nberFiles mod N
 
             % Launch all the threads
             % The parsing files are stocked in the Port
@@ -210,17 +197,17 @@ define
     proc {Main}
 
         %%% To Chose the value (input user) %%%
-        N_Of_N_Grams = 2
+        Variables.idx_N_Grams = 3
         
-        TweetsFolder_Name = {GetSentenceFolder}
-        List_PathName_Tweets = {OS.getDir TweetsFolder_Name}
-        NberFiles = {Length List_PathName_Tweets}
+        Variables.tweetsFolder_Name = {GetSentenceFolder}
+        Variables.list_PathName_Tweets = {OS.getDir Variables.tweetsFolder_Name}
+        Variables.nberFiles = {Length Variables.list_PathName_Tweets}
 
         % Need to do some tests to see the best number of threads
-        if 50 > NberFiles then
-            NbThreads = NberFiles
+        if 50 > Variables.nberFiles then
+            Variables.nbThreads = Variables.nberFiles
         else
-            NbThreads = 50
+            Variables.nbThreads = 50
         end
 
         local Window Description List_Line_Parsed SeparatedWordsStream in
@@ -230,13 +217,12 @@ define
             % Description of the GUI
             Description=td(
                 title: "Text predictor"
-                lr( td( text(handle:InputText width:75 height:12 background:white foreground:black wrap:word tdscrollbar:false)
-                        text(handle:OutputText width:75 height:12 background:black foreground:white glue:w wrap:word tdscrollbar:false)
+                lr( td( text(handle:Variables.inputText width:75 height:12 background:white foreground:black wrap:word tdscrollbar:false)
+                        text(handle:Variables.outputText width:75 height:12 background:black foreground:white glue:w wrap:word tdscrollbar:false)
                         )
-                    td( label(image:{QTk.newImage photo(url:"./twit.png")} borderwidth:0 width:200)
-                        button(text:"Predict" background:c(29 125 242) borderwidth:2 foreground:white activebackground:white activeforeground:black cursor:hand2 height:2 glue:we action:proc{$} _={Press} end)
-                        button(text:"Save in database" background:c(29 125 242) borderwidth:2 foreground:white activebackground:white activeforeground:black cursor:hand2 height:2 glue:we action:Extensions.saveText)
-                        button(text:"Load file as input" background:c(29 125 242) borderwidth:2 foreground:white activebackground:white activeforeground:black cursor:hand2 height:2 glue:we action:Extensions.loadText)
+                    td( button(text:"Predict" background:c(29 125 242) borderwidth:2 foreground:white activebackground:white activeforeground:black cursor:hand2 height:2 glue:we action:proc{$} _={Press} end)
+                        % button(text:"Save in database" background:c(29 125 242) borderwidth:2 foreground:white activebackground:white activeforeground:black cursor:hand2 height:2 glue:we action:Extensions.saveText)
+                        % button(text:"Load file as input" background:c(29 125 242) borderwidth:2 foreground:white activebackground:white activeforeground:black cursor:hand2 height:2 glue:we action:Extensions.loadText)
                         button(text:"Quit" background:c(29 125 242) relief:sunken borderwidth:2 foreground:white activebackground:white activeforeground:black cursor:hand2 height:2 glue:we action:proc{$} {Application.exit 0} end)
                         )
                 glue:nw
@@ -257,47 +243,39 @@ define
             Window = {QTk.build Description}
             {Window show}
 
-            {Interface.insertText_Window InputText 0 0 'end' "Loading... Please wait."}
-            {InputText bind(event:"<Control-s>" action:proc {$} _ = {Press} end)} % You can also bind events
-            {Interface.insertText_Window OutputText 0 0 'end' "You must wait until the database is parsed.\nA message will notify you.\nDon't press the 'predict' button until the message appears!\n"}
+            {Interface.insertText_Window Variables.inputText 0 0 'end' "Loading... Please wait."}
+            {Variables.inputText bind(event:"<Control-s>" action:proc {$} _ = {Press} end)} % You can also bind events
+            {Interface.insertText_Window Variables.outputText 0 0 'end' "You must wait until the database is parsed.\nA message will notify you.\nDon't press the 'predict' button until the message appears!\n"}
 
             % Create the Port
-            SeparatedWordsPort = {NewPort SeparatedWordsStream}
+            Variables.separatedWordsPort = {NewPort SeparatedWordsStream}
 
             % Launch all threads to reads and parses the files
-            {LaunchThreads SeparatedWordsPort NbThreads}
+            {LaunchThreads Variables.separatedWordsPort Variables.nbThreads}
 
             % We retrieve the information (parsed lines of the files) from the port's stream
-            {Send SeparatedWordsPort nil}
+            {Send Variables.separatedWordsPort nil}
             List_Line_Parsed = {Function.get_ListFromPortStream SeparatedWordsStream}
-            {Interface.insertText_Window OutputText 6 0 none "Step 1 Over : Reading + Parsing\n"}
+            {Interface.insertText_Window Variables.outputText 6 0 none "Step 1 Over : Reading + Parsing\n"}
 
             % Creation of the main binary tree (with all subtree as value)
-            {System.show {Tree.createTree List_Line_Parsed}}
-            Main_Tree = {Tree.traverseAndChange {Tree.createTree List_Line_Parsed} fun {$ NewTree Key Value}
+            Variables.main_Tree = {Tree.traverseAndChange {Tree.createTree List_Line_Parsed} fun {$ NewTree Key Value}
                 {Tree.insert NewTree Key {Tree.createSubtree Value}}
             end}
-
-            % {System.show Main_Tree}
-            
-            %%% VERSION Basique
-            % Main_Tree = {Tree.traverseAndChange {Tree.createTree List_Line_Parsed} fun {$ NewTree Key Value}
-            %                                                                             {Tree.insert NewTree Key {Tree.createSubtree Value}}
-            %                                                                        end}
             
             % {Press} can work now because the structure is ready
-            Tree_Over = true
+            Variables.tree_Over = true
 
             % Display and remove some strings
-            {Interface.insertText_Window OutputText 7 0 none "Step 2 Over : Stocking datas\n"}
-            {Interface.insertText_Window OutputText 9 0 none "The database is now parsed.\nYou can write and predict!"}
+            {Interface.insertText_Window Variables.outputText 7 0 none "Step 2 Over : Stocking datas\n"}
+            {Interface.insertText_Window Variables.outputText 9 0 none "The database is now parsed.\nYou can write and predict!"}
 
-            if {Function.findPrefix_InList {InputText getText(p(1 0) 'end' $)} "Loading... Please wait."} then
+            if {Function.findPrefix_InList {Variables.inputText getText(p(1 0) 'end' $)} "Loading... Please wait."} then
                 % Remove the first 23 characters (= "Loading... Please wait.")
-                {InputText tk(delete p(1 0) p(1 23))}
+                {Variables.inputText tk(delete p(1 0) p(1 23))}
             else
                 % Remove all because the user add some texts between or before the line : "Loading... Please wait."
-                {Interface.setText_Window InputText ""}
+                {Interface.setText_Window Variables.inputText ""}
             end
         end
         %%ENDOFCODE%%

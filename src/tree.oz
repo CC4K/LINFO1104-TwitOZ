@@ -3,7 +3,7 @@ import
     System
     Function at 'function.ozf'
     Extensions at 'extensions.ozf'
-    Main at 'main.ozf'
+    Variables at 'Variables.ozf'
 export
     CreateSubtree
     CreateTree
@@ -127,7 +127,6 @@ define
     % @return: the new updated tree with one value updated
     %%%
     fun {UpdateValue_ElemOfTree Tree Key List_Keys}
-        {System.show 3}
         local Value_to_Insert List_Value New_List_Value in
             Value_to_Insert = {String.toAtom {Reverse {Function.tokens_String List_Keys.1 32}}.1} % atom that represent the next word of the Key (example : Key = 'must go' => Value_to_Insert = ['ready' 'now'])
             List_Value = {LookingUp Tree Key}
@@ -147,7 +146,6 @@ define
     % @return: the new updated tree with all the value updated (at the location of each key in List_Keys)
     %%%
     fun {UpdateElementsOfTree Tree Updater_Value List_Keys}
-        {System.show List_Keys}
         case List_Keys
         of nil then Tree
         [] _|nil then Tree
@@ -171,7 +169,6 @@ define
     %%%
 
     fun {Update_Tree List_Line NewTree}
-        {System.show 1}
         case List_Line
         of nil then NewTree
         [] H|T then
