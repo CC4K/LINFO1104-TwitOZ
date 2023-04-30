@@ -34,13 +34,10 @@ define
             if Tree_Over == true then
 
                 ResultPress = {Press}
-                % {System.show ResultPress}
+                {Function.browse ResultPress}
 
                 ProbableWords = ResultPress.1
                 MaxFreq = ResultPress.2.1
-
-                % {Browse ProbableWords}
-                % {Browse MaxFreq}
 
                 if ProbableWords == [nil] then
                     {Interface.setText_Window OutputText "NO WORD FIND!"}
@@ -48,9 +45,7 @@ define
                     {Interface.setText_Window OutputText ProbableWords.1}
                 end
             else
-                % Will never be executed but need to put something
                 skip
-                % {Interface.setText_Window OutputText "Will never be display."}
             end
 		end
 	end
@@ -74,7 +69,6 @@ define
 
             % Clean the input user
             SplittedText = {Parser.cleaningUserInput {Function.tokens_String {InputText getText(p(1 0) 'end' $)} 32}}
-            % {Browse SplittedText}
             List_Words = {Function.get_TwoLastWord_List SplittedText}
 
             if List_Words \= nil then
@@ -86,15 +80,14 @@ define
                 Parsed_Key = {String.toAtom {Parser.parseInputUser {Atom.toString Key}}}
 
                 Tree_Value = {Tree.lookingUp Main_Tree Parsed_Key}
-                % {Browse Tree_Value}
 
                 if Tree_Value == notfound then
-                    [[nil] 0.0]
+                    [[nil] 0]
                 else
                     {Tree.traverseToGetProbability Tree_Value}
                 end
-            else % If the user did't write at least two words => return [[nil] 0.0]
-                [[nil] 0.0] % => no word or one word only
+            else % If the user did't write at least two words => return [[nil] 0]
+                [[nil] 0] % => no word or one word only
             end
 		end
     end
@@ -127,15 +120,17 @@ define
                             LineToParsed = {Reader.read File}
                             L=1
                             {Wait L} 
-                            File_Parsed = {Parser.parseAllLines LineToParsed fun {$ Str_Line}
-                                                                                    {Parser.removeEmptySpace
-                                                                                        {Parser.parseLine
-                                                                                            {Parser.cleanUp Str_Line
-                                                                                                fun {$ Line_Str} {Parser.removePartList Line_Str [226 128] 32 true} end
-                                                                                            }
-                                                                                        false}
-                                                                                    }
-                                                                              end}
+                            File_Parsed = {Parser.parseAllLines
+                                            LineToParsed
+                                            fun {$ Str_Line}
+                                                {Parser.removeEmptySpace
+                                                    {Parser.parseLine
+                                                        {Parser.cleanUp Str_Line
+                                                            fun {$ Line_Str} {Parser.removePartList Line_Str [226 128] 32 true} end
+                                                        }
+                                                    false}
+                                                }
+                                            end}
                             P=1
                             {Send Port File_Parsed}
                         end
@@ -258,8 +253,8 @@ define
             {Interface.insertText_Window OutputText 6 0 none "Step 1 Over : Reading + Parsing\n"}
 
             % Creation of the main binary tree (with all subtree as value)
-            Main_Tree = {Tree.traverseAndChange {Tree.createTree List_Line_Parsed} fun {$ Tree Key Value}
-                                                                                        {Tree.insert Tree Key {Tree.createSubtree Value}}
+            Main_Tree = {Tree.traverseAndChange {Tree.createTree List_Line_Parsed} fun {$ NewTree Key Value}
+                                                                                        {Tree.insert NewTree Key {Tree.createSubtree Value}}
                                                                                    end}
             
             % CallPress can work now because the structure is ready

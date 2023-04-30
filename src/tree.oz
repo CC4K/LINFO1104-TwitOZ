@@ -63,10 +63,13 @@ define
     fun {Insert Tree Key Value}
         case Tree
         of leaf then tree(key:Key value:Value t_left:leaf t_right:leaf)
+
         [] tree(key:K value:_ t_left:TLeft t_right:TRight) andthen K == Key then
-            tree(key:Key value:Value t_left:TLeft t_right:TRight)
+            tree(key:K value:Value t_left:TLeft t_right:TRight)
+
         [] tree(key:K value:V t_left:TLeft t_right:TRight) andthen K < Key then
             tree(key:K value:V t_left:TLeft t_right:{Insert TRight Key Value})
+
         [] tree(key:K value:V t_left:TLeft t_right:TRight) andthen K > Key then
             tree(key:K value:V t_left:{Insert TLeft Key Value} t_right:TRight)
         end
@@ -347,7 +350,9 @@ define
                 List = {TraverseToGetProbability_Aux Tree 0 0 nil}
                 TotalFreq = List.1 div 2
                 MaxFreq = List.2.1
+                {Function.browse List.2.2}
                 List_Word = List.2.2.1
+                {Function.browse MaxFreq}
                 Probability = {Int.toFloat MaxFreq} / {Int.toFloat TotalFreq}
                 [List_Word Probability]
             end
