@@ -213,6 +213,8 @@ define
     %%%%%%%%%%%%%% DATABASE ADDER SENTENCES IMPLEMENTATION  %%%%%%%%%%%%%%
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+    %%%%%%%%% MARCHE PAS ENCORE PARFAITEMENT %%%%%%%%%%%%%%%
+    %%%%%%%%% MARCHE PAS ENCORE PARFAITEMENT %%%%%%%%%%%%%%%
 
     proc {Send_NewTree_ToPort Name_File}
         local BefTree NewTree LineToParsed File_Parsed L P in
@@ -274,9 +276,19 @@ define
 
     fun {Update_SubTree SubTree Key NewValue}
         if SubTree == notfound then {Tree.insert leaf 1 [NewValue]}
-        else {Get_List_Value SubTree Key} end
+        else
+            local Updated_SubTree in
+                Updated_SubTree = {Get_List_Value SubTree Key}
+                if SubTree == Updated_SubTree then
+                    {Tree.insert SubTree 1 [NewValue]}
+                else
+                    Updated_SubTree
+                end
+            end
+        end
     end
 
+    %%% PROBLEME AVECLES FREQUENCE TOTALES! %%%
 
     fun {Get_List_Value SubTree Value_Word}
         local
@@ -286,8 +298,11 @@ define
                 [] tree(key:Key value:Value_List t_left:TLeft t_right:TRight) then
                     local T1 New_List_Value in
                         if {IsInList Value_List Value_Word} == true then
-                            New_List_Value = {RemoveElemOfList Value_List Value_Word}
-                            {AddElemToList_InTree {Tree.insert SubTree Key New_List_Value} Key+1 Value_Word}
+                            if {Length Value_List} == 1 then {Tree.insert_Key SubTree Key Key+1}
+                            else
+                                New_List_Value = {RemoveElemOfList Value_List Value_Word}
+                                {AddElemToList_InTree {Tree.insert SubTree Key New_List_Value} Key+1 Value_Word}
+                            end
                         else
                             T1 = {Get_List_Value_Aux TLeft Updated_SubTree}
                             _ = {Get_List_Value_Aux TRight T1}
@@ -296,7 +311,7 @@ define
                 end
             end
         in
-            {Get_List_Value_Aux SubTree leaf}
+            {Get_List_Value_Aux SubTree SubTree}
         end
     end
 
@@ -326,7 +341,7 @@ define
                 of nil then New_Value_List
                 [] H|T then
                     if H == Value_Word then {Function.append_List New_Value_List T}
-                    else {RemoveElemOfList_Aux T Value_Word|New_Value_List} end
+                    else {RemoveElemOfList_Aux T H|New_Value_List} end
                 end
             end
         in

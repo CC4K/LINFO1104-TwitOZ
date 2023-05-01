@@ -11,6 +11,7 @@ export
     UpdateAll_Tree
     Update_Line_To_Tree
     Get_Result_Prediction
+    Insert_Key
 define
 
     %%%
@@ -75,6 +76,22 @@ define
 
         [] tree(key:K value:V t_left:TLeft t_right:TRight) andthen K > Key then
             tree(key:K value:V t_left:{Insert TLeft Key Value} t_right:TRight)
+        end
+    end
+
+    %%% TODO
+    fun {Insert_Key Tree Key NewKey}
+        case Tree
+        of leaf then tree(key:Key value:Value t_left:leaf t_right:leaf)
+
+        [] tree(key:K value:V t_left:TLeft t_right:TRight) andthen K == Key then
+            tree(key:NewKey value:V t_left:TLeft t_right:TRight)
+
+        [] tree(key:K value:V t_left:TLeft t_right:TRight) andthen K < Key then
+            tree(key:K value:V t_left:TLeft t_right:{Insert_Key TRight Key Value})
+
+        [] tree(key:K value:V t_left:TLeft t_right:TRight) andthen K > Key then
+            tree(key:K value:V t_left:{Insert_Key TLeft Key Value} t_right:TRight)
         end
     end
 
