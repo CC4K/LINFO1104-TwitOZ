@@ -4,7 +4,6 @@ import
     Application
     OS
     Property
-    System
 
     Function at 'function.ozf'
     Interface at 'interface.ozf'
@@ -17,31 +16,41 @@ import
 define
 
     %%%
-    % Displays the most likely prediction of the next word based on the last two entered words.
-    %
-    % @pre: The threads are "ready".
-    % @post: Function called when the prediction button is pressed.
+    % Displays to the output zone on the window the most likely prediction of the next word based on the N last entered words.
+    % The value of N depends of the N-Grams asked by the user.
+    % This function is called when the prediction button is pressed.
     %
     % @param: /
     % @return: Returns a list containing the most probable word(s) list accompanied by the highest probability/frequency.
     %          The return value must take the form:
+    %
     %               <return_val> := <most_probable_words> '|' <probability/frequency> '|' nil
-    %               <most_probable_words> := <atom> '|' <most_probable_words> | nil
+    %
+    %               <most_probable_words> := <atom> '|' <most_probable_words>
+    %                                        | nil
+    %                                        | <no_word_found>
+    %
+    %               <no_word_found>         := nil '|' nil
+    %
     %               <probability/frequency> := <int> | <float>
     %%%
     fun {Press}
 
+        % If the structure to stock all the datas of the database is created
         if Variables.tree_Over == true then
-            local ResultPress ProbableWords Frequency Probability SplittedText List_Words BeforeLast Last Key Parsed_Key Tree_Value in
+            local InputUser SplittedText List_Words Key Parsed_Key Tree_Value ResultPress ProbableWords Frequency Probability in
 
-                % Clean the input user
-                SplittedText = {Parser.cleaningUserInput {Variables.inputText getText(p(1 0) 'end' $)}}
+                % Clean the input user and get the N last words (N depends of the N-Grams asked by the user)
+                InputUser = {Variables.inputText getText(p(1 0) 'end' $)}
+                SplittedText = {Parser.cleaningUserInput InputUser}
                 List_Words = {Function.get_Last_Nth_Word_List SplittedText Variables.idx_N_Grams}
-                    
+                
+
                 if {Length List_Words} >= Variables.idx_N_Grams then
+
+                    % Get the subtree representing the value at the key created by the concatenation of the N last words
                     Key = {Function.concatenateElemOfList List_Words 32}
-                    Parsed_Key = {String.toAtom {Parser.parseInputUser Key}}
-                    
+                    Parsed_Key = {String.toAtom {Parser.parseInputUser Key}} % Parses the key to avoid problems with special characters
                     Tree_Value = {Tree.lookingUp Variables.main_Tree Parsed_Key}
 
                     if Tree_Value == notfound then
@@ -51,6 +60,8 @@ define
                         {Interface.setText_Window Variables.outputText "No words found."}
                         [[nil] 0] % => no words found
                     else
+
+                        % Get the most probable word(s) and the highest probability/frequency
                         ResultPress = {Tree.get_Result_Prediction Tree_Value}
 
                         ProbableWords = ResultPress.1
@@ -61,7 +72,10 @@ define
                             {Interface.setText_Window Variables.outputText "No words found."}
                             [[nil] 0] % => no words found
                         else
+                            % Display to the window the most probable word(s) and the highest probability/frequency
                             {Extensions.proposeAllTheWords ProbableWords Frequency Probability}
+
+                            % Return the most probable word(s) and the highest probability/frequency
                             [ProbableWords Probability]
 
                             %% Basic version %%
@@ -69,8 +83,9 @@ define
                         end
                     end
                 else
+                    % Not enough words to predict the next one
                     {Interface.setText_Window Variables.outputText {Append "Need at least " {Append {Int.toString Variables.idx_N_Grams} " words to predict the next one."}}}
-                    [[nil] 0] % => no word or one word only
+                    [[nil] 0]
                 end
             end
         else
@@ -90,19 +105,30 @@ define
     proc {LaunchThreads Port N}
 
         local
+            Basic_Nber_Iter = Variables.nberFiles div N
+            Rest_Nber_Iter = Variables.nberFiles mod N
             List_Waiting_Threads
-            Basic_Nber_Iter
-            Rest_Nber_Iter
+
+            %%%
+            % Allows to launch a thread that will read and parse a file
+            % and to get the list with the value unbound until the thread has finished its work.
+            %
+            % @param Start: the number of the file where the thread begins to work (reads and parses)
+            % @param End: the number of the file where the thread stops to work (reads and parses)
+            % @param List_Waiting_Threads: a list initialized to nil
+            % @return: the list containing all the value unbound of all threads.
+            %          the value will be bound where the thread has finished its work.
             fun {Launch_OneThread Start End List_Waiting_Threads}
 
+                % If the thread has done (End - Start) files, the list is returned
                 if Start == End+1 then List_Waiting_Threads
                 else
-                    local File_Parsed File LineToParsed Thread_Reader_Parser L P in
-
-                        File = {Reader.getFilename Start}
-                        % File = "tweets/custom.txt"
-
-                        thread Thread_Reader_Parser =
+                    local File_Parsed File LineToParsed L P in
+                        % Launches a thread that will read and parse the file
+                        % After the work done, the thread will send the result to the port
+                        thread _ =
+                            File = {Reader.getFilename Start}
+                            % File = "tweets/custom.txt"
                             LineToParsed = {Reader.read File}
                             L=1
                             {Wait L} 
@@ -115,39 +141,44 @@ define
                     end
                 end
             end
+            
+            %%%
+            % Allows to launch N threads and to get the list with the value of each thread :
+            %     Unbound if the thread has not finished its work
+            %     Bound if the thread has finished its work
+            %
+            % @param List_Waiting_Threads: a list initialized to nil
+            % @param Nber_Threads: the number of threads to launch
+            % @return: the list containing all the value unbound (until they have finished their work) of all threads.
+            fun {Launch_AllThreads List_Waiting_Threads Nber_Threads}
                 
-            fun {Launch_AllThreads List_Waiting_Threads Nber_Iter}
-                
-                if Nber_Iter == 0 then List_Waiting_Threads
+                % If all the threads have been launch and all the result list has been get, the list is returned
+                if Nber_Threads == 0 then List_Waiting_Threads
                 else
                     local Current_Nber_Iter1 Start End in
 
-                        % Those formulas are used to split (in the best way) the work between threads.
+                        % Those formulas are used to split (= the best way) the work between threads.
                         % Those formulas are complicated to find but the idea is here:
                         % Example : if we have 6 threads and 23 files to read and process, the repartition will be [4 4 4 4 4 3].
                         %           A naive version will do a repartition like this [3 3 3 3 3 8].
                         %           This is a bad version because the last thread will slow down the program
                         %%%
-                        if Rest_Nber_Iter - Nber_Iter >= 0 then
+                        if Rest_Nber_Iter - Nber_Threads >= 0 then
                             Current_Nber_Iter1 = Basic_Nber_Iter + 1
-                            Start = (Nber_Iter - 1) * Current_Nber_Iter1 + 1
+                            Start = (Nber_Threads - 1) * Current_Nber_Iter1 + 1
                         else
                             Current_Nber_Iter1 = Basic_Nber_Iter
-                            Start = Rest_Nber_Iter * (Current_Nber_Iter1 + 1) + (Nber_Iter - 1 - Rest_Nber_Iter) * Current_Nber_Iter1 + 1
+                            Start = Rest_Nber_Iter * (Current_Nber_Iter1 + 1) + (Nber_Threads - 1 - Rest_Nber_Iter) * Current_Nber_Iter1 + 1
                         end
         
                         End = Start + Current_Nber_Iter1 - 1
 
-                        {Launch_AllThreads {Launch_OneThread Start End nil} Nber_Iter-1}
-
+                        {Launch_AllThreads {Launch_OneThread Start End nil} Nber_Threads-1}
                     end
                 end
 
             end
         in 
-            % Usefull to do the repartition of the work between threads
-            Basic_Nber_Iter = Variables.nberFiles div N
-            Rest_Nber_Iter = Variables.nberFiles mod N
 
             % Launch all the threads
             % The parsing files are stocked in the Port
@@ -186,37 +217,39 @@ define
     %%%
     proc {Main}
 
+        % Initialization of the global variables used in the program
         Variables.idx_N_Grams = 2     
         Variables.tweetsFolder_Name = {GetSentenceFolder}
         Variables.list_PathName_Tweets = {OS.getDir Variables.tweetsFolder_Name}
         Variables.nberFiles = {Length Variables.list_PathName_Tweets}
 
-        % More threads than files is useless
+        % More threads than files is useless in this case.
         % We take the maximum because the threads are 'false' threads.
         % They are not really threads but they are used to split the work between the files.
         % There is no overhead to create more threads.
         Variables.nbThreads = Variables.nberFiles
     
-        {Property.put print foo(width:1000 depth:1000)}  % for stdout siz
+        {Property.put print foo(width:1000 depth:1000)}
 
         % Description of the GUI
-        Variables.description = td(
-            title: "TwitOZ"
-            lr( td( text(handle:Variables.inputText width:65 height:12 font:{QTk.newFont font(family:"Verdana")} background:white foreground:black wrap:word tdscrollbar:false)
-                    text(handle:Variables.outputText width:65 height:12 font:{QTk.newFont font(family:"Verdana")} background:black foreground:white glue:w wrap:word tdscrollbar:false)
-                    )
-                td( %label(image:{QTk.newImage photo(url:"./twit.png")} borderwidth:0 width:275)
-                    button(text:"Predict" background:c(29 125 242) borderwidth:2 font:{QTk.newFont font(family:"Verdana" size:14)} foreground:white activebackground:white activeforeground:black cursor:hand2 height:2 glue:we action:proc{$} _={Press} end) % add a reload_tree function on each press (reminder)
-                    button(text:"Save file .txt" background:c(29 125 242) borderwidth:2 font:{QTk.newFont font(family:"Verdana" size:14)} foreground:white activebackground:white activeforeground:black cursor:hand2 height:2 glue:we action:Extensions.saveText)
-                    button(text:"Save file into the database" background:c(29 125 242) borderwidth:2 font:{QTk.newFont font(family:"Verdana" size:14)} foreground:white activebackground:white activeforeground:black cursor:hand2 height:2 glue:we action:Extensions.saveText_Database)
-                    button(text:"Load file as input" background:c(29 125 242) borderwidth:2 font:{QTk.newFont font(family:"Verdana" size:14)} foreground:white activebackground:white activeforeground:black cursor:hand2 height:2 glue:we action:Extensions.loadText)
-                    button(text:"Quit" background:c(29 125 242) relief:sunken borderwidth:2 font:{QTk.newFont font(family:"Verdana" size:14)} foreground:white activebackground:white activeforeground:black cursor:hand2 height:2 glue:we action:proc{$} {Application.exit 0} end)
-                    )
-                glue:nw
-                background:c(27 157 240)
-            )
-            action:proc{$} {Application.exit 0} end
-            )
+        Variables.description = {Extensions.getDescriptionGUI proc{$} _={Press} end}
+        % Variables.description = td(
+        %     title: "TwitOZ"
+        %     lr( td( text(handle:Variables.inputText width:65 height:12 font:{QTk.newFont font(family:"Verdana")} background:white foreground:black wrap:word tdscrollbar:false)
+        %             text(handle:Variables.outputText width:65 height:12 font:{QTk.newFont font(family:"Verdana")} background:black foreground:white glue:w wrap:word tdscrollbar:false)
+        %             )
+        %         td( %label(image:{QTk.newImage photo(url:"./twit.png")} borderwidth:0 width:275)
+        %             button(text:"Predict" background:c(29 125 242) borderwidth:2 font:{QTk.newFont font(family:"Verdana" size:14)} foreground:white activebackground:white activeforeground:black cursor:hand2 height:2 glue:we action:proc{$} _={Press} end) % add a reload_tree function on each press (reminder)
+        %             button(text:"Save file .txt" background:c(29 125 242) borderwidth:2 font:{QTk.newFont font(family:"Verdana" size:14)} foreground:white activebackground:white activeforeground:black cursor:hand2 height:2 glue:we action:Extensions.saveText)
+        %             button(text:"Save file into the database" background:c(29 125 242) borderwidth:2 font:{QTk.newFont font(family:"Verdana" size:14)} foreground:white activebackground:white activeforeground:black cursor:hand2 height:2 glue:we action:Extensions.saveText_Database)
+        %             button(text:"Load file as input" background:c(29 125 242) borderwidth:2 font:{QTk.newFont font(family:"Verdana" size:14)} foreground:white activebackground:white activeforeground:black cursor:hand2 height:2 glue:we action:Extensions.loadText)
+        %             button(text:"Quit" background:c(29 125 242) relief:sunken borderwidth:2 font:{QTk.newFont font(family:"Verdana" size:14)} foreground:white activebackground:white activeforeground:black cursor:hand2 height:2 glue:we action:proc{$} {Application.exit 0} end)
+        %             )
+        %         glue:nw
+        %         background:c(27 157 240)
+        %     )
+        %     action:proc{$} {Application.exit 0} end
+        %     )
 
         %%% Basic version %%%
         % Description = td(
@@ -229,22 +262,24 @@ define
         % Creation of the GUI
         Variables.window = {QTk.build Variables.description}
         {Variables.window show}
-
+        
+        % Writes some text in the GUI to inform the user
         {Interface.insertText_Window Variables.inputText 0 0 'end' "Loading... Please wait."}
         {Variables.inputText bind(event:"<Control-s>" action:proc {$} _ = {Press} end)} % You can also bind events
         {Interface.insertText_Window Variables.outputText 0 0 'end' "You must wait until the database is parsed.\nA message will notify you.\nDon't press the 'predict' button until the message appears!\n"}
 
-        % Create the Port
+        % Create the Port to communicate between the threads
         Variables.separatedWordsPort = {NewPort Variables.separatedWordsStream}
 
         % Launch all threads to reads and parses the files
         {LaunchThreads Variables.separatedWordsPort Variables.nbThreads}
 
         % We retrieve the information (parsed lines of the files) from the port's stream
-        {Send Variables.separatedWordsPort nil}
-
         local List_Line_Parsed in
+            {Send Variables.separatedWordsPort nil}
             List_Line_Parsed = {Function.get_ListFromPortStream}
+
+            % Writes some text in the GUI to inform the user
             {Interface.insertText_Window Variables.outputText 6 0 none "Step 1 Over : Reading + Parsing\n"}
 
             % Creation of the main binary tree (with all subtree as value)
@@ -252,13 +287,14 @@ define
                 {Tree.insert NewTree Key {Tree.createSubTree Value}} end fun {$ _ _} true end _} % The Condition is always true because we want to visit and update all the node of the tree
         end
         
-        % {Press} can work now because the structure is ready
+        % We bound the value 'Variables.tree_Over' => {Press} can work now because the structure is ready
         Variables.tree_Over = true
 
-        % Display and remove some strings
+        % Writes some text in the GUI to inform the users
         {Interface.insertText_Window Variables.outputText 7 0 none "Step 2 Over : Stocking datas\n"}
         {Interface.insertText_Window Variables.outputText 9 0 none "The database is now parsed.\nYou can write and predict!"}
-
+        
+        % Delete the text "Loading... Please wait." from the GUI or all if the user add some text between or before the line : "Loading... Please wait."
         if {Function.findPrefix_InList {Variables.inputText getText(p(1 0) 'end' $)} "Loading... Please wait."} then
             % Remove the first 23 characters (= "Loading... Please wait.")
             {Variables.inputText tk(delete p(1 0) p(1 23))}

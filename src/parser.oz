@@ -138,7 +138,7 @@ define
             fun {Parses_Line_Aux Line NewLine Previous_Changed_Char}
                 case Line
                 of nil then {Reverse NewLine}
-                [] H|nil then {Reverse 32|NewLine}
+                [] _|nil then {Reverse 32|NewLine}
                 [] H|T then
                     % 39 is the character ' => keep it only if the previous and the future
                     % character is a letter or a digit (not a special character!)

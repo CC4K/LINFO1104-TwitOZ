@@ -28,7 +28,6 @@ define
     %%%
     fun {Read Filename}
         local
-            Result
             fun {GetLine TextFile List_Line}
                 try 
                     Line = {TextFile getS($)}

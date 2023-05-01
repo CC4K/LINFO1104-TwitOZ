@@ -1,7 +1,6 @@
 functor
 import
     Browser
-    System
     Variables at 'Variables.ozf'
 export
     Browse
@@ -194,7 +193,7 @@ define
     % @param Nth: a positive integer representing the number of elements to get from the end of the list
     % @return: a new list with the last Nth elements from the original list.
     fun {Get_Last_Nth_Word_List ListWords Nth}
-        local New_List Length_Reversed in
+        local Length_Reversed in
             Length_Reversed = {Length ListWords} - Nth
             if Length_Reversed == 0 then ListWords
             elseif Length_Reversed < 0 then nil

@@ -3,7 +3,6 @@ import
     QTk at 'x-oz://system/wp/QTk.ozf'
     Application
     Open
-    System
     Function at 'function.ozf'
     Interface at 'interface.ozf'
     Parser at 'parser.ozf'
@@ -13,6 +12,7 @@ export
     ProposeAllTheWords
     N_Grams
     AddDatas_ToTree
+    GetDescriptionGUI
     SaveText
     LoadText
     SaveText_Database
@@ -122,7 +122,25 @@ define
     %%%%%%%%%%%%%% ============= IMPROVE GUI  ============= %%%%%%%%%%%%%%
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-    
+    fun {GetDescriptionGUI CallerPress}
+        td(
+            title: "TwitOZ"
+            lr( td( text(handle:Variables.inputText width:65 height:12 font:{QTk.newFont font(family:"Verdana")} background:white foreground:black wrap:word tdscrollbar:false)
+                    text(handle:Variables.outputText width:65 height:12 font:{QTk.newFont font(family:"Verdana")} background:black foreground:white glue:w wrap:word tdscrollbar:false)
+                    )
+                td( %label(image:{QTk.newImage photo(url:"./twit.png")} borderwidth:0 width:275)
+                    button(text:"Predict" background:c(29 125 242) borderwidth:2 font:{QTk.newFont font(family:"Verdana" size:14)} foreground:white activebackground:white activeforeground:black cursor:hand2 height:2 glue:we action:CallerPress)
+                    button(text:"Save file .txt" background:c(29 125 242) borderwidth:2 font:{QTk.newFont font(family:"Verdana" size:14)} foreground:white activebackground:white activeforeground:black cursor:hand2 height:2 glue:we action:SaveText)
+                    button(text:"Save file into the database" background:c(29 125 242) borderwidth:2 font:{QTk.newFont font(family:"Verdana" size:14)} foreground:white activebackground:white activeforeground:black cursor:hand2 height:2 glue:we action:SaveText_Database)
+                    button(text:"Load file as input" background:c(29 125 242) borderwidth:2 font:{QTk.newFont font(family:"Verdana" size:14)} foreground:white activebackground:white activeforeground:black cursor:hand2 height:2 glue:we action:LoadText)
+                    button(text:"Quit" background:c(29 125 242) relief:sunken borderwidth:2 font:{QTk.newFont font(family:"Verdana" size:14)} foreground:white activebackground:white activeforeground:black cursor:hand2 height:2 glue:we action:proc{$} {Application.exit 0} end)
+                    )
+                glue:nw
+                background:c(27 157 240)
+            )
+            action:proc{$} {Application.exit 0} end
+            )
+    end
     %%%
     % Saves an input text from the app window as a text file into the database.
     % The datas will be therefore be used for the next prediction.
@@ -177,7 +195,7 @@ define
                                  filetypes:q(q("Txt files" q(".txt")) q("All files" q("*"))) $)}
         Contents = {Variables.inputText get($)}
     in 
-        try 
+        try
             File = {New Open.file init(name:Name)}
             Contents = {File read(list:$ size:all)}
         in 

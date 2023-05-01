@@ -1,9 +1,7 @@
 functor
 import
-    System
     Function at 'function.ozf'
     Extensions at 'extensions.ozf'
-    Variables at 'Variables.ozf'
 export
     CreateSubTree
     CreateTree

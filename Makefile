@@ -12,16 +12,15 @@ endif
 
 all : $(ENTRY_POINT)
 
-# J'ai ajouté cette partie (sauf la dernière ligne)
-main : main.oz src/reader.oz src/parser.oz src/tree.oz
+main :
 	if [ ! -d "bin" ]; then mkdir bin; fi
 	$(OZC) -c src/Variables.oz -o bin/Variables.ozf
-	$(OZC) -c src/function.oz -o bin/function.ozf
-	$(OZC) -c src/interface.oz -o bin/interface.ozf
-	$(OZC) -c src/parser.oz -o bin/parser.ozf
-	$(OZC) -c src/tree.oz -o bin/tree.ozf
-	$(OZC) -c src/reader.oz -o bin/reader.ozf
-	$(OZC) -c src/extensions.oz -o bin/extensions.ozf
+	$(OZC) -c src/Function.oz -o bin/function.ozf
+	$(OZC) -c src/Interface.oz -o bin/interface.ozf
+	$(OZC) -c src/Parser.oz -o bin/parser.ozf
+	$(OZC) -c src/Tree.oz -o bin/tree.ozf
+	$(OZC) -c src/Reader.oz -o bin/reader.ozf
+	$(OZC) -c src/Extensions.oz -o bin/extensions.ozf
 
 	$(OZC) -c main.oz -o bin/main.ozf
 
@@ -31,7 +30,6 @@ main : main.oz src/reader.oz src/parser.oz src/tree.oz
 run: $(ENTRY_POINT) 
 	$(OZENGINE) $(ENTRY_POINT) --folder $(TWEETS_FOLDER)
 
-# J'ai ajouté les deux dernière ligne
 clean :
 	rm -f bin/*.ozf
 	rm -rf bin
