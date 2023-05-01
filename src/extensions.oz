@@ -7,7 +7,7 @@ import
     Interface at 'interface.ozf'
     Parser at 'parser.ozf'
     Tree at 'tree.ozf'
-    Variables at 'Variables.ozf'
+    Variables at 'variables.ozf'
 export
     ProposeAllTheWords
     N_Grams
@@ -123,21 +123,19 @@ define
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
     fun {GetDescriptionGUI CallerPress}
-        td(
-            title: "TwitOZ"
-            lr( td( text(handle:Variables.inputText width:65 height:12 font:{QTk.newFont font(family:"Verdana")} background:white foreground:black wrap:word tdscrollbar:false)
-                    text(handle:Variables.outputText width:65 height:12 font:{QTk.newFont font(family:"Verdana")} background:black foreground:white glue:w wrap:word tdscrollbar:false)
+        lr( title: "TwitOZ"
+            background:c(27 157 240)
+            td( text(handle:Variables.inputText height:15 font:{QTk.newFont font(family:"Verdana")} background:white foreground:black wrap:word)
+                text(handle:Variables.outputText height:15 font:{QTk.newFont font(family:"Verdana")} background:black foreground:white wrap:word)
+                )
+            td( label(image:{QTk.newImage photo(url:"./twit.png")} borderwidth:0 width:290)
+                td( button(text:"Predict" height:2 width:20 background:c(29 125 242) borderwidth:1 font:{QTk.newFont font(family:"Verdana" size:13)} foreground:white activebackground:white activeforeground:black cursor:hand2 action:CallerPress)
+                    button(text:"Save as .txt file" height:2 width:20 background:c(29 125 242) borderwidth:1 font:{QTk.newFont font(family:"Verdana" size:13)} foreground:white activebackground:white activeforeground:black cursor:hand2 action:SaveText)
+                    button(text:"Save file in database" height:2 width:20 background:c(29 125 242) borderwidth:1 font:{QTk.newFont font(family:"Verdana" size:13)} foreground:white activebackground:white activeforeground:black cursor:hand2 action:SaveText_Database)
+                    button(text:"Load file as input" height:2 width:20 background:c(29 125 242) borderwidth:1 font:{QTk.newFont font(family:"Verdana" size:13)} foreground:white activebackground:white activeforeground:black cursor:hand2 action:LoadText)
+                    button(text:"Quit" height:2 width:20 background:c(29 125 242) relief:sunken borderwidth:1 font:{QTk.newFont font(family:"Verdana" size:13)} foreground:white activebackground:white activeforeground:black cursor:hand2 action:proc{$} {Application.exit 0} end)
                     )
-                td( %label(image:{QTk.newImage photo(url:"./twit.png")} borderwidth:0 width:275)
-                    button(text:"Predict" background:c(29 125 242) borderwidth:2 font:{QTk.newFont font(family:"Verdana" size:14)} foreground:white activebackground:white activeforeground:black cursor:hand2 height:2 glue:we action:CallerPress)
-                    button(text:"Save file .txt" background:c(29 125 242) borderwidth:2 font:{QTk.newFont font(family:"Verdana" size:14)} foreground:white activebackground:white activeforeground:black cursor:hand2 height:2 glue:we action:SaveText)
-                    button(text:"Save file into the database" background:c(29 125 242) borderwidth:2 font:{QTk.newFont font(family:"Verdana" size:14)} foreground:white activebackground:white activeforeground:black cursor:hand2 height:2 glue:we action:SaveText_Database)
-                    button(text:"Load file as input" background:c(29 125 242) borderwidth:2 font:{QTk.newFont font(family:"Verdana" size:14)} foreground:white activebackground:white activeforeground:black cursor:hand2 height:2 glue:we action:LoadText)
-                    button(text:"Quit" background:c(29 125 242) relief:sunken borderwidth:2 font:{QTk.newFont font(family:"Verdana" size:14)} foreground:white activebackground:white activeforeground:black cursor:hand2 height:2 glue:we action:proc{$} {Application.exit 0} end)
-                    )
-                glue:nw
-                background:c(27 157 240)
-            )
+                )
             action:proc{$} {Application.exit 0} end
             )
     end

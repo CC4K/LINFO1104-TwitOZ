@@ -3,7 +3,7 @@ import
     Open
     Application
     Function at 'function.ozf'
-    Variables at 'Variables.ozf'
+    Variables at 'variables.ozf'
 export
     GetFilename
     Read   

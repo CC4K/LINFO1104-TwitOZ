@@ -11,7 +11,7 @@ import
     Parser at 'parser.ozf'
     Tree at 'tree.ozf'
     Reader at 'reader.ozf'
-    Variables at 'Variables.ozf'
+    Variables at 'variables.ozf'
 
 define
 

@@ -1,7 +1,7 @@
 functor
 import
     Browser
-    Variables at 'Variables.ozf'
+    Variables at 'variables.ozf'
 export
     Browse
     Append_List
