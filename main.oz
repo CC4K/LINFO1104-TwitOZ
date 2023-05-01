@@ -5,13 +5,13 @@ import
     OS
     Property
 
-    Function at 'function.ozf'
+    Variables at 'variables.ozf'
     Interface at 'interface.ozf'
-    Extensions at 'extensions.ozf'
+    Function at 'function.ozf'
     Parser at 'parser.ozf'
     Tree at 'tree.ozf'
     Reader at 'reader.ozf'
-    Variables at 'variables.ozf'
+    Extensions at 'extensions.ozf'
 
 define
 
@@ -51,7 +51,7 @@ define
                     % Get the subtree representing the value at the key created by the concatenation of the N last words
                     Key = {Function.concatenateElemOfList List_Words 32}
                     Parsed_Key = {String.toAtom {Parser.parseInputUser Key}} % Parses the key to avoid problems with special characters
-                    Tree_Value = {Tree.lookingUp Variables.main_Tree Parsed_Key}
+                    Tree_Value = {Tree.lookingUp {Function.get_Tree} Parsed_Key}
 
                     if Tree_Value == notfound then
                         {Interface.setText_Window Variables.outputText "No words found."}
@@ -228,6 +228,8 @@ define
         % They are not really threads but they are used to split the work between the files.
         % There is no overhead to create more threads.
         Variables.nbThreads = Variables.nberFiles
+
+        Variables.port_Tree = {NewPort Variables.stream_Tree}
     
         {Property.put print foo(width:1000 depth:1000)}
 
@@ -250,7 +252,7 @@ define
         {LaunchThreads Variables.separatedWordsPort Variables.nbThreads}
 
         % We retrieve the information (parsed lines of the files) from the port's stream
-        local List_Line_Parsed in
+        local List_Line_Parsed Main_Tree in
             {Send Variables.separatedWordsPort nil}
             List_Line_Parsed = {Function.get_ListFromPortStream}
 
@@ -258,8 +260,9 @@ define
             {Interface.insertText_Window Variables.outputText 6 0 none "Step 1 Over : Reading + Parsing\n"}
 
             % Creation of the main binary tree (with all subtree as value)
-            Variables.main_Tree = {Tree.updateAll_Tree {Tree.createTree List_Line_Parsed} fun {$ NewTree Key Value}
+            Main_Tree = {Tree.updateAll_Tree {Tree.createTree List_Line_Parsed} fun {$ NewTree Key Value}
                 {Tree.insert NewTree Key {Tree.createSubTree Value}} end fun {$ _ _} true end _} % The Condition is always true because we want to visit and update all the node of the tree
+            {Send Variables.port_Tree Main_Tree}
         end
         
         % We bound the value 'Variables.tree_Over' => {Press} can work now because the structure is ready

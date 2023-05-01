@@ -2,7 +2,6 @@ functor
 export
     InputText
     OutputText
-    Main_Tree
     Idx_N_Grams
     TweetsFolder_Name
     List_PathName_Tweets
@@ -13,13 +12,13 @@ export
     SeparatedWordsStream
     Window
     Description
+    Port_Tree
+    Stream_Tree
 define
 
-    % Global variables that will not be modify during the execution of the program.
-    % Except for Main_Tree but idk how to do it yet.
+    % Global variables that will not be modify during the execution of the program (except 'Stream_Tree' to store the future updated tree).
 	InputText
     OutputText
-    Main_Tree
     Idx_N_Grams
     TweetsFolder_Name
     List_PathName_Tweets
@@ -30,5 +29,7 @@ define
     SeparatedWordsStream
     Window
     Description
+    Port_Tree
+    Stream_Tree
 
 end

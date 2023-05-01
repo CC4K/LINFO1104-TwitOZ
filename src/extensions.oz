@@ -3,11 +3,11 @@ import
     QTk at 'x-oz://system/wp/QTk.ozf'
     Application
     Open
-    Function at 'function.ozf'
+    Variables at 'variables.ozf'
     Interface at 'interface.ozf'
+    Function at 'function.ozf'
     Parser at 'parser.ozf'
     Tree at 'tree.ozf'
-    Variables at 'variables.ozf'
 export
     ProposeAllTheWords
     N_Grams
@@ -154,7 +154,7 @@ define
         try 
             DataBase_File = {New Open.file init(name:{Append {Append "tweets/" Name} ".txt"} flags:[write create truncate])}
             Contents = {Variables.inputText get($)}
-            _ = {AddDatas_ToTree Variables.main_Tree Contents} % Useless now (I don't know how to save the tree)
+            {Send Variables.port_Tree {AddDatas_ToTree {Function.get_Tree} Contents}}
         in 
             {DataBase_File write(vs:Contents)}
             {DataBase_File close}

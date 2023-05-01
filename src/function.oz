@@ -13,6 +13,7 @@ export
     Get_ListFromPortStream
     SplitList_AtIdx
     ConcatenateElemOfList
+    Get_Tree
 define
 
     %%%
@@ -308,6 +309,20 @@ define
             end
         in
             {Get_ListFromPortStream_Aux Variables.separatedWordsStream nil}
+        end
+    end
+
+    fun {Get_Tree}
+        local
+            fun {Get_Tree_Aux Stream_Tree}
+                case Stream_Tree
+                of H|_ then H
+                [] H|T then
+                    {Get_Tree_Aux T}
+                end
+            end
+        in
+            {Get_Tree_Aux Variables.stream_Tree}
         end
     end
 end
