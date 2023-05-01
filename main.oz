@@ -12,7 +12,6 @@ define
     % Global variables
 	InputText OutputText TweetsFolder_Name List_PathName_Tweets Main_Tree Tree_Over NberFiles NbThreads SeparatedWordsStream SeparatedWordsPort
 
-
     %%%
     % Procedure used to display some datas
     %
@@ -35,10 +34,10 @@ define
         from Open.file Open.text
     end
 
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %%% ====== IMPLEMENTATION OF BASIC FUNCTIONS TO MAKE THEM RECURSIVE TERMINAL : SECTION ====== %%%
     %%% ====== IMPLEMENTATION OF BASIC FUNCTIONS TO MAKE THEM RECURSIVE TERMINAL : SECTION ====== %%%
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
     % NOTE : These implementations are maybe a little bit too slow but there are recursive terminal like asked for the project.
 
@@ -51,7 +50,7 @@ define
                 case L1
                 of nil then NewList
                 [] H|T then
-                    {AppendList_Aux L1.2 L1.1|NewList}
+                    {AppendList_Aux T H|NewList}
                 end
             end
         in
@@ -60,7 +59,7 @@ define
     end
 
     %%%
-    % Implementation of the List.append function but in recursive terminal way.
+    % Implementation of the List.nth function but in recursive terminal way.
     %%%
     fun {Nth_List List N}
         local
@@ -78,6 +77,9 @@ define
         end
     end
 
+    %%%
+    % Implementation of the String.tokens function but in recursive terminal way.
+    %%%
     fun {Tokens_String Str Char_Delimiter}
         local
             fun {Tokens_String_Aux Str SubList NewList}
@@ -105,6 +107,107 @@ define
         end
     end
 
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    %%% ==== IMPLEMENTATION OF USEFULL FUNCIONS : SECTION ==== %%%
+    %%% ==== IMPLEMENTATION OF USEFULL FUNCIONS : SECTION ==== %%%
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+     %%%
+    % Checks if a list is a prefix of another list
+    %
+    % Example usage:
+    % In1: [83 97 108 117 116] [83 97]
+    % Out1: true
+    % In2: [83 97 108 117 116] [97 108]
+    % Out2: false
+    %
+    % @param List: the list to search in
+    % @param List_Prefix: the prefix list
+    % @return: true if 'List_Prefix' is a prefix of  'List', false otherwise
+    %%%
+    fun {FindPrefix List List_Prefix}
+        case List_Prefix
+        of nil then true
+        [] H|T then
+            if List == nil then false
+            else
+                if H == List.1 then {FindPrefix List.2 T}
+                else false end
+            end
+        end
+    end
+
+
+    %%%
+    % Get the list of strings from a stream associated with a port
+    %
+    % Example usage:
+    % In: ['i am good and you']|['i am very good thanks']|['wow this is a port']|_ 
+    % Out: ['i am good and you']|['i am very good thanks']|['wow this is a port']
+    %
+    % @param Stream: a stream associated with a port that contains a list of parsed lines
+    % @return: the list of strings (from the stream 'Stream' associated with the port 'Port' (= global variable))
+    %%%
+    fun {Get_ListFromPortStream Stream}
+        local
+            fun {Get_ListFromPortStream_Aux Stream NewList}
+                case Stream
+                of nil|_ then NewList
+                [] H|T then
+                    {Get_ListFromPortStream_Aux T H|NewList}
+                end
+            end
+        in
+            {Send SeparatedWordsPort nil}
+            {Get_ListFromPortStream_Aux Stream nil}
+        end
+    end
+
+    %%%
+    % Returns the part of the string after a specified delimiter character
+    %
+    % Example usage:
+    % In: "i am alone"
+    % Out: "am alone" if the delimiter is " " (32 in ASCII code)
+    %
+    % @param Str_Line: a string
+    % @param Delimiter_Char: a delimiter character to separate the string
+    % @return: the substring of the input string after the delimiter character
+    %%%
+    fun {GetStrAfterDelimiter Str_Line Delimiter_Char}
+        case Str_Line
+        of nil then nil
+        [] H|T then
+            if H == Delimiter_Char then T
+            else {GetStrAfterDelimiter T Delimiter_Char} end
+        end
+    end
+
+
+    %%%
+    % Gets the last word and the word before the last one of a list.
+    %
+    % Example usage:
+    % In: ["hello" "i am okay" "where is" "here"]
+    % Out: ["where is" "here"]
+    %
+    % @param ListWords: a list of strings
+    % return: a list of length 2 : [before_last_word   last_word]
+    %%%
+    fun {Get_TwoLastWord ListWords}
+        case ListWords
+        of nil then nil
+        [] _|nil then nil
+        [] H|T then
+            if T.2 == nil then
+                [H T.1]
+            else
+                {Get_TwoLastWord T}
+            end
+        end
+    end
+
+
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %%% ================= READING SECTION ================= %%%
     %%% ================= READING SECTION ================= %%%
@@ -120,23 +223,25 @@ define
     % @param Filename: a string representing the path to the file
     % @return: a list of all lines in the file, where each line is a string
     %%%
-    fun {Reader Filename}
-        fun {GetLine TextFile ListLine}
-            Line = {TextFile getS($)}
-        in
-            if Line == false then
-                {TextFile close}
-                ListLine
-            else
-                % {Browse {String.toAtom Line}}
-                % {Browse {String.toAtom {CleanUp Line fun {$ LineStr} {RemovePartList LineStr [226 128] 32 true} end}}}
-
-                % [226 128] is a character that is not recognised by UTF-8 (the follow char too). That's why the last argument is set to true.
-                {GetLine TextFile {CleanUp Line fun {$ LineStr} {RemovePartList LineStr [226 128] 32 true} end} | ListLine}
+    fun {Read Filename}
+        local
+            fun {GetLine TextFile List_Line}
+                try 
+                    Line = {TextFile getS($)}
+                in
+                    if Line == false then
+                        {TextFile close}
+                        List_Line
+                    else {GetLine TextFile Line|List_Line} end
+                catch _ then {Application.exit} end
             end
+        in
+            try
+                TextOfFile = {New TextFile init(name:Filename flags:[read])}
+            in
+                {GetLine TextOfFile nil}
+            catch _ then {Application.exit} end
         end
-    in
-        {GetLine {New TextFile init(name:Filename flags:[read])} nil}
     end
 
     %%%
@@ -162,212 +267,10 @@ define
     %%%% ================= PARSING SECTION ================= %%%%
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-    %%%
-    % Removes the first Nth elements from a list
-    %
-    % Example usage:
-    % In: [83 97 108 117 116] 3
-    % Out: [117 116]
-    %
-    % @param List: a list
-    % @param Nth: a positive integer representing the number of elements to remove from the beginning of the list
-    % @return: a new list with the first Nth elements removed from the original list.
-    %          If Nth is greater than the length of the list, an empty list is returned.
-    %%%
-    fun {RemoveFirstNthElements List Nth}
-        case List
-        of nil then nil
-        [] H|T then
-            if Nth == 1 then T
-            else
-                {RemoveFirstNthElements T Nth-1}
-            end
-        end
-    end
-
-    %%%
-    % Checks if a list is a prefix of another list
-    %
-    % Example usage:
-    % In1: [83 97 108 117 116] [83 97]
-    % Out1: true
-    % In2: [83 97 108 117 116] [97 108]
-    % Out2: false
-    %
-    % @param List: the list to search in
-    % @param List_Prefix: the prefix list
-    % @return: true if 'List_Prefix' is a prefix of  'List', false otherwise
-    %%%
-    fun {FindPrefix List List_Prefix}
-        case List_Prefix
-        of nil then true
-        [] H|T then
-            if List == nil then false
-            else
-                if H == List.1 then {FindPrefix List.2 T}
-                else false end
-            end
-        end
-    end
-
-    %%%
-    % Remove a specified sublist from a given list
-    %
-    % Example usage:
-    % In1: "Jeui ui suis okuiui et je suis louisuiuiuiui" "ui" true
-    % Out1: "Jes oket je s lo"
-    % In2: "    Je suis   ok  et je  suis louis    " [32] false
-    % Out2: "Je suis ok et je suis louis"
-    %
-    % @param SubList: a list from which to remove the specified sublist
-    % @param Length_SubList: the sublist to remove from the 'List'
-    % @param NextCharRemoveToo: boolean indicating whether to remove the next character
-    %                           after the substring if it is found in the 'List'
-    % @return: a new list with all instances of the specified sublist removed
-    %          (and their next character too if 'removeNextChar' is set to true)
-    %%%
-    fun {RemovePartList List SubList Replacer NextCharRemoveToo}
-        local
-            Length_SubList
-            fun {RemovePartList_Aux List NewList Length_List}
-                if Length_List < Length_SubList then NewList
-                elseif List == nil then NewList
-                else
-                    local List_Updated NewList_Updated Length_List_Updated in
-                        if {FindPrefix List SubList} == true then
-                            if NextCharRemoveToo == true then
-                                List_Updated = {RemoveFirstNthElements List Length_SubList+1}
-                                Length_List_Updated = Length_List - (Length_SubList + 1)
-                                % 153 => = ' special not the basic => basic one is 39
-                                if {Nth_List List Length_SubList+1} == 153 then
-                                    NewList_Updated = 39 | NewList
-                                else
-                                    NewList_Updated = 32 | NewList
-                                end
-                            else
-                                if Replacer == none then
-                                    NewList_Updated = 32 | NewList
-                                else
-                                    NewList_Updated = NewList
-                                end
-                                List_Updated = {RemoveFirstNthElements List Length_SubList}
-                                Length_List_Updated = Length_List - Length_SubList
-                            end
-                        else
-                            List_Updated = List.2
-                            NewList_Updated = List.1 | NewList
-                            Length_List_Updated = Length_List
-                        end
-
-                        {RemovePartList_Aux List_Updated NewList_Updated Length_List_Updated}
-                    end
-                end
-            end
-        in
-            Length_SubList = {Length SubList}
-            {Reverse {RemovePartList_Aux List nil {Length List}}}
-        end
-    end
-
-    %%%
-    % Applies a cleaning function to a string
-    %
-    % Example usage:
-    % If Cleaner = fun {$ LineStr} {RemovePartList LineStr [226 128] 32 true} end
-    %   In1: "Jeui ui suis okuiui et je suis louisuiuiuiui" "ui" true
-    %   Out1: "Jes oket je s lo"
-    %   In2: "    Je suis   ok  et je  suis louis    " " " false
-    %   Out2: "Je suis ok et je suis louis"
-    %
-    % @param LineStr: a string to be cleaned
-    % @param Cleaner: a function that takes as input a string and returns a cleaned string
-    % @return: a new string that has been cleaned by the function 'Cleaner'
-    %%%
-    fun {CleanUp LineStr Cleaner}
-        {Cleaner LineStr}
-    end
-
-    %%%
-    % Applies a parsing function to each string in a list of strings
-    %
-    % Example usage:
-    % In: ["  _&Hello there...! General Kenobi!!! %100 "]
-    % Out: ["hello there general kenobi 100"] if Parser = fun {$ StrLine} {RemoveEmptySpace {ParseLine Str_Line}} end
-    %
-    % @param List: a list of strings
-    % @param Parser: a function that takes a string as input and returns a parsed version of it
-    % @return: a list of the parsed strings
-    %%%
-    fun {ParseAllLines List Parser}
-        local
-            fun {ParseAllLines_Aux List Parser NewList}
-                case List
-                of nil then NewList
-                [] H|T then
-                    % {Browse {String.toAtom {Parser H}}}
-                    % {Browse {String.toAtom H}}
-                    local ParsedLine in
-                        ParsedLine = {Parser H}
-                        % nil represent the empty atom like this : ''.
-                        % Useless because false the result of prediction.
-                        % Remove it.
-                        if ParsedLine == nil then
-                            {ParseAllLines_Aux T Parser NewList}
-                        else
-                            {ParseAllLines_Aux T Parser ParsedLine|NewList}
-                        end
-                    end
-                end
-            end
-        in
-            {ParseAllLines_Aux List Parser nil}
-        end
-    end
+    % NOTE : The parsing is done in a recursive terminal way.
+    % NOTE : The parsing in this basic version (without extensions) is naive and not very efficient.
+    % NOTE : Checks the version with extensions to see a better parsing.
     
-    %%%
-    % Removes any space larger than one character wide (and therefore useless)
-    %
-    % Example usage:
-    % In: "  general    kenobi       you are a           bold   one   "
-    % Out: "general kenobi you are a bold one"
-    %
-    % @param Line: a string to be cleaned of unnecessary spaces.
-    % @return: a new string with all excess spaces removed
-    %%%
-    fun {RemoveEmptySpace Line}
-        local
-            CleanLine
-            fun {RemoveEmptySpace_Aux Line NewLine PreviousSpace}
-                case Line
-                of nil then NewLine
-                [] H|nil then
-                    if H == 32 then NewLine
-                    else H|NewLine end
-                [] H|T then
-                    if H == 32 then
-                        if PreviousSpace == true then
-                            {RemoveEmptySpace_Aux T NewLine true}
-                        else
-                            
-                            {RemoveEmptySpace_Aux T H|NewLine true}
-                        end
-                    else
-                        {RemoveEmptySpace_Aux T H|NewLine false}
-                    end
-                end
-            end
-        in
-            CleanLine = {RemoveEmptySpace_Aux Line nil true}
-            if CleanLine == nil then nil
-            else
-                if CleanLine.1 == 32 then
-                    {Reverse CleanLine.2}
-                else    
-                    {Reverse CleanLine}
-                end
-            end
-        end
-    end
 
     %%%
     % Replaces the character by an other
@@ -375,31 +278,23 @@ define
     % If the character is a digit letter => don't replace it
     % If the character is a lowercase letter => don't replace it
     % If the character is a special character (all the other case) => replaces it by a space (32 in ASCII code)
-    % Returns too a boolean : false if the new character is a space, true otherwise
     %
     % Example usage:
     % In1: 99          In2: 69            In3: 57           In4: 42
-    % Out1: [99 true]  Out2: [101 true]   Out3: [57 true]   Out4: [32 false]
+    % Out1: 99         Out2: 101          Out3: 57          Out4: 32
     %
     % @param Char: a character (number in ASCII code)
-    % @return: a list of length 2 : [the new character    the boolean]
+    % @return: the char parsed
     %%%
     fun {GetNewChar Char}
-        local New_Char Bool in
-            if 97 =< Char andthen Char =< 122 then
-                New_Char = Char 
-                Bool = true
-            elseif 48 =< Char andthen Char =< 57 then
-                New_Char = Char 
-                Bool = true
-            elseif 65 =< Char andthen Char =< 90 then
-                New_Char = Char + 32
-                Bool = true
-            else
-                New_Char = 32 
-                Bool = false
-            end
-            [New_Char Bool]
+        if 97 =< Char andthen Char =< 122 then
+            Char
+        elseif 48 =< Char andthen Char =< 57 then
+            Char
+        elseif 65 =< Char andthen Char =< 90 then
+            Char + 32
+        else
+            32
         end
     end
 
@@ -412,39 +307,71 @@ define
     % Out: "flattening of the curve  888 is a good digit     "
     %
     % @param Line: a string to be parsed
+    % @param Parser: a function that parses a character
     % @return: a parsed string without any special characters or capital letters
     %%%
-    fun {ParseLine Line PreviousGoodChar}
+    fun {ParseLine Line Parser}
         local
-            fun {ParseLine_Aux Line NewLine PreviousGoodChar}
+            fun {ParseLine_Aux Line NewLine}
                 case Line
-                of H|T then
-                    local New_H Result_List in
-                        % 39 is the character ' => keep it only if the previous and the future
-                        % character is a letter or a digit (not a special character!)
-                        if H == 39 andthen PreviousGoodChar == true then
-                            if T \= nil then
-                                if T.1 == {GetNewChar T.1}.1 then
-                                    {ParseLine_Aux T H|NewLine true}
-                                else
-                                    {ParseLine_Aux T 32|NewLine false}
-                                end
-                            else
-                                {ParseLine_Aux T 32|NewLine false}
-                            end
-                        else
-                            Result_List = {GetNewChar H}
-                            {ParseLine_Aux T Result_List.1|NewLine Result_List.2.1}
-                        end
-                    end
-                [] nil then NewLine
+                of nil then {Reverse NewLine}
+                [] H|T then
+                    {ParseLine_Aux T {Parser H}|NewLine}
                 end
             end
         in
-            {Reverse {ParseLine_Aux Line nil PreviousGoodChar}}
+            {ParseLine_Aux Line nil}
         end
     end
-    
+
+    %%%
+    % Applies a parsing function to each string in a list of strings
+    %
+    % Example usage:
+    % In: ["  _&Hello there...! General Kenobi!!! %100 "]
+    % Out: ["hello there general kenobi 100"] with Parser = fun {$ StrLine} {RemoveEmptySpace {ParseLine Str_Line}} end
+    %
+    % @param List: a list of strings
+    % @return: a list of the parsed strings
+    %%%
+    fun {ParseAllLines List}
+        local
+            Parser = fun {$ Line} {ParseLine Line fun {$ Char} {GetNewChar Char} end} end
+            fun {ParseAllLines_Aux List NewList}
+                case List
+                of nil then NewList
+                [] H|T then
+                    {ParseAllLines_Aux T {Parser H}|NewList}
+                end
+            end
+        in
+            {ParseAllLines_Aux List nil}
+        end
+    end
+
+    %%%
+    % Parses the input of the user to set all the upercase letters to its lowercase letters.
+    %
+    % Example usage:
+    % In1: "I aM"   In2: "you know"  In3: "WOW MAN"
+    % Out2: "i am"  In2: "you know"  In3: "wow man" 
+    %
+    % @param Str_Line: a string (the input user) to be parsed
+    % @return: the string parsed
+    %%%
+    fun {ParseInputUser Str_Line}
+        local
+            fun {ParseCharUser Char}
+                local New_Char in
+                    New_Char = {GetNewChar Char}
+                    if New_Char == 32 then Char
+                    else New_Char end
+                end
+            end
+        in
+            {ParseLine Str_Line fun {$ Char} {ParseCharUser Char} end}
+        end
+    end
 
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -474,11 +401,11 @@ define
     fun {LookingUp Tree Key}
         case Tree
         of leaf then notfound
-        [] tree(key:K value:V t_left:TLeft t_right:TRight) andthen K == Key
+        [] tree(key:K value:V t_left:_ t_right:_) andthen K == Key
             then V
-        [] tree(key:K value:V t_left:TLeft t_right:TRight) andthen K > Key
+        [] tree(key:K value:_ t_left:TLeft t_right:_) andthen K > Key
             then {LookingUp TLeft Key}
-        [] tree(key:K value:V t_left:TLeft t_right:TRight) andthen K < Key
+        [] tree(key:K value:_ t_left:_ t_right:TRight) andthen K < Key
             then {LookingUp TRight Key}
         end
     end
@@ -505,10 +432,12 @@ define
     fun {Insert Tree Key Value}
         case Tree
         of leaf then tree(key:Key value:Value t_left:leaf t_right:leaf)
-        [] tree(key:K value:V t_left:TLeft t_right:TRight) andthen K == Key then
+        [] tree(key:K value:_ t_left:TLeft t_right:TRight) andthen K == Key then
             tree(key:Key value:Value t_left:TLeft t_right:TRight)
+
         [] tree(key:K value:V t_left:TLeft t_right:TRight) andthen K < Key then
             tree(key:K value:V t_left:TLeft t_right:{Insert TRight Key Value})
+
         [] tree(key:K value:V t_left:TLeft t_right:TRight) andthen K > Key then
             tree(key:K value:V t_left:{Insert TLeft Key Value} t_right:TRight)
         end
@@ -525,7 +454,7 @@ define
     % In2: ['word1'#1 'word2'#1 'word3'#9 'word4'#2] 'word5'
     % Out2: ['word1'#1 'word2'#1 'word3'#9 'word4'#2 'word5'#1]
     %
-    % @param L: a list of pairs in the form of atom#frequency
+    % @param List: a list of pairs in the form of atom#frequency
     % @param NewElem: the element whose frequency we want to increase by one
     % @return: a new updated list
     %%%
@@ -547,26 +476,7 @@ define
             {UpdateList_Aux List nil NewElem}
         end
     end
-
-    %%%
-    % Returns the part of the string after a specified delimiter character
-    %
-    % Example usage:
-    % In: "i am alone"
-    % Out: "am alone" if the delimiter is " " (32 in ASCII code)
-    %
-    % @param Str_Line: a string
-    % @param Delimiter_Char: a delimiter character to separate the string
-    % @return: the substring of the input string after the delimiter character
-    %%%
-    fun {GetStrAfterDelimiter Str_Line Delimiter_Char}
-        case Str_Line
-        of nil then nil
-        [] H|T then
-            if H == Delimiter_Char then T
-            else {GetStrAfterDelimiter T Delimiter_Char} end
-        end
-    end
+    
 
     %%%
     % Applies a function that changes the value of an element into a binary tree
@@ -607,7 +517,7 @@ define
         in
             case List_Keys
             of nil then Tree
-            [] H|nil then Tree
+            [] _|nil then Tree
             [] H|T then
                 {UpdateElementsOfTree {UpdateValue_ElemOfTree Tree H T} T}
             end
@@ -628,14 +538,14 @@ define
         local
             fun {BiGrams_Aux List NewList}
                 case List
-                of nil then NewList
-                [] H|nil then NewList
+                of nil then nil
+                [] _|nil then {Reverse NewList}
                 [] H|T then
                     {BiGrams_Aux T {String.toAtom {Append_List H 32|T.1}}|NewList}
                 end
             end
         in
-            {Reverse {BiGrams_Aux List nil}}
+            {BiGrams_Aux List nil}
         end
     end
 
@@ -649,14 +559,13 @@ define
     % @return: the all binary tree with all the datas added
     %%%
     fun {CreateTree List_List_Line}
-        
         local
-
+            Updater_Tree = fun {$ List_Line NewTree} {Update_Tree List_Line NewTree} end
             %%%
             % Creates a part of the complete binary tree structure (to store the datas)
             %
             % Example usage:
-            % In: L = [["i am the boss man"] ["no problem sir"] ["the boss is here"] ["the boss is here"]]
+            % In: L = [["i     am the      boss man  "] ["no   problem sir"] ["  the boss is   here"] ["the boss is here"]]
             % Out: tree(key:'i am' value:['the'#1] t_left:tree(key:'boss is' value:['here'#2] t_left:
             %      tree(key:'am the' value:['boss'#1] t_left:leaf t_right:leaf) t_right:leaf) t_right:
             %      tree(key:'no problem' value:['sir'#1] t_left:leaf t_right:tree(key:'the boss' value:['man'#1 'is'#2] t_left:leaf t_right:leaf)))
@@ -673,15 +582,15 @@ define
                 end
             end
 
-            fun {CreateTree_Aux List_List_Line UpdaterTree NewTree}
+            fun {CreateTree_Aux List_List_Line NewTree}
                 case List_List_Line
                 of nil then NewTree
                 [] H|T then
-                    {CreateTree_Aux T UpdaterTree {UpdaterTree H NewTree}}
+                    {CreateTree_Aux T {Updater_Tree H NewTree}}
                 end
             end
         in
-            {CreateTree_Aux List_List_Line fun {$ List_Line NewTree} {Update_Tree List_Line NewTree} end leaf}
+            {CreateTree_Aux List_List_Line leaf}
         end
     end
 
@@ -737,18 +646,18 @@ define
     %%%
     fun {TraverseAndChange Tree UpdaterTree_ChangerValue}
         local
-            fun {TraverseAndChange_Aux Tree UpdaterTree_ChangerValue UpdatedTree}
+            fun {TraverseAndChange_Aux Tree UpdatedTree}
                 case Tree
                 of leaf then UpdatedTree
                 [] tree(key:Key value:Value t_left:TLeft t_right:TRight) then
-                    local T1 T2 in
-                        T1 = {TraverseAndChange_Aux TLeft UpdaterTree_ChangerValue {UpdaterTree_ChangerValue UpdatedTree Key Value}}
-                        T2 = {TraverseAndChange_Aux TRight UpdaterTree_ChangerValue T1}
+                    local T1 in
+                        T1 = {TraverseAndChange_Aux TLeft {UpdaterTree_ChangerValue UpdatedTree Key Value}}
+                        _ = {TraverseAndChange_Aux TRight T1}
                     end
                 end
             end
         in
-            {TraverseAndChange_Aux Tree UpdaterTree_ChangerValue Tree}
+            {TraverseAndChange_Aux Tree Tree}
         end
     end
 
@@ -777,9 +686,9 @@ define
                 case Tree
                 of leaf then [TotalFreq MaxFreq ListWord]
                 [] tree(key:Key value:Value t_left:TLeft t_right:TRight) then
-                    local T1 T2 in
+                    local T1 in
                         T1 = {TraverseToGetProbability_Aux TLeft ({Length Value}*Key)+TotalFreq Key Value}
-                        T2 = {TraverseToGetProbability_Aux TRight ({Length Value}*Key)+T1.1 Key Value}
+                        _ = {TraverseToGetProbability_Aux TRight ({Length Value}*Key)+T1.1 Key Value}
                     end
                 end
             end
@@ -797,36 +706,10 @@ define
     end
 
 
-
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %%% ================= MAIN SECTION ================= %%%
     %%% ================= MAIN SECTION ================= %%%
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-    %%%
-    % Get the list of strings from a stream associated with a port
-    %
-    % Example usage:
-    % In: ['i am good and you']|['i am very good thanks']|['wow this is a port']|_ 
-    % Out: ['i am good and you']|['i am very good thanks']|['wow this is a port']
-    %
-    % @param Stream: a stream associated with a port that contains a list of parsed lines
-    % @return: the list of strings (from the stream 'Stream' associated with the port 'Port' (= global variable))
-    %%%
-    fun {Get_ListFromPortStream Stream}
-        local
-            fun {Get_ListFromPortStream_Aux Stream NewList}
-                case Stream
-                of nil|T then NewList
-                [] H|T then
-                    {Get_ListFromPortStream_Aux T H|NewList}
-                end
-            end
-        in
-            {Send SeparatedWordsPort nil}
-            {Get_ListFromPortStream_Aux Stream nil}
-        end
-    end
 
 
     %%%
@@ -838,7 +721,6 @@ define
     %%%
 	proc {CallPress}
 		local ResultPress ProbableWords MaxFreq in
-            
             % Goal of Tree_Over : Block this bloc of instruction until the structure is created.
             % If {CallPress} is called (= if the user pressed the button "predict") and the structure
             % to stock datas is not ready yet, the program wait here because Tree_Over is only bind
@@ -846,13 +728,8 @@ define
             if Tree_Over == true then
 
                 ResultPress = {Press}
-                % {System.show ResultPress}
-
                 ProbableWords = ResultPress.1
                 MaxFreq = ResultPress.2.1
-
-                % {Browse ProbableWords}
-                % {Browse MaxFreq}
 
                 if ProbableWords == [nil] then
                     {SetText_Window OutputText "NO WORD FIND!"}
@@ -860,9 +737,7 @@ define
                     {SetText_Window OutputText ProbableWords.1}
                 end
             else
-                % Will never be executed but need to put something
                 skip
-                % {SetText_Window OutputText "Will never be display."}
             end
 		end
 	end
@@ -900,125 +775,46 @@ define
 
 
     %%%
-    % Parses the input of the user to set all the upercase letters to its lowercase letters.
-    %
-    % Example usage:
-    % In1: "I aM"   In2: "you know"  In3: "WOW MAN"
-    % Out2: "i am"  In2: "you know"  In3: "wow man" 
-    %
-    % @param Str_Line: a string (the input user) to be parsed
-    % @return: the string parsed
-    %%%
-    fun {ParseInputUser Str_Line}
-        local
-            fun {ParseCharUser Char}
-                local New_Char in
-                    New_Char = {GetNewChar Char}.1
-                    if New_Char == 32 then Char
-                    else New_Char end
-                end
-            end
-
-            fun {ParseInputUser_Aux Str_Line NewLine}
-                case Str_Line
-                of nil then NewLine
-                [] H|T then
-                    {ParseInputUser_Aux T {ParseCharUser H}|NewLine}
-                end
-            end
-        in
-            {Reverse {ParseInputUser_Aux Str_Line nil}}
-        end
-    end
-
-
-    %%%
-    % Gets the last word and the word before the last one of a list.
-    %
-    % Example usage:
-    % In: ["hello" "i am okay" "where is" "here"]
-    % Out: ["where is" "here"]
-    %
-    % @param ListWords: a list of strings
-    % return: a list of length 2 : [before_last_word   last_word]
-    %%%
-    fun {Get_TwoLastWord ListWords}
-        case ListWords
-        of nil then nil
-        [] H|nil then nil
-        [] H|T then
-            if T.2 == nil andthen {Tokens_String T.1 10} \= nil then
-                [H T.1]
-            else
-                {Get_TwoLastWord T}
-            end
-        end
-    end
-
-    %%%
-    % Removes all the "\n" character and the unnecessary " " character.
-    %
-    % Example usage:
-    % In: ["hello       i am  okay 
-    %      " "  you are   nice    "]
-    % Out: ["hello i am okay" "you are nice"]
-    %
-    % @param SplittedText: a list of strings to be parsed
-    % return: the new list with all the string parsed.
-    %%%
-    fun {CleaningUserInput SplittedText}
-        local
-            fun {CleaningUserInput_Aux SplittedText NewSplittedText}
-                case SplittedText
-                of nil then {Filter NewSplittedText fun {$ X} X \= nil end}
-                [] H|T then
-                    {CleaningUserInput_Aux T {CleanUp H fun {$ X} {RemoveEmptySpace {RemovePartList X [10] 32 false}} end}|NewSplittedText}
-                end
-            end
-        in 
-            {Reverse {CleaningUserInput_Aux SplittedText nil}}
-        end
-    end
-
-    %%%
-    % Displays the most likely prediction of the next word based on the last two entered words.
-    %
-    % @pre: The threads are "ready".
-    % @post: Function called when the prediction button is pressed.
+    % Displays to the output zone on the window the most likely prediction of the next word based on the N last entered words.
+    % The value of N depends of the N-Grams asked by the user.
+    % This function is called when the prediction button is pressed.
     %
     % @param: /
     % @return: Returns a list containing the most probable word(s) list accompanied by the highest probability/frequency.
     %          The return value must take the form:
+    %
     %               <return_val> := <most_probable_words> '|' <probability/frequency> '|' nil
-    %               <most_probable_words> := <atom> '|' <most_probable_words> | nil
+    %
+    %               <most_probable_words> := <atom> '|' <most_probable_words>
+    %                                        | nil
+    %                                        | <no_word_found>
+    %
+    %               <no_word_found>         := nil '|' nil
+    %
     %               <probability/frequency> := <int> | <float>
     %%%
     fun {Press}
 		local SplittedText List_Words BeforeLast Last Key Parsed_Key Tree_Value in
 
-            % Clean the input user
-            SplittedText = {CleaningUserInput {Tokens_String {InputText getText(p(1 0) 'end' $)} 32}}
-            % {Browse SplittedText}
+            % Clean the input user and get the 2 last words
+            SplittedText = {Tokens_String {ParseLine {InputText getText(p(1 0) 'end' $)} fun {$ Char} {GetNewChar Char} end} 32}
             List_Words = {Get_TwoLastWord SplittedText}
 
-            if List_Words \= nil then
-
+            if List_Words == nil then  [[nil] 0.0] % If the user did't write at least two words => return [[nil] 0.0]
+            elseif {Length List_Words} < 2 then [[nil] 0.0] % If the user did't write at least two words => return [[nil] 0.0]
+            else
                 BeforeLast = List_Words.1
                 Last = {Tokens_String List_Words.2.1 10}.1
 
                 Key = {String.toAtom {Append_List BeforeLast 32|Last}}
                 Parsed_Key = {String.toAtom {ParseInputUser {Atom.toString Key}}}
-
                 Tree_Value = {LookingUp Main_Tree Parsed_Key}
-                % {Browse Tree_Value}
 
                 if Tree_Value == notfound then
                     [[nil] 0.0]
                 else
                     {TraverseToGetProbability Tree_Value}
                 end
-            else % If the user did't write at least two words => return [[nil] 0.0]
-                [[nil] 0.0] % => no word or one word only
             end
 		end
     end
@@ -1035,9 +831,19 @@ define
     proc {LaunchThreads Port N}
 
         local
+            Basic_Nber_Iter = NberFiles div N
+            Rest_Nber_Iter = NberFiles mod N
             List_Waiting_Threads
-            Basic_Nber_Iter
-            Rest_Nber_Iter
+
+            %%%
+            % Allows to launch a thread that will read and parse a file
+            % and to get the list with the value unbound until the thread has finished its work.
+            %
+            % @param Start: the number of the file where the thread begins to work (reads and parses)
+            % @param End: the number of the file where the thread stops to work (reads and parses)
+            % @param List_Waiting_Threads: a list initialized to nil
+            % @return: the list containing all the value unbound of all threads.
+            %          the value will be bound where the thread has finished its work.
             fun {Launch_OneThread Start End List_Waiting_Threads}
 
                 if Start == End+1 then List_Waiting_Threads
@@ -1048,11 +854,10 @@ define
                         % File = "tweets/custom.txt"
 
                         thread Thread_Reader_Parser =
-                            LineToParsed = {Reader File}
+                            LineToParsed = {Read File}
                             L=1
                             {Wait L}
-                            File_Parsed = {ParseAllLines LineToParsed fun {$ Str_Line} {RemoveEmptySpace {ParseLine Str_Line false}} end}
-                            % File_Parsed = {ParseAllLines LineToParsed fun {$ Str_Line} {RemoveEmptySpace {ParseLine Str_Line false}} end}
+                            File_Parsed = {ParseAllLines LineToParsed}
                             P=1
                         end
                     
@@ -1061,7 +866,15 @@ define
                     end
                 end
             end
-                
+
+            %%%
+            % Allows to launch N threads and to get the list with the value of each thread :
+            %     Unbound if the thread has not finished its work
+            %     Bound if the thread has finished its work
+            %
+            % @param List_Waiting_Threads: a list initialized to nil
+            % @param Nber_Threads: the number of threads to launch
+            % @return: the list containing all the value unbound (until they have finished their work) of all threads.    
             fun {Launch_AllThreads List_Waiting_Threads Nber_Iter}
                 
                 if Nber_Iter == 0 then List_Waiting_Threads
@@ -1090,16 +903,12 @@ define
                 end
 
             end
-        in 
-            % Usefull to do the repartition of the work between threads
-            Basic_Nber_Iter = NberFiles div N
-            Rest_Nber_Iter = NberFiles mod N
-
+        in
             % Launch all the threads
             % The parsing files are stocked in the Port
             % The variables to Wait all the threads are stocked in List_Waiting_Threads
             List_Waiting_Threads = {Launch_AllThreads nil N}
-            
+        
             % Wait for all the threads
             % When a thread have finished, the value P associated to this thread
             % is bind and the program can move on 
@@ -1134,17 +943,13 @@ define
         
         TweetsFolder_Name = {GetSentenceFolder}
         List_PathName_Tweets = {OS.getDir TweetsFolder_Name}
-
         NberFiles = {Length List_PathName_Tweets}
-        % NberFiles = 6
 
-        % Need to do some tests to see the best number of threads
-        if 50 > NberFiles then
-            NbThreads = NberFiles
-        else
-            NbThreads = 50
-        end
-        % NbThreads = 6
+        % More threads than files is useless in this case.
+        % We take the maximum because the threads are 'false' threads.
+        % They are not really threads but they are used to split the work between the files.
+        % There is no overhead to create more threads.
+        NbThreads = NberFiles
 
         local UpdaterTree List_Line_Parsed Window Description in
 
@@ -1180,7 +985,7 @@ define
             UpdaterTree = fun {$ Tree Key Value} {Insert Tree Key {CreateSubtree Value}} end
             Main_Tree = {TraverseAndChange {CreateTree List_Line_Parsed} UpdaterTree}
 
-            % CallPress can work now because the structure is ready
+            % {Press} can be applied now because the structure is ready
             Tree_Over = true
 
             % Display and remove some strings
