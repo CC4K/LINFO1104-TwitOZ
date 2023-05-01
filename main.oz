@@ -233,31 +233,6 @@ define
 
         % Description of the GUI
         Variables.description = {Extensions.getDescriptionGUI proc{$} _={Press} end}
-        % Variables.description = td(
-        %     title: "TwitOZ"
-        %     lr( td( text(handle:Variables.inputText width:65 height:12 font:{QTk.newFont font(family:"Verdana")} background:white foreground:black wrap:word tdscrollbar:false)
-        %             text(handle:Variables.outputText width:65 height:12 font:{QTk.newFont font(family:"Verdana")} background:black foreground:white glue:w wrap:word tdscrollbar:false)
-        %             )
-        %         td( %label(image:{QTk.newImage photo(url:"./twit.png")} borderwidth:0 width:275)
-        %             button(text:"Predict" background:c(29 125 242) borderwidth:2 font:{QTk.newFont font(family:"Verdana" size:14)} foreground:white activebackground:white activeforeground:black cursor:hand2 height:2 glue:we action:proc{$} _={Press} end) % add a reload_tree function on each press (reminder)
-        %             button(text:"Save file .txt" background:c(29 125 242) borderwidth:2 font:{QTk.newFont font(family:"Verdana" size:14)} foreground:white activebackground:white activeforeground:black cursor:hand2 height:2 glue:we action:Extensions.saveText)
-        %             button(text:"Save file into the database" background:c(29 125 242) borderwidth:2 font:{QTk.newFont font(family:"Verdana" size:14)} foreground:white activebackground:white activeforeground:black cursor:hand2 height:2 glue:we action:Extensions.saveText_Database)
-        %             button(text:"Load file as input" background:c(29 125 242) borderwidth:2 font:{QTk.newFont font(family:"Verdana" size:14)} foreground:white activebackground:white activeforeground:black cursor:hand2 height:2 glue:we action:Extensions.loadText)
-        %             button(text:"Quit" background:c(29 125 242) relief:sunken borderwidth:2 font:{QTk.newFont font(family:"Verdana" size:14)} foreground:white activebackground:white activeforeground:black cursor:hand2 height:2 glue:we action:proc{$} {Application.exit 0} end)
-        %             )
-        %         glue:nw
-        %         background:c(27 157 240)
-        %     )
-        %     action:proc{$} {Application.exit 0} end
-        %     )
-
-        %%% Basic version %%%
-        % Description = td(
-        %     title: "Text predictor"
-        %     lr(text(handle:InputText width:50 height:10 background:white foreground:black wrap:word) button(text:"Predict" width:15 action:proc {$} _ = {Press} end))
-        %     text(handle:OutputText width:50 height:10 background:black foreground:white glue:w wrap:word)
-        %     action:proc{$} {Application.exit 0} end % Quitte le programme quand la fenetre est fermee
-        % )
 
         % Creation of the GUI
         Variables.window = {QTk.build Variables.description}
