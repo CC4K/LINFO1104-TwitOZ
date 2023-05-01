@@ -16,7 +16,7 @@ export
     N_Grams
     Create_Updated_Tree
     GetDescriptionGUI
-    SaveText
+    SaveText_UserFinder
     LoadText
     SaveText_Database
 define
@@ -133,7 +133,7 @@ define
                 )
             td( %label(image:{QTk.newImage photo(url:"./twit.png")} borderwidth:0 width:290)
                 td( button(text:"Predict" height:2 width:20 background:c(29 125 242) borderwidth:1 font:{QTk.newFont font(family:"Verdana" size:13)} foreground:white activebackground:white activeforeground:black cursor:hand2 action:CallerPress)
-                    button(text:"Save as .txt file" height:2 width:20 background:c(29 125 242) borderwidth:1 font:{QTk.newFont font(family:"Verdana" size:13)} foreground:white activebackground:white activeforeground:black cursor:hand2 action:SaveText)
+                    button(text:"Save as .txt file" height:2 width:20 background:c(29 125 242) borderwidth:1 font:{QTk.newFont font(family:"Verdana" size:13)} foreground:white activebackground:white activeforeground:black cursor:hand2 action:SaveText_UserFinder)
                     button(text:"Save file in database" height:2 width:20 background:c(29 125 242) borderwidth:1 font:{QTk.newFont font(family:"Verdana" size:13)} foreground:white activebackground:white activeforeground:black cursor:hand2 action:SaveText_Database)
                     button(text:"Load file as input" height:2 width:20 background:c(29 125 242) borderwidth:1 font:{QTk.newFont font(family:"Verdana" size:13)} foreground:white activebackground:white activeforeground:black cursor:hand2 action:LoadText)
                     button(text:"Quit" height:2 width:20 background:c(29 125 242) relief:sunken borderwidth:1 font:{QTk.newFont font(family:"Verdana" size:13)} foreground:white activebackground:white activeforeground:black cursor:hand2 action:proc{$} {Application.exit 0} end)
@@ -142,6 +142,8 @@ define
             action:proc{$} {Application.exit 0} end
             )
     end
+
+
     %%%
     % Saves an input text from the app window as a text file into the database.
     % The datas will be therefore be used for the next prediction.
@@ -149,29 +151,29 @@ define
     % @return: /
     %%%
     proc {SaveText_Database}
-        Name = {QTk.dialogbox save(defaultextension:"txt"
-                                   filetypes:q(q("Txt files" q(".txt")) q("All files" q("*"))) $)}
+        PathHistoricFile = "user_historic/historic_part"
+        Nber_HistoricFiles = 1 % Get the real one @TODO
     in
         try
-            Name_File = {Function.append_List {Function.append_List Variables.tweetsFolder_Name 47|Name} ".txt"}
-            DataBase_File = {New Open.file init(name:Name_File flags:[write create truncate])}
+            Name_File = {Function.append_List PathHistoricFile {Append {Int.toString Nber_HistoricFiles} ".txt"}}
+            Historic_File = {New Open.file init(name:Name_File flags:[write create truncate])}
             Contents = {Variables.inputText get($)}
         in
             % Write the datas in the file to save them for the next usage
-            {DataBase_File write(vs:Contents)}
-            {DataBase_File close}
+            {Historic_File write(vs:Contents)}
+            {Historic_File close}
             {Send_NewTree_ToPort Name_File}
-        catch _ then {System.show 'Error'} {Application.exit 0} end
+        catch _ then {System.show 'Error when saving the file into the database'} {Application.exit 0} end
     end
 
 
     %%%
-    % Saves an input text from the app window as a text file on the computer.
+    % Saves an input text from the app window as a text file on the user's computer.
     %
     % @param: /
     % @return: /
     %%%
-    proc {SaveText}
+    proc {SaveText_UserFinder}
         Name = {QTk.dialogbox save( defaultextension:"txt"
                                     filetypes:q(q("Txt files" q(".txt")) q("All files" q("*"))) $)}
     in 
@@ -213,7 +215,7 @@ define
 
 
     proc {Send_NewTree_ToPort Name_File}
-        local LineToParsed File_Parsed L P in
+        local BefTree NewTree LineToParsed File_Parsed L P in
             thread _ =
                 LineToParsed = {Reader.read Name_File}
                 L=1
@@ -222,57 +224,9 @@ define
                 P=1
                 {Wait P}
                 % Send to the port the new update tree with the new datas
-                {Send Variables.port_Tree {Create_Updated_Tree {Function.get_Tree} File_Parsed}}
-            end
-        end
-    end
-
-    %%%
-    % Updates the value of one subtree of the main tree at the location of a specified key.
-    %
-    % @param Main_Tree: The main tree to update
-    % @param Key: The key of the main tree to update
-    % @param Value_to_Insert: The value to insert in the subtree of the main tree at the location of the key
-    % @return: The new main tree updated with the new datas added in one subtree
-    fun {UpdateSubTree Main_Tree Key Value_to_Insert}
-
-        local
-            Value
-            fun {UpdateSubTreeValue Main_Tree Key Value}
-                local
-                    Old_Value
-                    NewValue
-                    fun {UpdateSubTreeValue Main_Tree Key Value NewValue}
-                        case Value
-                        of nil then NewValue
-                        [] H|T then
-                            if H == Value then NewValue
-                            else {UpdateSubTreeValue Main_Tree Key T H|NewValue} end
-                        end
-                    end
-                in
-                    NewValue = {UpdateSubTreeValue Main_Tree Key Value nil}
-                    if {Length NewValue} == {Length Value} then Main_Tree
-                    else
-                        {Tree.insert Main_Tree Key NewValue}
-                        Old_Value = {Tree.lookingUp Main_Tree Key+1}
-                        if Old_Value == notfound then {Tree.insert Main_Tree Key+1 Value}
-                        else {Tree.insert Main_Tree Key+1 Value|Old_Value} end
-                    end
-                end
-            end
-        in
-            Value = {Tree.lookingUp Main_Tree Key}
-            if Value == notfound then {Tree.insert Main_Tree Key Value_to_Insert}
-            else
-                {Tree.updateAll_Tree Main_Tree fun {$ Tree Key Value}
-                                                    {UpdateSubTreeValue Tree Key Value}
-                                               end
-                                               % The condition allows to applies the function only if the key at the node is the same as 'Key_To_Access'
-                                               fun {$ Key_Tree Key_To_Access}
-                                                    Key_To_Access == Key_Tree
-                                               end
-                                               Key}
+                BefTree = {Function.get_Tree}
+                NewTree = {Create_Updated_Tree {Function.get_Tree} File_Parsed}
+                {Send Variables.port_Tree NewTree}
             end
         end
     end
@@ -285,25 +239,98 @@ define
     % @param TextUserInput: The user text from which we want to add the datas
     % @return: The new main tree updated with the new datas added
     %%%
-    fun {Create_Updated_Tree Tree TextUserInput}
+    fun {Create_Updated_Tree Main_Tree List_UserInput} 
+        case List_UserInput
+        of nil then Main_Tree
+        [] H|T then
+            {Create_Updated_Tree {Create_Updated_Tree_Aux Main_Tree {N_Grams {Function.tokens_String H 32}}} T}
+        end
+    end
 
-        local SplittedText SplittedText_Cleaned List_NGrams Updater_Value in
 
-            % Clean the input user
-            SplittedText = {Parser.cleaningUserInput {Function.tokens_String TextUserInput 32}}
-            SplittedText_Cleaned = {Map SplittedText proc {$ Str_Line}
-                                                         {Parser.removeEmptySpace
-                                                         {Parser.parseLine
-                                                         {Parser.removePartList Str_Line [226 128] 32 true}
-                                                         false}}
-                                                     end}
+    fun {Create_Updated_Tree_Aux New_Tree List_Keys}
+        local
+            %%%
+            % Changes the value with a new specified one at the location of a specified key in a binary tree
+            %%%
+            fun {Update_Value New_Tree Key List_Keys}
+                local Value_to_Insert Tree_Value New_Tree_Value in
+                    Value_to_Insert = {String.toAtom {Reverse {Function.tokens_String List_Keys.1 32}}.1}
+                    Tree_Value = {Tree.lookingUp New_Tree Key}
+                    New_Tree_Value = {Update_SubTree Tree_Value Key Value_to_Insert}
+                    {Tree.insert New_Tree Key New_Tree_Value}
+                end
+            end
+        in
+            case List_Keys
+            of nil then New_Tree
+            [] _|nil then New_Tree
+            [] H|T then
+                {Create_Updated_Tree_Aux {Update_Value New_Tree {String.toAtom H} T} T}
+            end
+        end
+    end
 
-            List_NGrams = {N_Grams SplittedText_Cleaned}
 
-            Updater_Value = fun {$ Tree Key List_Keys} {UpdateSubTree Tree Key {Function.get_Last_Nth_Word_List List_Keys.1 Variables.idx_N_Grams}} end
+    fun {Update_SubTree SubTree Key NewValue}
+        if SubTree == notfound then {Tree.insert leaf 1 [NewValue]}
+        else {Get_List_Value SubTree Key} end
+    end
 
-            % The new main_tree updated
-            {Tree.update_Line_To_Tree Tree Updater_Value List_NGrams}
+
+    fun {Get_List_Value SubTree Value_Word}
+        local
+            fun {Get_List_Value_Aux SubTree Updated_SubTree}
+                case SubTree
+                of leaf then Updated_SubTree
+                [] tree(key:Key value:Value_List t_left:TLeft t_right:TRight) then
+                    local T1 New_List_Value in
+                        if {IsInList Value_List Value_Word} == true then
+                            New_List_Value = {RemoveElemOfList Value_List Value_Word}
+                            {AddElemToList_InTree {Tree.insert SubTree Key New_List_Value} Key+1 Value_Word}
+                        else
+                            T1 = {Get_List_Value_Aux TLeft Updated_SubTree}
+                            _ = {Get_List_Value_Aux TRight T1}
+                        end
+                    end
+                end
+            end
+        in
+            {Get_List_Value_Aux SubTree leaf}
+        end
+    end
+
+
+    fun {AddElemToList_InTree SubTree Key Word_Value}
+        local Value_List in
+            Value_List = {Tree.lookingUp SubTree Key}
+            if Value_List == notfound then {Tree.insert SubTree Key [Word_Value]}
+            else {Tree.insert SubTree Key Word_Value|Value_List} end
+        end
+    end
+
+
+    fun {IsInList List Value}
+        case List
+        of nil then false
+        [] H|T then
+            if H == Value then true
+            else {IsInList T Value} end
+        end
+    end
+
+    fun {RemoveElemOfList Value_List Value_Word}
+        local
+            fun {RemoveElemOfList_Aux Value_List New_Value_List}
+                case Value_List
+                of nil then New_Value_List
+                [] H|T then
+                    if H == Value_Word then {Function.append_List New_Value_List T}
+                    else {RemoveElemOfList_Aux T Value_Word|New_Value_List} end
+                end
+            end
+        in
+            {RemoveElemOfList_Aux Value_List nil}
         end
     end
 end

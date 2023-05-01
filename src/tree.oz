@@ -297,6 +297,7 @@ define
                 end
             end
         in
+            {System.show Tree}
             List_Result = {Get_Result_Prediction_Aux Tree 0 0 nil}
             Total_Frequency = List_Result.1 div 2
             Max_Frequency = List_Result.2.1

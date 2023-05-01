@@ -36,7 +36,7 @@ define
     %               <probability/frequency> := <int> | <float>
     %%%
     fun {Press}
-
+        
         % If the structure to stock all the datas of the database is created
         if Variables.tree_Over == true then
             local InputUser SplittedText List_Words Key Parsed_Key Tree_Value ResultPress ProbableWords Frequency Probability in
@@ -52,7 +52,9 @@ define
                     % Get the subtree representing the value at the key created by the concatenation of the N last words
                     Key = {Function.concatenateElemOfList List_Words 32}
                     Parsed_Key = {String.toAtom {Parser.parseInputUser Key}} % Parses the key to avoid problems with special characters
+                    {System.show 'ok'}
                     Tree_Value = {Tree.lookingUp {Function.get_Tree} Parsed_Key}
+                    {System.show 'ok'}
 
                     if Tree_Value == notfound then
                         {Interface.setText_Window Variables.outputText "No words found."}

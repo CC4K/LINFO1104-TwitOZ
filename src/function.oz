@@ -1,6 +1,7 @@
 functor
 import
     Browser
+    System
     Variables at 'variables.ozf'
 export
     Browse
@@ -315,10 +316,11 @@ define
     fun {Get_Tree}
         local
             fun {Get_Tree_Aux Stream_Tree}
+                {System.show 'Err'}
                 case Stream_Tree
-                of H|_ then H
-                [] H|T then
-                    {Get_Tree_Aux T}
+                of H|T then
+                    if {IsDet T} == false then H
+                    else {Get_Tree_Aux T} end
                 end
             end
         in
