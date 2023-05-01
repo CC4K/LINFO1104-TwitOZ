@@ -3,15 +3,18 @@ import
     QTk at 'x-oz://system/wp/QTk.ozf'
     Application
     Open
+    System
+    
     Variables at 'variables.ozf'
     Interface at 'interface.ozf'
     Function at 'function.ozf'
+    Reader at 'reader.ozf'
     Parser at 'parser.ozf'
     Tree at 'tree.ozf'
 export
     ProposeAllTheWords
     N_Grams
-    AddDatas_ToTree
+    Create_Updated_Tree
     GetDescriptionGUI
     SaveText
     LoadText
@@ -128,7 +131,7 @@ define
             td( text(handle:Variables.inputText height:15 font:{QTk.newFont font(family:"Verdana")} background:white foreground:black wrap:word)
                 text(handle:Variables.outputText height:15 font:{QTk.newFont font(family:"Verdana")} background:black foreground:white wrap:word)
                 )
-            td( label(image:{QTk.newImage photo(url:"./twit.png")} borderwidth:0 width:290)
+            td( %label(image:{QTk.newImage photo(url:"./twit.png")} borderwidth:0 width:290)
                 td( button(text:"Predict" height:2 width:20 background:c(29 125 242) borderwidth:1 font:{QTk.newFont font(family:"Verdana" size:13)} foreground:white activebackground:white activeforeground:black cursor:hand2 action:CallerPress)
                     button(text:"Save as .txt file" height:2 width:20 background:c(29 125 242) borderwidth:1 font:{QTk.newFont font(family:"Verdana" size:13)} foreground:white activebackground:white activeforeground:black cursor:hand2 action:SaveText)
                     button(text:"Save file in database" height:2 width:20 background:c(29 125 242) borderwidth:1 font:{QTk.newFont font(family:"Verdana" size:13)} foreground:white activebackground:white activeforeground:black cursor:hand2 action:SaveText_Database)
@@ -145,20 +148,20 @@ define
     % @param: /
     % @return: /
     %%%
-    %%%%%%%%%%%%% TODO (IMPLEMENTATION) %%%%%%%%%%%%%
-    %%%%%%%%%%%%% TODO (IMPLEMENTATION) %%%%%%%%%%%%%
     proc {SaveText_Database}
-        Name = {QTk.dialogbox save(   defaultextension:"txt"
-                                    filetypes:q(q("Txt files" q(".txt")) q("All files" q("*"))) $)}
-    in 
-        try 
-            DataBase_File = {New Open.file init(name:{Append {Append "tweets/" Name} ".txt"} flags:[write create truncate])}
+        Name = {QTk.dialogbox save(defaultextension:"txt"
+                                   filetypes:q(q("Txt files" q(".txt")) q("All files" q("*"))) $)}
+    in
+        try
+            Name_File = {Function.append_List {Function.append_List Variables.tweetsFolder_Name 47|Name} ".txt"}
+            DataBase_File = {New Open.file init(name:Name_File flags:[write create truncate])}
             Contents = {Variables.inputText get($)}
-            {Send Variables.port_Tree {AddDatas_ToTree {Function.get_Tree} Contents}}
-        in 
+        in
+            % Write the datas in the file to save them for the next usage
             {DataBase_File write(vs:Contents)}
             {DataBase_File close}
-        catch _ then {Application.exit} end 
+            {Send_NewTree_ToPort Name_File}
+        catch _ then {System.show 'Error'} {Application.exit 0} end
     end
 
 
@@ -169,7 +172,7 @@ define
     % @return: /
     %%%
     proc {SaveText}
-        Name = {QTk.dialogbox save(   defaultextension:"txt"
+        Name = {QTk.dialogbox save( defaultextension:"txt"
                                     filetypes:q(q("Txt files" q(".txt")) q("All files" q("*"))) $)}
     in 
         try 
@@ -208,10 +211,21 @@ define
     %%%%%%%%%%%%%% DATABASE ADDER SENTENCES IMPLEMENTATION  %%%%%%%%%%%%%%
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-    %%% DONT KNOW IF THIS SECTION OF FUNCTIONS WORKS => DONT TEST YET %%%
-    %%% DONT KNOW IF THIS SECTION OF FUNCTIONS WORKS => DONT TEST YET %%%
-    %%% DONT KNOW IF THIS SECTION OF FUNCTIONS WORKS => DONT TEST YET %%%
 
+    proc {Send_NewTree_ToPort Name_File}
+        local LineToParsed File_Parsed L P in
+            thread _ =
+                LineToParsed = {Reader.read Name_File}
+                L=1
+                {Wait L} 
+                File_Parsed = {Parser.parses_AllLines LineToParsed}
+                P=1
+                {Wait P}
+                % Send to the port the new update tree with the new datas
+                {Send Variables.port_Tree {Create_Updated_Tree {Function.get_Tree} File_Parsed}}
+            end
+        end
+    end
 
     %%%
     % Updates the value of one subtree of the main tree at the location of a specified key.
@@ -271,7 +285,7 @@ define
     % @param TextUserInput: The user text from which we want to add the datas
     % @return: The new main tree updated with the new datas added
     %%%
-    fun {AddDatas_ToTree Tree TextUserInput}
+    fun {Create_Updated_Tree Tree TextUserInput}
 
         local SplittedText SplittedText_Cleaned List_NGrams Updater_Value in
 
@@ -289,7 +303,7 @@ define
             Updater_Value = fun {$ Tree Key List_Keys} {UpdateSubTree Tree Key {Function.get_Last_Nth_Word_List List_Keys.1 Variables.idx_N_Grams}} end
 
             % The new main_tree updated
-            {Tree.updateElementsOfTree Tree Updater_Value List_NGrams}
+            {Tree.update_Line_To_Tree Tree Updater_Value List_NGrams}
         end
     end
 end

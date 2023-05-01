@@ -1,5 +1,6 @@
 functor
 import
+    System
     Function at 'function.ozf'
     Extensions at 'extensions.ozf'
 export
@@ -8,6 +9,7 @@ export
     LookingUp
     Insert
     UpdateAll_Tree
+    Update_Line_To_Tree
     Get_Result_Prediction
 define
 
@@ -110,64 +112,6 @@ define
         end
     end
 
-    %%%
-    % Creates a part of the complete binary tree structure (to store the datas)
-    %
-    % Example usage:
-    % In: L = [["i am the boss man"] ["no problem sir"] ["the boss is here"] ["the boss is here"]]
-    % Out: tree(key:'i am' value:['the'#1] t_left:tree(key:'boss is' value:['here'#2] t_left:
-    %      tree(key:'am the' value:['boss'#1] t_left:leaf t_right:leaf) t_right:leaf) t_right:
-    %      tree(key:'no problem' value:['sir'#1] t_left:leaf t_right:tree(key:'the boss' value:['man'#1 'is'#2] t_left:leaf t_right:leaf)))
-    %
-    % @param List_Line: a list of lists of strings representing a line parsed (from a file)
-    % @param NewTree: the new binary tree initialized to 'leaf' that will be update
-    % @return: the new binary tree with some datas added
-    %%%
-    fun {Update_Tree List_Line NewTree}
-        local
-            %%%
-            % Changes the value with a new specified one at the location of a specified key in a binary tree
-            %%%
-            fun {UpdateValue Tree Key List_Keys}
-                local Value_to_Insert List_Value New_List_Value in
-                    Value_to_Insert = {String.toAtom {Reverse {Function.tokens_String List_Keys.1 32}}.1}
-                    List_Value = {LookingUp Tree Key}
-                    New_List_Value = {UpdateList List_Value Value_to_Insert}
-                    {Insert Tree Key New_List_Value}
-                end
-            end
-
-            %%%
-            % Applies the function 'UpdateValue' on all the keys of the keys list
-            %%%
-            fun {Update_Tree_Helper Tree List_Keys}
-                case List_Keys
-                of nil then Tree
-                [] _|nil then Tree
-                [] H|T then
-                    {Update_Tree_Helper {UpdateValue Tree {String.toAtom H} T} T}
-                end
-            end
-
-            %%%
-            % Applies the function 'Update_Tree_Helper' on all the keys list found by the function 'Extensions.n_Grams'
-            %%%
-            fun {Update_Tree_Aux List_Line NewTree}
-                case List_Line
-                of nil then NewTree
-                [] H|T then
-                    local List_Keys Updated_Tree in
-                        List_Keys = {Extensions.n_Grams {Function.tokens_String H 32}}
-                        Updated_Tree = {Update_Tree_Helper NewTree List_Keys}
-                        {Update_Tree_Aux T Updated_Tree}
-                    end
-                end
-            end
-        in
-            {Update_Tree_Aux List_Line NewTree}
-        end
-    end
-    
 
     % Creates the all binary tree structure (to store the datas).
     % To do it, the function 'Update_Tree' is applied on all
@@ -184,13 +128,69 @@ define
                 case Parsed_Datas
                 of nil then Updated_Tree
                 [] H|T then
-                    {CreateTree_Aux T {Update_Tree H Updated_Tree}}
+                    {CreateTree_Aux T {Update_File_To_Tree Updated_Tree H}}
                 end
             end
         in
             {CreateTree_Aux Parsed_Datas leaf}
         end
     end
+
+
+    %%%
+    % Creates a part of the complete binary tree structure (to store the datas)
+    %
+    % Example usage:
+    % In: L = [["i am the boss man"] ["no problem sir"] ["the boss is here"] ["the boss is here"]]
+    % Out: tree(key:'i am' value:['the'#1] t_left:tree(key:'boss is' value:['here'#2] t_left:
+    %      tree(key:'am the' value:['boss'#1] t_left:leaf t_right:leaf) t_right:leaf) t_right:
+    %      tree(key:'no problem' value:['sir'#1] t_left:leaf t_right:tree(key:'the boss' value:['man'#1 'is'#2] t_left:leaf t_right:leaf)))
+    %
+    % @param Parsed_Datas: a list of lists of strings representing a line parsed (from a file)
+    % @param NewTree: the new binary tree initialized to 'leaf' that will be update
+    % @return: the new binary tree with some datas added
+    %%%
+    fun {Update_File_To_Tree Updated_Tree Parsed_Datas}
+        local
+            fun {Update_File_To_Tree_Aux Parsed_Datas Updated_Tree}
+                case Parsed_Datas
+                of nil then Updated_Tree
+                [] H|T then
+                    {Update_File_To_Tree_Aux T {Update_Line_To_Tree Updated_Tree {Extensions.n_Grams {Function.tokens_String H 32}}}}
+                end
+            end
+        in
+            {Update_File_To_Tree_Aux Parsed_Datas Updated_Tree}
+        end
+    end
+    
+    
+    %%%
+    % Applies the function 'Update_Value' on all the keys of the keys list
+    %%%
+    fun {Update_Line_To_Tree Tree List_Keys}
+        local
+            %%%
+            % Changes the value with a new specified one at the location of a specified key in a binary tree
+            %%%
+            fun {Update_Value Tree Key List_Keys}
+                local Value_to_Insert List_Value New_List_Value in
+                    Value_to_Insert = {String.toAtom {Reverse {Function.tokens_String List_Keys.1 32}}.1}
+                    List_Value = {LookingUp Tree Key}
+                    New_List_Value = {UpdateList List_Value Value_to_Insert}
+                    {Insert Tree Key New_List_Value}
+                end
+            end
+        in
+            case List_Keys
+            of nil then Tree
+            [] _|nil then Tree
+            [] H|T then
+                {Update_Line_To_Tree {Update_Value Tree {String.toAtom H} T} T}
+            end
+        end
+    end
+    
 
     %%%
     % Creates a binary subtree representing a value of the main binary tree,
