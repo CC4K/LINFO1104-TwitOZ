@@ -10,6 +10,9 @@ export
     NberFiles
     NbThreads
     SeparatedWordsPort
+    SeparatedWordsStream
+    Window
+    Description
 define
 
     % Global variables that will not be modify during the execution of the program.
@@ -24,5 +27,8 @@ define
     NberFiles
     NbThreads
     SeparatedWordsPort
+    SeparatedWordsStream
+    Window
+    Description
 
 end

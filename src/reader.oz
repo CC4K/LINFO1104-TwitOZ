@@ -3,6 +3,7 @@ import
     Open
     Application
     Function at 'function.ozf'
+    Variables at 'Variables.ozf'
 export
     GetFilename
     Read   
@@ -27,30 +28,22 @@ define
     %%%
     fun {Read Filename}
         local
-            fun {GetLine TextFile}
+            Result
+            fun {GetLine TextFile List_Line}
                 try 
-                    {TextFile getS($)}
-                catch _ then
-                    {Application.exit}
-                end
-            end
-
-            fun {Read_Aux TextFile ListLine}
-                local Line in
-                    Line = {GetLine TextFile}
+                    Line = {TextFile getS($)}
+                in
                     if Line == false then
-                        try 
-                            {TextFile close}
-                            ListLine
-                        catch _ then {Application.exit} end
-                    else
-                        {Read_Aux TextFile Line|ListLine}
-                    end
-                end
+                        {TextFile close}
+                        List_Line
+                    else {GetLine TextFile Line|List_Line} end
+                catch _ then {Application.exit} end
             end
         in
-            try 
-                {Read_Aux {New TextFile init(name:Filename flags:[read])} nil}
+            try
+                TextOfFile = {New TextFile init(name:Filename flags:[read])}
+            in
+                {GetLine TextOfFile nil}
             catch _ then {Application.exit} end
         end
     end
@@ -63,13 +56,10 @@ define
     % In: "tweets" ["part_1.txt" "part_2.txt"] 2
     % Out: "tweets/part_2.txt"
     %
-    % @param TweetsFolder_Name: a string representing the name of a folder
-    % @param List_PathName: a list of filenames
     % @param Idx: an index representing the position of the desired filename in List_PathName
     % @return: a string representing the desired filename (the Idxth filename in the list) preceded by the folder name + "/"
     %%%
-    fun {GetFilename TweetsFolder_Name List_PathName Idx}
-        {Function.append_List TweetsFolder_Name 47|{Function.nth_List List_PathName Idx}}
+    fun {GetFilename Idx}
+        {Function.append_List Variables.tweetsFolder_Name 47|{Function.nth_List Variables.list_PathName_Tweets Idx}}
     end
-
 end

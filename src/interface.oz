@@ -2,14 +2,12 @@ functor
 export
     InsertText_Window
     SetText_Window
-    % inserttext_window:InsertText_Window
-    % settext_window:SetText_Window
 define
 
     %%%
     % Inserts a text into the tk window.
     %
-    % @param Location_Text: the location where inserts the text (InputText or OutputText)
+    % @param Location_Text: the location where inserts the text (Variables.inputText or Variables.outputText)
     % @param Row: a positive number representing the row where to inserts the text
     % @param Col: a positive number representing the column where to inserts the text
     % @param Special_Location: = 'end' or none if no special location
@@ -35,5 +33,4 @@ define
     proc {SetText_Window Location_Text Text}
         {Location_Text set(Text)}
     end
-
 end

@@ -246,14 +246,18 @@ define
     % @param UpdaterTree_ChangerValue: a function that takes as input a tree, a key and a value and update the value at the specified key
     % @return: a new binary tree where each of these value has been updated by UpdaterTree_ChangerValue
     %%%
-    fun {UpdateAll_Tree Tree Updater_Tree}
+    fun {UpdateAll_Tree Tree Updater_Tree Condition Key_Where_Update}
         local
             fun {UpdateAll_Tree_Aux Tree Updated_Tree}
                 case Tree
                 of leaf then Updated_Tree
                 [] tree(key:Key value:Value t_left:TLeft t_right:TRight) then
                     local T1 in
-                        T1 = {UpdateAll_Tree_Aux TLeft {Updater_Tree Updated_Tree Key Value}}
+                        if {Condition Key_Where_Update Key} == true then
+                            T1 = {UpdateAll_Tree_Aux TLeft {Updater_Tree Updated_Tree Key Value}}
+                        else
+                            T1 = {UpdateAll_Tree_Aux TLeft Updated_Tree}
+                        end
                         _ = {UpdateAll_Tree_Aux TRight T1}
                     end
                 end

@@ -2,6 +2,7 @@ functor
 import
     Browser
     System
+    Variables at 'Variables.ozf'
 export
     Browse
     Append_List
@@ -34,18 +35,29 @@ define
     %%% ====== IMPLEMENTATION OF BASIC FUNCTIONS TO MAKE THEM RECURSIVE TERMINAL ====== %%%
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-    % NOTE : These implementations are maybe a little bit too slow but there are recursive terminal like asked for the project.
+    % NOTE : These implementations are maybe a little bit more slow but there are recursive terminal like asked for the project.
+    % NOTE : All the others functions that we have used (lile {Reverse List} or {ForAll List Function} are recursive terminal too.
+
 
     %%%
-    % Implementation of the List.append function but in recursive terminal way.
+    % Implementation of the List.append function.
+    % Appends two lists together.
+    %
+    % Example usage:
+    % In: [83 97 108 117 116] [32 84 101 115 116]
+    % Out: [83 97 108 117 116 32 84 101 115 116]
+    %
+    % @param L1: a list
+    % @param L2: a list
+    % return: a new list which is the concatenation of L1 and L2
     %%%
     fun {Append_List L1 L2}
         local
             fun {AppendList_Aux L1 NewList}
                 case L1
                 of nil then NewList
-                [] _|_ then
-                    {AppendList_Aux L1.2 L1.1|NewList}
+                [] H|T then
+                    {AppendList_Aux T H|NewList}
                 end
             end
         in
@@ -53,8 +65,18 @@ define
         end
     end
 
+
     %%%
-    % Implementation of the List.append function but in recursive terminal way.
+    % Implementation of the List.nth function.
+    % Returns the Nth element of a list.
+    %
+    % Example usage:
+    % In: [83 97 108 117 116] 3
+    % Out: 108
+    %
+    % @param List: a list
+    % @param N: a positive integer representing the index of the element to return
+    % @return: the Nth element of the list
     %%%
     fun {Nth_List List N}
         local
@@ -72,23 +94,29 @@ define
         end
     end
 
+
+    %%%
+    % Implementation of the String.tokens function.
+    % Splits a string into a list of strings using a delimiter.
+    %
+    % Example usage:
+    % In: "hello there, please display me" " "
+    % Out: ["hello" "there," "please" "display" "me"]
+    %
+    % @param Str: a string
+    % @param Char_Delimiter: a character used to split the string
+    % @return: a list of strings splitted from the original string by the delimiter
     fun {Tokens_String Str Char_Delimiter}
         local
             fun {Tokens_String_Aux Str SubList NewList}
                 case Str
                 of nil then
-                    if SubList \= nil then
-                        {Reverse {Reverse SubList}|NewList}
-                    else
-                        {Reverse NewList}
-                    end
+                    if SubList \= nil then {Reverse {Reverse SubList}|NewList}
+                    else {Reverse NewList} end
                 [] H|T then
                     if H == Char_Delimiter then
-                        if SubList \= nil then
-                            {Tokens_String_Aux T nil {Reverse SubList}|NewList}
-                        else
-                            {Tokens_String_Aux T nil NewList}
-                        end
+                        if SubList \= nil then {Tokens_String_Aux T nil {Reverse SubList}|NewList}
+                        else {Tokens_String_Aux T nil NewList} end
                     else
                         {Tokens_String_Aux T H|SubList NewList}
                     end
@@ -128,6 +156,7 @@ define
         end
     end
 
+
     %%%
     % Checks if a list is a prefix of another list
     %
@@ -154,26 +183,37 @@ define
     end
 
 
+    %%%
+    % Gets the last Nth elements from a list
+    %
+    % Example usage:
+    % In1: [83 97 108 117 116] 3   In2: [83 97 108 117 116] 6   In3: [83 97 108 117 116] 0
+    % Out1: [108 117 116]          Out2: nil                    Out3: nil
+    %
+    % @param List: a list
+    % @param Nth: a positive integer representing the number of elements to get from the end of the list
+    % @return: a new list with the last Nth elements from the original list.
     fun {Get_Last_Nth_Word_List ListWords Nth}
-        local
-            Result
-            fun {Get_Last_Nth_Word_List_Aux ListWords N}
-                case ListWords
-                of nil then nil
-                [] _|T then
-                    if N == 0 then ListWords
-                    else
-                        {Get_Last_Nth_Word_List_Aux T N-1}
-                    end
-                end
-            end
-        in                      
-            Result = {Get_Last_Nth_Word_List_Aux ListWords {Length ListWords}-Nth}
-            if Result == nil then ListWords
-            else Result end
+        local New_List Length_Reversed in
+            Length_Reversed = {Length ListWords} - Nth
+            if Length_Reversed == 0 then ListWords
+            elseif Length_Reversed < 0 then nil
+            else {Remove_List_FirstNthElements ListWords Length_Reversed} end
         end
-    end
+     end
 
+
+    %%%
+    % Slits a list at a given index
+    %
+    % Example usage:
+    % In1: [83 97 108 117 116] 3
+    % Out1: [[83 97 108] [117 116]]
+    %
+    % @param List: a list
+    % @param Nth: a positive integer representing the index at which to split the list
+    % @return: a list of two lists, the first one containing the first Nth elements of the original list,
+    %          the second one containing the remaining elements of the original list.
     fun {SplitList_AtIdx List Idx}
         local 
             fun {SplitList_AtIdx_Aux List NewList Idx}
@@ -190,23 +230,45 @@ define
         end
     end
 
-    fun {AddReversedWord_ToString Str Word}
-        local
-            fun {AddReversedWord_ToString NewStr Word}
-                case Word
-                of nil then NewStr
-                [] H|T then
-                {AddReversedWord_ToString H|NewStr T}
-                end
-            end
-        in
-            {AddReversedWord_ToString nil Word}
-        end
-    end
-     
+
+    %%%
+    % Concatenates the elements of a list into a string using a delimiter
+    %
+    % Example usage:
+    % In1 ["hello" "there" "please" "display" "me"] " "
+    % Out1 "hello there please display me"
+    %
+    % @param List: a list of strings
+    % @param Delimiter: a string used to separate the elements of the list
+    % @return: a string containing the elements of the list concatenated with the delimiter
     fun {ConcatenateElemOfList List Delimiter}
         local
             String_To_Cleaned
+
+            %%%
+            % Adds a word in reverse to a string
+            %
+            % Example usage:
+            % In: "hello there " " "
+            % Out: "olleh ereht "
+            %%%
+            fun {AddReversedWord_ToString Str Word}
+                local
+                    fun {AddReversedWord_ToString NewStr Word}
+                        case Word
+                        of nil then NewStr
+                        [] H|T then
+                        {AddReversedWord_ToString H|NewStr T}
+                        end
+                    end
+                in
+                    {AddReversedWord_ToString nil Word}
+                end
+            end
+
+            %%%
+            % Concatenates the elements of a list into a string
+            %%%
             fun {ConcatenateElemOfList_Aux List List_Str}
                 case List
                 of nil then List_Str
@@ -220,10 +282,12 @@ define
             end
         in
             String_To_Cleaned = {Reverse {ConcatenateElemOfList_Aux List ""}}
+            % Clean the string from the first space if there is one
             if String_To_Cleaned.1 == 32 then String_To_Cleaned.2
             else String_To_Cleaned end
         end
     end
+
 
     %%%
     % Get the list of strings from a stream associated with a port
@@ -232,10 +296,9 @@ define
     % In: ['i am good and you']|['i am very good thanks']|['wow this is a port']|_ 
     % Out: ['i am good and you']|['i am very good thanks']|['wow this is a port']
     %
-    % @param Stream: a stream associated with a port that contains a list of parsed lines
     % @return: the list of strings (from the stream 'Stream' associated with the port 'Port' (= global variable))
     %%%
-    fun {Get_ListFromPortStream Stream}
+    fun {Get_ListFromPortStream}
         local
             fun {Get_ListFromPortStream_Aux Stream NewList}
                 case Stream
@@ -245,8 +308,7 @@ define
                 end
             end
         in
-            {Get_ListFromPortStream_Aux Stream nil}
+            {Get_ListFromPortStream_Aux Variables.separatedWordsStream nil}
         end
     end
-
 end

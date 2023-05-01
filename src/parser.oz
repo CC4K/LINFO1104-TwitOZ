@@ -2,13 +2,12 @@ functor
 import
     Function at 'function.ozf'
 export
-    CleanUp
     CleaningUserInput
     ParseInputUser
-    RemoveEmptySpace
-    RemovePartList
-    ParseLine
-    ParseAllLines
+    Cleaning_UnNecessary_Spaces
+    Removes_SubString
+    Parses_Line
+    Parses_AllLines
 define
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -26,109 +25,43 @@ define
     %
     % @param SubList: a list from which to remove the specified sublist
     % @param Length_SubList: the sublist to remove from the 'List'
+    % @param Replacer: the character to replace the removed sublist with (if none, then the replaced character is a space)
     % @param NextCharRemoveToo: boolean indicating whether to remove the next character
     %                           after the substring if it is found in the 'List'
     % @return: a new list with all instances of the specified sublist removed
     %          (and their next character too if 'removeNextChar' is set to true)
     %%%
-    fun {RemovePartList List SubList Replacer NextCharRemoveToo}
+    fun {Removes_SubString List SubList Replacer NextCharRemoveToo}
         local
-            Length_SubList
-            fun {RemovePartList_Aux List NewList Length_List}
-                if Length_List < Length_SubList then NewList
-                elseif List == nil then NewList
-                else
-                    local List_Updated NewList_Updated Length_List_Updated in
-                        if {Function.findPrefix_InList List SubList} == true then
-                            if NextCharRemoveToo == true then
-                                List_Updated = {Function.remove_List_FirstNthElements List Length_SubList+1}
-                                Length_List_Updated = Length_List - (Length_SubList + 1)
-                                % 153 => = ' special not the basic => basic one is 39
-                                if {Function.nth_List List Length_SubList+1} == 153 then
-                                    NewList_Updated = 39 | NewList
-                                else
-                                    NewList_Updated = 32 | NewList
-                                end
-                            else
-                                if Replacer == none then
-                                    NewList_Updated = 32 | NewList
-                                else
-                                    NewList_Updated = NewList
-                                end
-                                List_Updated = {Function.remove_List_FirstNthElements List Length_SubList}
-                                Length_List_Updated = Length_List - Length_SubList
-                            end
-                        else
-                            List_Updated = List.2
-                            NewList_Updated = List.1 | NewList
-                            Length_List_Updated = Length_List
-                        end
-
-                        {RemovePartList_Aux List_Updated NewList_Updated Length_List_Updated}
-                    end
-                end
-            end
-        in
             Length_SubList = {Length SubList}
-            {Reverse {RemovePartList_Aux List nil {Length List}}}
-        end
-    end
-
-    %%%
-    % Applies a cleaning function to a string
-    %
-    % Example usage:
-    % If Cleaner = fun {$ LineStr} {RemovePartList LineStr [226 128] 32 true} end
-    %   In1: "Jeui ui suis okuiui et je suis louisuiuiuiui" "ui" true
-    %   Out1: "Jes oket je s lo"
-    %   In2: "    Je suis   ok  et je  suis louis    " " " false
-    %   Out2: "Je suis ok et je suis louis"
-    %
-    % @param LineStr: a string to be cleaned
-    % @param Cleaner: a function that takes as input a string and returns a cleaned string
-    % @return: a new string that has been cleaned by the function 'Cleaner'
-    %%%
-    fun {CleanUp LineStr Cleaner}
-        {Cleaner LineStr}
-    end
-
-    %%%
-    % Applies a parsing function to each string in a list of strings
-    %
-    % Example usage:
-    % In: ["  _&Hello there...! General Kenobi!!! %100 "]
-    % Out: ["hello there general kenobi 100"] if Parser = fun {$ StrLine} {RemoveEmptySpace {ParseLine Str_Line}} end
-    %
-    % @param List: a list of strings
-    % @param Parser: a function that takes a string as input and returns a parsed version of it
-    % @return: a list of the parsed strings
-    %%%
-    fun {ParseAllLines List Parser}
-        local
-            fun {ParseAllLines_Aux List Parser NewList}
+            Length_List = {Length List}
+            fun {Removes_SubString_Aux List NewList Length_List}
                 case List
                 of nil then NewList
                 [] H|T then
-                    % {Browse {String.toAtom {Parser H}}}
-                    % {Browse {String.toAtom H}}
-                    local ParsedLine in
-                        ParsedLine = {Parser H}
-                        % nil represent the empty atom like this : ''.
-                        % Useless because false the result of prediction.
-                        % Remove it.
-                        if ParsedLine == nil then
-                            {ParseAllLines_Aux T Parser NewList}
+                    if {Function.findPrefix_InList List SubList} == true then
+                        if NextCharRemoveToo == true then
+                            % 153 => = ' special not the basic => basic one is 39 (to replace with 39)
+                            if {Function.nth_List List Length_SubList+1} == 153 then
+                                {Removes_SubString_Aux {Function.remove_List_FirstNthElements List Length_SubList+1} 39|NewList Length_List-(Length_SubList+1)}
+                            else
+                                if Replacer == none then {Removes_SubString_Aux {Function.remove_List_FirstNthElements List Length_SubList+1} 32|NewList Length_List-(Length_SubList+1)}
+                                else {Removes_SubString_Aux {Function.remove_List_FirstNthElements List Length_SubList+1} Replacer|NewList Length_List-(Length_SubList+1)} end
+                            end
                         else
-                            {ParseAllLines_Aux T Parser ParsedLine|NewList}
+                            if Replacer == none then {Removes_SubString_Aux {Function.remove_List_FirstNthElements List Length_SubList} 32|NewList Length_List-Length_SubList}
+                            else {Removes_SubString_Aux {Function.remove_List_FirstNthElements List Length_SubList} Replacer|NewList Length_List-Length_SubList} end
                         end
-                    end
+                    else {Removes_SubString_Aux T H|NewList Length_List} end
                 end
             end
         in
-            {ParseAllLines_Aux List Parser nil}
+            if Length_List < Length_SubList then nil
+            else {Reverse {Removes_SubString_Aux List nil {Length List}}} end
         end
     end
-    
+
+
     %%%
     % Removes any space larger than one character wide (and therefore useless)
     %
@@ -139,10 +72,10 @@ define
     % @param Line: a string to be cleaned of unnecessary spaces.
     % @return: a new string with all excess spaces removed
     %%%
-    fun {RemoveEmptySpace Line}
+    fun {Cleaning_UnNecessary_Spaces Line}
         local
             CleanLine
-            fun {RemoveEmptySpace_Aux Line NewLine PreviousSpace}
+            fun {Cleaning_UnNecessary_Spaces_Aux Line NewLine PreviousSpace}
                 case Line
                 of nil then NewLine
                 [] H|nil then
@@ -150,29 +83,21 @@ define
                     else H|NewLine end
                 [] H|T then
                     if H == 32 then
-                        if PreviousSpace == true then
-                            {RemoveEmptySpace_Aux T NewLine true}
-                        else
-                            
-                            {RemoveEmptySpace_Aux T H|NewLine true}
-                        end
-                    else
-                        {RemoveEmptySpace_Aux T H|NewLine false}
-                    end
+                        if PreviousSpace == true then {Cleaning_UnNecessary_Spaces_Aux T NewLine true}
+                        else {Cleaning_UnNecessary_Spaces_Aux T H|NewLine true} end
+                    else {Cleaning_UnNecessary_Spaces_Aux T H|NewLine false} end
                 end
             end
         in
-            CleanLine = {RemoveEmptySpace_Aux Line nil true}
+            CleanLine = {Cleaning_UnNecessary_Spaces_Aux Line nil true}
             if CleanLine == nil then nil
             else
-                if CleanLine.1 == 32 then
-                    {Reverse CleanLine.2}
-                else    
-                    {Reverse CleanLine}
-                end
+                if CleanLine.1 == 32 then {Reverse CleanLine.2}
+                else {Reverse CleanLine} end
             end
         end
     end
+
 
     %%%
     % Replaces the character by an other
@@ -190,70 +115,79 @@ define
     % @return: a list of length 2 : [the new character    the boolean]
     %%%
     fun {GetNewChar Char}
-        local New_Char Bool in
-            if 97 =< Char andthen Char =< 122 then
-                New_Char = Char 
-                Bool = true
-            elseif 48 =< Char andthen Char =< 57 then
-                New_Char = Char 
-                Bool = true
-            elseif 65 =< Char andthen Char =< 90 then
-                New_Char = Char + 32
-                Bool = true
-            else
-                New_Char = 32 
-                Bool = false
-            end
-            [New_Char Bool]
-        end
+        if 97 =< Char andthen Char =< 122 then [Char true]
+        elseif 48 =< Char andthen Char =< 57 then [Char true]
+        elseif 65 =< Char andthen Char =< 90 then [Char+32 true]
+        else [32 false] end
     end
 
     %%%
     % Replaces special characters with spaces (== 32 in ASCII) and sets all letters to lowercase
-    % Digits are left untouched
-
+    % Digits are left untouched.
+    % Keep also the character 39 (') if it is between two letters or two digits.
+    %
     % Example usage:
-    % In: "FLATTENING of the CURVE! 888 IS a GoOd DIgit..#/!"
-    % Out: "flattening of the curve  888 is a good digit     "
+    % In: "FLATTENING of the CURVE! 888 IS a GoOd DIgit..#/! I can't believe it!"
+    % Out: "flattening of the curve  888 is a good digit i can't believe it"
     %
     % @param Line: a string to be parsed
     % @return: a parsed string without any special characters or capital letters
     %%%
-    fun {ParseLine Line PreviousGoodChar}
+    fun {Parses_Line Line}
         local
-            fun {ParseLine_Aux Line NewLine PreviousGoodChar}
+            fun {Parses_Line_Aux Line NewLine Previous_Changed_Char}
                 case Line
-                of H|T then
-                    local New_H Bool Next_Line Result_GetNewChar in
-                        % 39 is the character ' => keep it only if the previous and the future
-                        % character is a letter or a digit (not a special character!)
-
-                        Next_Line = T
-                        if H == 39 andthen PreviousGoodChar == true then
-                            if T \= nil then
-                                if T.1 == {GetNewChar T.1}.1 then
-                                    New_H = H
-                                    Bool = true
-                                else
-                                    New_H = 32
-                                    Bool = false
-                                end
-                            else
-                                New_H = 32
-                                Bool = false
-                            end
-                        else
-                            Result_GetNewChar = {GetNewChar H}
-                            New_H = Result_GetNewChar.1
-                            Bool = Result_GetNewChar.2.1
+                of nil then {Reverse NewLine}
+                [] H|nil then {Reverse 32|NewLine}
+                [] H|T then
+                    % 39 is the character ' => keep it only if the previous and the future
+                    % character is a letter or a digit (not a special character!)
+                    if H == 39 andthen Previous_Changed_Char == true then          
+                        if T.1 == {GetNewChar T.1}.1 then {Parses_Line_Aux T H|NewLine true}
+                        else {Parses_Line_Aux T 32|NewLine false} end
+                    else
+                        local Result_GetNewChar = {GetNewChar H} in
+                            {Parses_Line_Aux T Result_GetNewChar.1|NewLine Result_GetNewChar.2.1}
                         end
-                        {ParseLine_Aux Next_Line New_H|NewLine Bool}
                     end
-                [] nil then NewLine
                 end
             end
         in
-            {Reverse {ParseLine_Aux Line nil PreviousGoodChar}}
+            {Parses_Line_Aux Line nil false}
+        end
+    end
+
+
+    %%%
+    % Applies a parsing function to each string in a list of strings (to clean the string)
+    %
+    % Example usage:
+    % In: ["  _&Hello there...! General Kenobi!!! %100 "]
+    % Out: ["hello there general kenobi 100"]
+    %
+    % @param List: a list of strings
+    % @return: a list of the parsed strings
+    %%%
+    fun {Parses_AllLines List}
+        local
+            % Function to parse a single line of the database
+            Parser = fun {$ Line_Str} {Cleaning_UnNecessary_Spaces {Parses_Line {Removes_SubString Line_Str [226 128] 32 true}}} end
+            fun {Parses_AllLines_Aux List NewList}
+                case List
+                of nil then NewList
+                [] H|T then
+                    local ParsedLine in
+                        ParsedLine = {Parser H}
+                        % nil represent the empty atom like this : ''.
+                        % Useless because it false the result of a prediction.
+                        % => Remove it.
+                        if ParsedLine == nil then {Parses_AllLines_Aux T NewList}
+                        else {Parses_AllLines_Aux T ParsedLine|NewList} end
+                    end
+                end
+            end
+        in
+            {Parses_AllLines_Aux List nil}
         end
     end
 
@@ -273,23 +207,13 @@ define
     %%%
     fun {ParseInputUser Str_Line}
         local
-            fun {ParseCharUser Char}
-                local New_Char in
-                    New_Char = {GetNewChar Char}.1
-                    if New_Char == 32 then Char
-                    else New_Char end
-                end
-            end
-
             fun {ParseInputUser_Aux Str_Line NewLine}
                 case Str_Line
-                of nil then NewLine
-                [] H|T then
-                    {ParseInputUser_Aux T {ParseCharUser H}|NewLine}
-                end
+                of nil then {Reverse NewLine}
+                [] H|T then {ParseInputUser_Aux T {GetNewChar H}.1|NewLine} end
             end
         in
-            {Reverse {ParseInputUser_Aux Str_Line nil}}
+            {ParseInputUser_Aux Str_Line nil}
         end
     end
 
@@ -297,25 +221,25 @@ define
     % Removes all the "\n" character and the unnecessary " " character.
     %
     % Example usage:
-    % In: ["hello       i am  okay 
-    %      " "  you are   nice    "]
+    % In: "hello       i am  okay 
+    %      " "  you are   nice    "
     % Out: ["hello i am okay" "you are nice"]
     %
     % @param SplittedText: a list of strings to be parsed
     % return: the new list with all the string parsed.
     %%%
-    fun {CleaningUserInput SplittedText}
+    fun {CleaningUserInput Text_Line}
         local
+            Cleaner = fun {$ Str_Line} {Cleaning_UnNecessary_Spaces {Removes_SubString Str_Line [10] 32 false}} end
             fun {CleaningUserInput_Aux SplittedText NewSplittedText}
                 case SplittedText
                 of nil then {Filter NewSplittedText fun {$ X} X \= nil end}
                 [] H|T then
-                    {CleaningUserInput_Aux T {CleanUp H fun {$ X} {RemoveEmptySpace {RemovePartList X [10] 32 false}} end}|NewSplittedText}
+                    {CleaningUserInput_Aux T {Cleaner H}|NewSplittedText}
                 end
             end
-        in 
-            {Reverse {CleaningUserInput_Aux SplittedText nil}}
+        in
+            {Reverse {CleaningUserInput_Aux {Function.tokens_String Text_Line 32} nil}}
         end
     end
-
 end
