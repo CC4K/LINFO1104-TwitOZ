@@ -183,7 +183,7 @@ define
         in 
             {User_File write(vs:Contents)}
             {User_File close}
-        catch _ then {Application.exit} end 
+        catch _ then {System.show 'Error when saving the file into the user specified file'} {Application.exit} end 
     end
 
 
@@ -204,7 +204,7 @@ define
         in 
             {Variables.inputText set(Contents)}
             {File close}
-        catch _ then {Application.exit} end 
+        catch _ then {System.show 'Error when loading the file into the window'} {Application.exit} end 
     end
 
 
@@ -212,12 +212,10 @@ define
     %%%%%%%%%%%%%%%% ====== 4eme EXTENSION ====== %%%%%%%%%%%%%%%%%%%%%%%%
     %%%%%%%%%%%%%% DATABASE ADDER SENTENCES IMPLEMENTATION  %%%%%%%%%%%%%%
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-    %%%%%%%%% MARCHE PAS ENCORE PARFAITEMENT %%%%%%%%%%%%%%%
-    %%%%%%%%% MARCHE PAS ENCORE PARFAITEMENT %%%%%%%%%%%%%%%
+    
 
     proc {Send_NewTree_ToPort Name_File}
-        local BefTree NewTree LineToParsed File_Parsed L P in
+        local NewTree LineToParsed File_Parsed L P in
             thread _ =
                 LineToParsed = {Reader.read Name_File}
                 L=1
@@ -225,9 +223,8 @@ define
                 File_Parsed = {Parser.parses_AllLines LineToParsed}
                 P=1
                 {Wait P}
-                % Send to the port the new update tree with the new datas
-                BefTree = {Function.get_Tree}
                 NewTree = {Create_Updated_Tree {Function.get_Tree} File_Parsed}
+                % Send to the port the new update tree with the new datas
                 {Send Variables.port_Tree NewTree}
             end
         end
@@ -277,10 +274,12 @@ define
     fun {Update_SubTree SubTree Key NewValue}
         if SubTree == notfound then {Tree.insert leaf 1 [NewValue]}
         else
-            local Updated_SubTree in
-                Updated_SubTree = {Get_List_Value SubTree Key}
+            local Updated_SubTree List_Value in
+                Updated_SubTree = {Get_List_Value SubTree NewValue}
                 if SubTree == Updated_SubTree then
-                    {Tree.insert SubTree 1 [NewValue]}
+                    List_Value = {Tree.lookingUp SubTree 1}
+                    if List_Value == notfound then {Tree.insert SubTree 1 [NewValue]}
+                    else {Tree.insert SubTree 1 NewValue|List_Value} end
                 else
                     Updated_SubTree
                 end
@@ -288,7 +287,6 @@ define
         end
     end
 
-    %%% PROBLEME AVECLES FREQUENCE TOTALES! %%%
 
     fun {Get_List_Value SubTree Value_Word}
         local
@@ -296,12 +294,14 @@ define
                 case SubTree
                 of leaf then Updated_SubTree
                 [] tree(key:Key value:Value_List t_left:TLeft t_right:TRight) then
-                    local T1 New_List_Value in
+                    local T1 New_List_Value Length_Value_List in
                         if {IsInList Value_List Value_Word} == true then
-                            if {Length Value_List} == 1 then {Tree.insert_Key SubTree Key Key+1}
+                            Length_Value_List = {Length Value_List}
+                            if Length_Value_List == 1 then {Tree.insert_Key Updated_SubTree Key Key+1}
                             else
                                 New_List_Value = {RemoveElemOfList Value_List Value_Word}
-                                {AddElemToList_InTree {Tree.insert SubTree Key New_List_Value} Key+1 Value_Word}
+                                if Length_Value_List == {Length New_List_Value} then {AddElemToList_InTree Updated_SubTree Key+1 Value_Word}
+                                else {AddElemToList_InTree {Tree.insert Updated_SubTree Key New_List_Value} Key+1 Value_Word} end
                             end
                         else
                             T1 = {Get_List_Value_Aux TLeft Updated_SubTree}

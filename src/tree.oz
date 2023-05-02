@@ -88,10 +88,10 @@ define
             tree(key:NewKey value:V t_left:TLeft t_right:TRight)
 
         [] tree(key:K value:V t_left:TLeft t_right:TRight) andthen K < Key then
-            tree(key:K value:V t_left:TLeft t_right:{Insert_Key TRight Key Value})
+            tree(key:K value:V t_left:TLeft t_right:{Insert_Key TRight Key NewKey})
 
         [] tree(key:K value:V t_left:TLeft t_right:TRight) andthen K > Key then
-            tree(key:K value:V t_left:{Insert_Key TLeft Key Value} t_right:TRight)
+            tree(key:K value:V t_left:{Insert_Key TLeft Key NewKey} t_right:TRight)
         end
     end
 
@@ -314,7 +314,6 @@ define
                 end
             end
         in
-            {System.show Tree}
             List_Result = {Get_Result_Prediction_Aux Tree 0 0 nil}
             Total_Frequency = List_Result.1 div 2
             Max_Frequency = List_Result.2.1

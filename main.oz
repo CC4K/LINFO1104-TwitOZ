@@ -53,7 +53,6 @@ define
                     Key = {Function.concatenateElemOfList List_Words 32}
                     Parsed_Key = {String.toAtom {Parser.parseInputUser Key}} % Parses the key to avoid problems with special characters
                     Tree_Value = {Tree.lookingUp {Function.get_Tree} Parsed_Key}
-                    {System.show Tree_Value}
 
                     if Tree_Value == notfound then
                         {Interface.setText_Window Variables.outputText "No words found."}
@@ -65,7 +64,6 @@ define
 
                         % Get the most probable word(s) and the highest probability/frequency
                         ResultPress = {Tree.get_Result_Prediction Tree_Value}
-                        {System.show ResultPress}
                         ProbableWords = ResultPress.1
                         Probability = ResultPress.2.1
                         Frequency = ResultPress.2.2.1

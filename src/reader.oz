@@ -36,14 +36,14 @@ define
                         {TextFile close}
                         List_Line
                     else {GetLine TextFile Line|List_Line} end
-                catch _ then {Application.exit} end
+                catch _ then {System.show 'Error when reading or closing the file'} {Application.exit} end
             end
         in
             try
                 TextOfFile = {New TextFile init(name:Filename flags:[read])}
             in
                 {GetLine TextOfFile nil}
-            catch _ then {Application.exit} end
+            catch _ then {System.show 'Error when opening the file'} {Application.exit} end
         end
     end
     
