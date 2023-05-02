@@ -230,7 +230,7 @@ define
     %%%
     fun {CleaningUserInput Text_Line}
         local
-            Cleaner = fun {$ Str_Line} {Cleaning_UnNecessary_Spaces {Removes_SubString Str_Line [10] 32 false}} end
+            Cleaner = fun {$ Str_Line} {Cleaning_UnNecessary_Spaces {ParseInputUser {Removes_SubString Str_Line [10] 32 false}}} end
             fun {CleaningUserInput_Aux SplittedText NewSplittedText}
                 case SplittedText
                 of nil then {Filter NewSplittedText fun {$ X} X \= nil end}

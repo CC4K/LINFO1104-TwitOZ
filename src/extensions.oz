@@ -135,7 +135,7 @@ define
             td( text(handle:Variables.inputText height:15 font:{QTk.newFont font(family:"Verdana")} background:white foreground:black insertbackground:black selectbackground:c(13 101 212) wrap:word)
                 text(handle:Variables.outputText height:15 font:{QTk.newFont font(family:"Verdana")} background:black foreground:white wrap:word)
                 )
-            td( label(image:{QTk.newImage photo(url:"./twit.png")} borderwidth:0 width:290)
+            td( %label(image:{QTk.newImage photo(url:"./twit.png")} borderwidth:0 width:290)
                 td( button(text:"Predict" height:2 width:20 background:c(29 125 242) borderwidth:1 font:{QTk.newFont font(family:"Verdana" size:13)} foreground:white activebackground:white activeforeground:black cursor:hand2 action:CallerPress)
                     button(text:"Save as .txt file" height:2 width:20 background:c(29 125 242) borderwidth:1 font:{QTk.newFont font(family:"Verdana" size:13)} foreground:white activebackground:white activeforeground:black cursor:hand2 action:SaveText_UserFinder)
                     button(text:"Save file in database" height:2 width:20 background:c(29 125 242) borderwidth:1 font:{QTk.newFont font(family:"Verdana" size:13)} foreground:white activebackground:white activeforeground:black cursor:hand2 action:SaveText_Database)
@@ -452,40 +452,108 @@ define
     %%%%%%%% PREDICTION AUTOMATIQUE %%%%%%%%
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-
-    proc {Automatic_Prediction}
-        local User_Input List_Words Splitted_Words First_Key Second_Key Value_Tree Value_Tree2 ResultPress ProbableWords Probability Frequency in
-            User_Input = {Variables.inputText getText(p(1 0) 'end' $)}
-            List_Words = {Function.get_Last_Nth_Word_List User_Input Variables.idx_N_Grams+1}
-            Splitted_Words = {Function.tokens_String List_Words 32}
-            First_Key = {Function.concatenateElemOfList [Splitted_Words.1 Splitted_Words.2.1] 32}
-            Second_Key = {Function.concatenateElemOfList [Splitted_Words.2.1 Splitted_Words.2.2.1] 32}
-            Value_Tree = {Tree.lookingUp {Function.get_Tree} {String.toAtom Second_Key}}
-            if Value_Tree == notfound then
-                Value_Tree2 = {Tree.lookingUp {Function.get_Tree} {String.toAtom First_Key}}
-                if Value_Tree2 == notfound then
-                    {Interface.insert Variables.outputText 1 0 none "Words not found."}
-                    %%TODO
-                    %% Need to search with the letters
-                    %%TODO
-                else
-                    ResultPress = {Tree.get_Result_Prediction Value_Tree2}
-                    ProbableWords = ResultPress.1
-                    Probability = ResultPress.2.1
-                    Frequency = ResultPress.2.2.1
-
-                    if ProbableWords == [nil] then {Interface.insert Variables.outputText 1 0 none "Words not found."}
-                    else {ProposeAllTheWords ProbableWords Frequency Probability} end
+    fun {RemoveLastCharOfLastWord List_Words}
+        local
+            fun {RemoveLastChar Word}
+                local
+                    fun {RemoveLastChar_Aux Word NewWord}
+                        case Word
+                        of nil then nil
+                        [] H|nil then {Reverse NewWord}
+                        [] H|T then {RemoveLastChar_Aux T H|NewWord}
+                        end
+                    end
+                in
+                    {RemoveLastChar_Aux Word nil}
                 end
-            else
-                ResultPress = {Tree.get_Result_Prediction Value_Tree}
-                ProbableWords = ResultPress.1
-                Probability = ResultPress.2.1
-                Frequency = ResultPress.2.2.1
-
-                if ProbableWords == [nil] then {Interface.insert Variables.outputText }
-                else {ProposeAllTheWords ProbableWords Frequency Probability} end
             end
+
+            fun {RemoveLastCharOfLastWord_Aux List_Words NewList}
+                case List_Words
+                of nil then nil
+                [] H|nil then {Reverse {RemoveLastChar H}|NewList}
+                [] H|T then {RemoveLastCharOfLastWord_Aux T H|NewList}
+                end
+            end
+        in
+            {RemoveLastCharOfLastWord_Aux List_Words nil}
+        end
+    end
+
+
+    proc {Automatic_Prediction Time_Delay}
+        local
+            User_Input Splitted_Text List_Words Length_Splitted_Text First_Key Second_Key Value_Tree Value_Tree2 ResultPress ProbableWords Probability Frequency
+            proc {Automatic_Prediction_Aux}
+                User_Input = {Variables.inputText getText(p(1 0) 'end' $)}
+                Splitted_Text = {Parser.cleaningUserInput User_Input}
+                Length_Splitted_Text = {Length Splitted_Text}
+
+                {System.show User_Input}
+                {System.show Splitted_Text}
+
+                if Length_Splitted_Text == Variables.idx_N_Grams then
+                    List_Words = Splitted_Text
+                else
+                    List_Words = {Function.get_Last_Nth_Word_List Splitted_Text Variables.idx_N_Grams+1}
+                end
+
+                {System.show List_Words}
+
+                if Length_Splitted_Text < Variables.idx_N_Grams then {Interface.insertText_Window Variables.outputText 1 0 none {Append "Need at least " {Append {Int.toString Variables.idx_N_Grams} " words to predict the next one."}}}
+                else
+                    if Length_Splitted_Text == Variables.idx_N_Grams then
+                        First_Key = {Function.concatenateElemOfList List_Words 32}
+                        Value_Tree = {Tree.lookingUp {Function.get_Tree} {String.toAtom First_Key}}
+                        if Value_Tree == notfound then {Interface.insertText_Window Variables.outputText 1 0 none "Words not found."}
+                        else
+                            ResultPress = {Tree.get_Result_Prediction Value_Tree}
+                            ProbableWords = ResultPress.1
+                            Probability = ResultPress.2.1
+                            Frequency = ResultPress.2.2.1
+
+                            if ProbableWords == nil then {Interface.insertText_Window Variables.outputText 1 0 none "Words not found."}
+                            else {ProposeAllTheWords ProbableWords Frequency Probability} end
+                        end           
+                    else
+                        First_Key = {Function.concatenateElemOfList List_Words.2 32}
+                        Second_Key = {Function.concatenateElemOfList List_Words 32}
+
+                        Value_Tree = {Tree.lookingUp {Function.get_Tree} {String.toAtom First_Key}}
+                        if Value_Tree == notfound then
+                            Value_Tree2 = {Tree.lookingUp {Function.get_Tree} {String.toAtom Second_Key}}
+                            if Value_Tree2 == notfound then
+                                %%TODO
+                                %% Need to search with the letters
+                                %%TODO
+                                {Interface.insertText_Window Variables.outputText 1 0 none "Words not found."}
+                            else
+                                ResultPress = {Tree.get_Result_Prediction Value_Tree2}
+                                ProbableWords = ResultPress.1
+                                Probability = ResultPress.2.1
+                                Frequency = ResultPress.2.2.1
+
+                                if ProbableWords == nil then {Interface.insertText_Window Variables.outputText 1 0 none "Words not found."}
+                                else {ProposeAllTheWords ProbableWords Frequency Probability} end
+                            end
+                        else
+                            ResultPress = {Tree.get_Result_Prediction Value_Tree}
+                            ProbableWords = ResultPress.1
+                            Probability = ResultPress.2.1
+                            Frequency = ResultPress.2.2.1
+
+                            if ProbableWords == nil then {Interface.insertText_Window Variables.outputText 1 0 none "Words not found."}
+                            else {ProposeAllTheWords ProbableWords Frequency Probability} end
+                        end
+                    end
+                end
+            end
+        in
+            % Infinite loop
+            {Interface.setText_Window Variables.outputText ""}
+            {Automatic_Prediction_Aux}
+            {Time.delay Time_Delay}
+            {Automatic_Prediction Time_Delay}
         end
     end
 

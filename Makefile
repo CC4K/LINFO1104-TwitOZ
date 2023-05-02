@@ -12,6 +12,19 @@ endif
 
 all : $(ENTRY_POINT)
 
+run_all:
+	if [ ! -d "bin" ]; then mkdir bin; fi
+	$(OZC) -c src/variables.oz -o bin/variables.ozf
+	$(OZC) -c src/function.oz -o bin/function.ozf
+	$(OZC) -c src/interface.oz -o bin/interface.ozf
+	$(OZC) -c src/parser.oz -o bin/parser.ozf
+	$(OZC) -c src/tree.oz -o bin/tree.ozf
+	$(OZC) -c src/reader.oz -o bin/reader.ozf
+	$(OZC) -c src/extensions.oz -o bin/extensions.ozf
+	$(OZC) -c main.oz -o bin/main.ozf
+
+	$(OZENGINE) bin/$(ENTRY_POINT) --folder $(TWEETS_FOLDER)
+
 main.ozf :
 	if [ ! -d "bin" ]; then mkdir bin; fi
 	$(OZC) -c src/variables.oz -o bin/variables.ozf
