@@ -137,6 +137,7 @@ define
                 td( button(text:"Predict" height:2 width:20 background:c(29 125 242) borderwidth:1 font:{QTk.newFont font(family:"Verdana" size:13)} foreground:white activebackground:white activeforeground:black cursor:hand2 action:CallerPress)
                     button(text:"Save as .txt file" height:2 width:20 background:c(29 125 242) borderwidth:1 font:{QTk.newFont font(family:"Verdana" size:13)} foreground:white activebackground:white activeforeground:black cursor:hand2 action:SaveText_UserFinder)
                     button(text:"Save file in database" height:2 width:20 background:c(29 125 242) borderwidth:1 font:{QTk.newFont font(family:"Verdana" size:13)} foreground:white activebackground:white activeforeground:black cursor:hand2 action:SaveText_Database)
+                    button(text:"Clean user historic" height:2 width:20 background:c(29 125 242) borderwidth:1 font:{QTk.newFont font(family:"Verdana" size:13)} foreground:white activebackground:white activeforeground:black cursor:hand2 action:Clean_UserHistoric)
                     button(text:"Load file as input" height:2 width:20 background:c(29 125 242) borderwidth:1 font:{QTk.newFont font(family:"Verdana" size:13)} foreground:white activebackground:white activeforeground:black cursor:hand2 action:LoadText)
                     button(text:"Quit" height:2 width:20 background:c(29 125 242) relief:sunken borderwidth:1 font:{QTk.newFont font(family:"Verdana" size:13)} foreground:white activebackground:white activeforeground:black cursor:hand2 action:proc{$} {Application.exit 0} end)
                     )
@@ -375,6 +376,29 @@ define
         in
             {RemoveElemOfList_Aux Value_List nil}
         end
+    end
+
+
+    proc {Clean_UserHistoric}
+        local Historic_NberFiles_File in
+            % Open the file where the number of historic files is stored and reset it to 0
+            Historic_NberFiles_File = {New Open.file init(name:"user_historic/nber_historic_files.txt" flags:[write])}
+            {Historic_NberFiles_File write(vs:{Int.toString 0})}
+            {Historic_NberFiles_File close}
+
+            % Delete all the historic files
+            {Delete_HistoricFiles}
+        end
+    end
+
+    %%%% TODO %%%%
+    %%%% Want to apply the command "make clean_user_historic" from the Makefile %%%%
+    proc {Delete_HistoricFiles}
+
+        _ = _
+        %%% System.command doesn't exist %%%
+        % {System.command "make clean_user_historic"}
+        % {System.command "rm -rf user_historic/user_files"}
     end
 
 

@@ -30,6 +30,9 @@ main.ozf :
 run: bin/$(ENTRY_POINT) 
 	$(OZENGINE) bin/$(ENTRY_POINT) --folder $(TWEETS_FOLDER)
 
-clean :
+clean_user_historic:
+	rm -f user_historic/user_files/*.txt
+
+clean:
 	rm -f bin/*.ozf
 	rm -rf bin
