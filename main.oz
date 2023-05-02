@@ -211,6 +211,12 @@ define
         Args.'folder'
     end
 
+    proc {F X}
+        {Extensions.automatic_Prediction}
+        {Time.delay X}
+        {F X}
+    end
+
 
     %%%
     % Main procedure that creates the Qtk window and calls differents functions/procedures to make the program functional.
@@ -288,6 +294,10 @@ define
             % Remove all because the user add some texts between or before the line : "Loading... Please wait."
             {Interface.setText_Window Variables.inputText ""}
         end
+        
+        %%% Add the delay function to do some automatic prediction %%%
+        %% Didn't test yet!
+        thread {F 2} end
 
         %%ENDOFCODE%%
     end

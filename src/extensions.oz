@@ -22,6 +22,7 @@ export
     SaveText_Database
     LaunchThreads_HistoricUser
     Get_Nber_HistoricFile
+    Automatic_Prediction
 define
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -443,6 +444,48 @@ define
             end
         in
             {LaunchThreads_HistoricUser_Aux 1 nil}
+        end
+    end
+
+
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    %%%%%%%% PREDICTION AUTOMATIQUE %%%%%%%%
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+    proc {Automatic_Prediction}
+        local User_Input List_Words Splitted_Words First_Key Second_Key Value_Tree Value_Tree2 ResultPress ProbableWords Probability Frequency in
+            User_Input = {Variables.inputText getText(p(1 0) 'end' $)}
+            List_Words = {Function.get_Last_Nth_Word_List User_Input Variables.idx_N_Grams+1}
+            Splitted_Words = {Function.tokens_String List_Words 32}
+            First_Key = {Function.concatenateElemOfList [Splitted_Words.1 Splitted_Words.2.1] 32}
+            Second_Key = {Function.concatenateElemOfList [Splitted_Words.2.1 Splitted_Words.2.2.1] 32}
+            Value_Tree = {Tree.lookingUp {Function.get_Tree} {String.toAtom Second_Key}}
+            if Value_Tree == notfound then
+                Value_Tree2 = {Tree.lookingUp {Function.get_Tree} {String.toAtom First_Key}}
+                if Value_Tree2 == notfound then
+                    {Interface.insert Variables.outputText 1 0 none "Words not found."}
+                    %%TODO
+                    %% Need to search with the letters
+                    %%TODO
+                else
+                    ResultPress = {Tree.get_Result_Prediction Value_Tree2}
+                    ProbableWords = ResultPress.1
+                    Probability = ResultPress.2.1
+                    Frequency = ResultPress.2.2.1
+
+                    if ProbableWords == [nil] then {Interface.insert Variables.outputText 1 0 none "Words not found."}
+                    else {ProposeAllTheWords ProbableWords Frequency Probability} end
+                end
+            else
+                ResultPress = {Tree.get_Result_Prediction Value_Tree}
+                ProbableWords = ResultPress.1
+                Probability = ResultPress.2.1
+                Frequency = ResultPress.2.2.1
+
+                if ProbableWords == [nil] then {Interface.insert Variables.outputText }
+                else {ProposeAllTheWords ProbableWords Frequency Probability} end
+            end
         end
     end
 
