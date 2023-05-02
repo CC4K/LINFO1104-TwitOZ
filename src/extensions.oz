@@ -155,19 +155,18 @@ define
     proc {SaveText_Database}
 
         % Name folder to stock the historic of user
-        PathHistoricFile = "user_historic/historic_part"
+        PathHistoricFile = "user_historic/user_files/historic_part"
     in
         try
             % Open the file where the number of historic files is stored
-            Historic_NberFiles_File_Reading = {New Open.file init(name:"nber_historic_files.txt" flags:[read])}
+            Historic_NberFiles_File_Reading = {New Open.file init(name:"user_historic/nber_historic_files.txt" flags:[read])}
 
             % Read this file to get the number of historic files incremented of 1
             Nber_HistoricFiles = {String.toInt {Historic_NberFiles_File_Reading read(list:$ size:all)}} + 1
-            {System.show Nber_HistoricFiles}
 
             {Historic_NberFiles_File_Reading close}
 
-            Historic_NberFiles_File_Writing = {New Open.file init(name:"nber_historic_files.txt" flags:[write create truncate])}
+            Historic_NberFiles_File_Writing = {New Open.file init(name:"user_historic/nber_historic_files.txt" flags:[write create truncate])}
 
             % Write the new number of historic files in the file
             {Historic_NberFiles_File_Writing write(vs:{Int.toString Nber_HistoricFiles})}
@@ -271,7 +270,6 @@ define
         case List_UserInput
         of nil then Main_Tree
         [] H|T then
-            {System.show H}
             {Create_Updated_Tree {Create_Updated_Tree_Aux Main_Tree {N_Grams {Function.tokens_String H 32}}} T}
         end
     end
@@ -384,7 +382,7 @@ define
 
     fun {Get_Nber_HistoricFile}
         local Historic_NberFiles_File Nber_HistoricFiles in
-            Historic_NberFiles_File = {New Open.file init(name:"nber_historic_files.txt" flags:[read])}
+            Historic_NberFiles_File = {New Open.file init(name:"user_historic/nber_historic_files.txt" flags:[read])}
             Nber_HistoricFiles = {String.toInt {Historic_NberFiles_File read(list:$ size:all)}}
             {Historic_NberFiles_File close}
             Nber_HistoricFiles
@@ -399,7 +397,7 @@ define
                 else
                     local File_Parsed File LineToParsed L P in
                         thread _ =
-                            File = {Function.append_List "user_historic/historic_part" {Function.append_List {Int.toString Id_Thread} ".txt"}}
+                            File = {Function.append_List "user_historic/user_files/historic_part" {Function.append_List {Int.toString Id_Thread} ".txt"}}
                             LineToParsed = {Reader.read File}
                             L=1
                             {Wait L} 
