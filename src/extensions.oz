@@ -3,6 +3,7 @@ import
     QTk at 'x-oz://system/wp/QTk.ozf'
     Application
     Open
+    OS
     System
     
     Variables at 'variables.ozf'
@@ -243,6 +244,7 @@ define
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     
 
+     %%%% TODO %%%%
     proc {Send_NewTree_ToPort Name_File}
         local NewTree LineToParsed File_Parsed L P in
             thread _ =
@@ -276,6 +278,7 @@ define
     end
 
 
+     %%%% TODO %%%%
     fun {Create_Updated_Tree_Aux New_Tree List_Keys}
         local
             %%%
@@ -300,6 +303,7 @@ define
     end
 
 
+    %%%% TODO %%%%
     fun {Update_SubTree SubTree Key NewValue}
         if SubTree == notfound then {Tree.insert leaf 1 [NewValue]}
         else
@@ -317,6 +321,7 @@ define
     end
 
 
+     %%%% TODO %%%%
     fun {Get_List_Value SubTree Value_Word}
         local
             fun {Get_List_Value_Aux SubTree Updated_SubTree}
@@ -345,6 +350,7 @@ define
     end
 
 
+     %%%% TODO %%%%
     fun {AddElemToList_InTree SubTree Key Word_Value}
         local Value_List in
             Value_List = {Tree.lookingUp SubTree Key}
@@ -354,6 +360,7 @@ define
     end
 
 
+     %%%% TODO %%%%
     fun {IsInList List Value}
         case List
         of nil then false
@@ -363,6 +370,8 @@ define
         end
     end
 
+
+     %%%% TODO %%%%
     fun {RemoveElemOfList Value_List Value_Word}
         local
             fun {RemoveElemOfList_Aux Value_List New_Value_List}
@@ -379,6 +388,7 @@ define
     end
 
 
+     %%%% TODO %%%%
     proc {Clean_UserHistoric}
         local Historic_NberFiles_File in
             % Open the file where the number of historic files is stored and reset it to 0
@@ -391,19 +401,15 @@ define
         end
     end
 
-    %%%% TODO %%%%
-    %%%% Want to apply the command "make clean_user_historic" from the Makefile %%%%
-    proc {Delete_HistoricFiles}
 
-        _ = _
-        %%% System.command doesn't exist %%%
-        % {System.command "make clean_user_historic"}
-        % {System.command "rm -rf user_historic/user_files"}
+    %%%% TODO %%%%
+    proc {Delete_HistoricFiles}
+        {OS.pipe make "clean_user_historic"|nil _ _}
     end
 
 
 
-
+     %%%% TODO %%%%
     fun {Get_Nber_HistoricFile}
         local Historic_NberFiles_File Nber_HistoricFiles in
             Historic_NberFiles_File = {New Open.file init(name:"user_historic/nber_historic_files.txt" flags:[read])}
@@ -413,7 +419,8 @@ define
         end
     end
 
-
+     
+    %%%% TODO %%%%
     fun {LaunchThreads_HistoricUser}
         local
             fun {LaunchThreads_HistoricUser_Aux Id_Thread List_Waiting_Threads}
