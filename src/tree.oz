@@ -38,7 +38,7 @@ define
             fun {LookingUp_Aux Tree Key KeyToReturn}
                 case Tree
                 of leaf then KeyToReturn
-                [] tree(key:K value:V t_left:_ t_right:_) andthen K == Key
+                [] tree(key:K value:V t_left:_ t_right:_) andthen K == Key then
                     if Prefix_Value == none then V
                     else
                         if {Function.findPrefix_InList V Prefix_Value} then V
