@@ -288,7 +288,7 @@ define
             fun {Update_Value New_Tree Key List_Keys}
                 local Value_to_Insert Tree_Value New_Tree_Value in
                     Value_to_Insert = {String.toAtom {Reverse {Function.tokens_String List_Keys.1 32}}.1}
-                    Tree_Value = {Tree.lookingUp New_Tree Key}
+                    Tree_Value = {Tree.lookingUp New_Tree Key none}
                     New_Tree_Value = {Update_SubTree Tree_Value Key Value_to_Insert}
                     {Tree.insert New_Tree Key New_Tree_Value}
                 end
@@ -311,7 +311,7 @@ define
             local Updated_SubTree List_Value in
                 Updated_SubTree = {Get_List_Value SubTree NewValue}
                 if SubTree == Updated_SubTree then
-                    List_Value = {Tree.lookingUp SubTree 1}
+                    List_Value = {Tree.lookingUp SubTree 1 none}
                     if List_Value == notfound then {Tree.insert SubTree 1 [NewValue]}
                     else {Tree.insert SubTree 1 NewValue|List_Value} end
                 else
@@ -354,7 +354,7 @@ define
      %%%% TODO %%%%
     fun {AddElemToList_InTree SubTree Key Word_Value}
         local Value_List in
-            Value_List = {Tree.lookingUp SubTree Key}
+            Value_List = {Tree.lookingUp SubTree Key none}
             if Value_List == notfound then {Tree.insert SubTree Key [Word_Value]}
             else {Tree.insert SubTree Key Word_Value|Value_List} end
         end
@@ -504,7 +504,7 @@ define
                 else
                     if Length_Splitted_Text == Variables.idx_N_Grams then
                         First_Key = {Function.concatenateElemOfList List_Words 32}
-                        Value_Tree = {Tree.lookingUp {Function.get_Tree} {String.toAtom First_Key}}
+                        Value_Tree = {Tree.lookingUp {Function.get_Tree} {String.toAtom First_Key} none}
                         if Value_Tree == notfound then {Interface.insertText_Window Variables.outputText 1 0 none "Words not found."}
                         else
                             ResultPress = {Tree.get_Result_Prediction Value_Tree}
@@ -519,10 +519,12 @@ define
                         First_Key = {Function.concatenateElemOfList List_Words.2 32}
                         Second_Key = {Function.concatenateElemOfList List_Words 32}
 
-                        Value_Tree = {Tree.lookingUp {Function.get_Tree} {String.toAtom First_Key}}
+                        Value_Tree = {Tree.lookingUp {Function.get_Tree} {String.toAtom First_Key} none}
                         if Value_Tree == notfound then
-                            Value_Tree2 = {Tree.lookingUp {Function.get_Tree} {String.toAtom Second_Key}}
+                            Value_Tree2 = {Tree.lookingUp {Function.get_Tree} {String.toAtom Second_Key} none}
                             if Value_Tree2 == notfound then
+
+                                {Tree.lookingUp {Function.get_Tree} {String.toAtom Second_Key} {Reverse First_Key.1}}
                                 %%TODO
                                 %% Need to search with the letters
                                 %%TODO
