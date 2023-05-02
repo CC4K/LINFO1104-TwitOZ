@@ -19,6 +19,8 @@ export
     SaveText_UserFinder
     LoadText
     SaveText_Database
+    LaunchThreads_HistoricUser
+    Get_Nber_HistoricFile
 define
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -151,17 +153,44 @@ define
     % @return: /
     %%%
     proc {SaveText_Database}
+
+        % Name folder to stock the historic of user
         PathHistoricFile = "user_historic/historic_part"
-        Nber_HistoricFiles = 1 % Get the real one @TODO
     in
         try
-            Name_File = {Function.append_List PathHistoricFile {Append {Int.toString Nber_HistoricFiles} ".txt"}}
+            % Open the file where the number of historic files is stored
+            Historic_NberFiles_File_Reading = {New Open.file init(name:"nber_historic_files.txt" flags:[read])}
+
+            % Read this file to get the number of historic files incremented of 1
+            Nber_HistoricFiles = {String.toInt {Historic_NberFiles_File_Reading read(list:$ size:all)}} + 1
+            {System.show Nber_HistoricFiles}
+
+            {Historic_NberFiles_File_Reading close}
+
+            Historic_NberFiles_File_Writing = {New Open.file init(name:"nber_historic_files.txt" flags:[write create truncate])}
+
+            % Write the new number of historic files in the file
+            {Historic_NberFiles_File_Writing write(vs:{Int.toString Nber_HistoricFiles})}
+
+            % Get the name of the new file to create
+            Name_File = {Function.append_List PathHistoricFile {Function.append_List {Int.toString Nber_HistoricFiles} ".txt"}}
+
+            % Open the file
             Historic_File = {New Open.file init(name:Name_File flags:[write create truncate])}
+
+            % Get the contents of the user
             Contents = {Variables.inputText get($)}
         in
+            % Close the file where the number of historic files is stored
+            {Historic_NberFiles_File_Writing close}
+
             % Write the datas in the file to save them for the next usage
             {Historic_File write(vs:Contents)}
+
+            % Close the file where the user historic datas are stored
             {Historic_File close}
+
+            % Send the new tree to the port
             {Send_NewTree_ToPort Name_File}
         catch _ then {System.show 'Error when saving the file into the database'} {Application.exit 0} end
     end
@@ -242,6 +271,7 @@ define
         case List_UserInput
         of nil then Main_Tree
         [] H|T then
+            {System.show H}
             {Create_Updated_Tree {Create_Updated_Tree_Aux Main_Tree {N_Grams {Function.tokens_String H 32}}} T}
         end
     end
@@ -348,4 +378,43 @@ define
             {RemoveElemOfList_Aux Value_List nil}
         end
     end
+
+
+
+
+    fun {Get_Nber_HistoricFile}
+        local Historic_NberFiles_File Nber_HistoricFiles in
+            Historic_NberFiles_File = {New Open.file init(name:"nber_historic_files.txt" flags:[read])}
+            Nber_HistoricFiles = {String.toInt {Historic_NberFiles_File read(list:$ size:all)}}
+            {Historic_NberFiles_File close}
+            Nber_HistoricFiles
+        end
+    end
+
+
+    fun {LaunchThreads_HistoricUser}
+        local
+            fun {LaunchThreads_HistoricUser_Aux Id_Thread List_Waiting_Threads}
+                if Id_Thread == Variables.nber_HistoricFiles + 1 then List_Waiting_Threads
+                else
+                    local File_Parsed File LineToParsed L P in
+                        thread _ =
+                            File = {Function.append_List "user_historic/historic_part" {Function.append_List {Int.toString Id_Thread} ".txt"}}
+                            LineToParsed = {Reader.read File}
+                            L=1
+                            {Wait L} 
+                            File_Parsed = {Parser.parses_AllLines LineToParsed}
+                            P=1
+                            {Send Variables.separatedWordsPort File_Parsed}
+                        end
+                        
+                        {LaunchThreads_HistoricUser_Aux Id_Thread+1 P|List_Waiting_Threads}
+                    end
+                end
+            end
+        in
+            {LaunchThreads_HistoricUser_Aux 1 nil}
+        end
+    end
+
 end

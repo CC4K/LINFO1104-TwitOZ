@@ -14,6 +14,7 @@ export
     Description
     Port_Tree
     Stream_Tree
+    Nber_HistoricFiles
 define
 
     % Global variables that will not be modify during the execution of the program (except 'Stream_Tree' to store the future updated tree).
@@ -31,5 +32,6 @@ define
     Description
     Port_Tree
     Stream_Tree
+    Nber_HistoricFiles
 
 end

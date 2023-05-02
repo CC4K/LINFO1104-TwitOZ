@@ -3,6 +3,7 @@ import
     QTk at 'x-oz://system/wp/QTk.ozf'
     Application
     OS
+    Open
     Property
     System
 
@@ -108,6 +109,7 @@ define
             Basic_Nber_Iter = Variables.nberFiles div N
             Rest_Nber_Iter = Variables.nberFiles mod N
             List_Waiting_Threads
+            List_Waiting_Threads_2
 
             %%%
             % Allows to launch a thread that will read and parse a file
@@ -183,12 +185,16 @@ define
             % Launch all the threads
             % The parsing files are stocked in the Port
             % The variables to Wait all the threads are stocked in List_Waiting_Threads
-            List_Waiting_Threads = {Launch_AllThreads nil N}
+
+            thread _ = List_Waiting_Threads = {Launch_AllThreads nil N} end
+
+            % To also parse the historic user files (Extension)
+            thread _ = List_Waiting_Threads_2 = {Extensions.launchThreads_HistoricUser} end
             
             % Wait for all the threads
             % When a thread have finished, the value P associated to this thread
             % is bind and the program can move on 
-            {ForAll List_Waiting_Threads proc {$ P} {Wait P} end}
+            {ForAll {Function.append_List List_Waiting_Threads List_Waiting_Threads_2} proc {$ P} {Wait P} end}
         end
     end
 
@@ -216,6 +222,8 @@ define
     % @return: /
     %%%
     proc {Main}
+
+        Variables.nber_HistoricFiles = {Extensions.get_Nber_HistoricFile}
 
         % Initialization of the global variables used in the program
         Variables.idx_N_Grams = 2     

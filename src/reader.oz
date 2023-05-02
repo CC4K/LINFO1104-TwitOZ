@@ -2,6 +2,7 @@ functor
 import 
     Open
     Application
+    System
     Function at 'function.ozf'
     Variables at 'variables.ozf'
 export

@@ -316,7 +316,6 @@ define
     fun {Get_Tree}
         local
             fun {Get_Tree_Aux Stream_Tree}
-                {System.show 'Err'}
                 case Stream_Tree
                 of H|T then
                     if {IsDet T} == false then H
