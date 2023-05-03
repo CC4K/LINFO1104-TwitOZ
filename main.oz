@@ -22,6 +22,12 @@ import
 
 define
 
+    %%%%%%%%%%%%%%%%% Probleme dans la creation de l'arbre %%%%%%%%%%%%%%%%%
+    %%%%%%%%%%%%%%%%% Les valeurs changent d'une execution a l'autre %%%%%%%%%%%%%%%%%
+
+
+
+
     %%%
     % Displays to the output zone on the window the most likely prediction of the next word based on the N last entered words.
     % The value of N depends of the N-Grams asked by the user.
@@ -126,7 +132,6 @@ define
             % @return: the list containing all the value unbound of all threads.
             %          the value will be bound where the thread has finished its work.
             fun {Launch_OneThread Start End List_Waiting_Threads}
-
                 % If the thread has done (End - Start) files, the list is returned
                 if Start == End+1 then List_Waiting_Threads
                 else
@@ -179,7 +184,9 @@ define
                         end
         
                         End = Start + Current_Nber_Iter1 - 1
-
+                        {System.show Start}
+                        {System.show End}
+                        {System.show 'Next :'}
                         {Launch_AllThreads {Launch_OneThread Start End nil} Nber_Threads-1}
                     end
                 end
@@ -276,6 +283,8 @@ define
             Main_Tree = {Tree.updateAll_Tree {Tree.createTree List_Line_Parsed} fun {$ NewTree Key Value}
                 {Tree.insert NewTree Key {Tree.createSubTree Value}} end fun {$ _ _} true end _} % The Condition is always true because we want to visit and update all the node of the tree
             {Send Variables.port_Tree Main_Tree}
+
+            {System.show {Tree.get_Result_Prediction {Tree.lookingUp Main_Tree 'i have'} none}}
         end
         
         % We bound the value 'Variables.tree_Over' => {Press} can work now because the structure is ready

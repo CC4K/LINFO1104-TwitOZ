@@ -75,15 +75,11 @@ define
                         % Get the subtree associated to the first key
                         Value_Tree = {Tree.lookingUp {Function.get_Tree} {String.toAtom First_Key}}
 
-                        {System.show {String.toAtom First_Key}}
-                        {System.show {String.toAtom Second_Key}}
-
                         % If the first key is not found
                         if Value_Tree == notfound then
                             
                             % Get the subtree associated to the second key
                             Value_Tree2 = {Tree.lookingUp {Function.get_Tree} {String.toAtom Second_Key}}
-                            {System.show Value_Tree2}
 
                             if Value_Tree2 == notfound then {Interface.insertText_Window Variables.outputText 1 0 none "Words not found."}
                             else
@@ -100,7 +96,6 @@ define
                                 end
                             end
                         else % If the first key is found
-                            {System.show "wtf"}
                             {System.show Value_Tree}
                             ResultPress = {Tree.get_Result_Prediction Value_Tree none}
                             ProbableWords = ResultPress.1
@@ -137,17 +132,23 @@ define
 
     fun {CheckIfSamePrediction ProbableWords Frequency Probability}
         try
-            local Path_LastPrediction_File Last_List_Prediction Result in
+            local Path_LastPrediction_File Last_List_Prediction in
                 Path_LastPrediction_File = {New Open.file init(name:"user_historic/last_prediction.txt" flags:[read])}
                 Last_List_Prediction = {Function.tokens_String {Path_LastPrediction_File read(list:$ size:all)} 32}
+
                 % Compare if it's the same
                 if {Length Last_List_Prediction} == {Length ProbableWords} + 2 then
                     if Frequency == {String.toInt Last_List_Prediction.2.1} andthen Probability == {String.toFloat Last_List_Prediction.1} then
-                        Result = {CompareList Last_List_Prediction.2.2 ProbableWords}
-                    else Result = false end
-                else Result = false end
-                {Path_LastPrediction_File close}
-                Result
+                        {Path_LastPrediction_File close}
+                        {CompareList Last_List_Prediction.2.2 ProbableWords}
+                    else
+                        {Path_LastPrediction_File close}
+                        false
+                    end
+                else
+                    {Path_LastPrediction_File close}
+                    false
+                end
             end
         catch _ then {System.show 'Error in CheckIfSamePrediction function'} {Application.exit 0} none end
     end
