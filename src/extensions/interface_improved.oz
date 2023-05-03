@@ -6,7 +6,8 @@ import
     OS
     System
     
-    Variables at 'variables.ozf'
+    Variables at '../variables.ozf'
+    Historic_user at 'historic_user.ozf'
 export
     GetDescriptionGUI
     SaveText_UserFinder
@@ -27,8 +28,8 @@ define
             td( %label(image:{QTk.newImage photo(url:"./twit.png")} borderwidth:0 width:290)
                 td( button(text:"Predict" height:2 width:20 background:c(29 125 242) borderwidth:1 font:{QTk.newFont font(family:"Verdana" size:13)} foreground:white activebackground:white activeforeground:black cursor:hand2 action:CallerPress)
                     button(text:"Save as .txt file" height:2 width:20 background:c(29 125 242) borderwidth:1 font:{QTk.newFont font(family:"Verdana" size:13)} foreground:white activebackground:white activeforeground:black cursor:hand2 action:SaveText_UserFinder)
-                    button(text:"Save file in database" height:2 width:20 background:c(29 125 242) borderwidth:1 font:{QTk.newFont font(family:"Verdana" size:13)} foreground:white activebackground:white activeforeground:black cursor:hand2 action:SaveText_Database)
-                    button(text:"Clean user historic" height:2 width:20 background:c(29 125 242) borderwidth:1 font:{QTk.newFont font(family:"Verdana" size:13)} foreground:white activebackground:white activeforeground:black cursor:hand2 action:Clean_UserHistoric)
+                    button(text:"Save file in database" height:2 width:20 background:c(29 125 242) borderwidth:1 font:{QTk.newFont font(family:"Verdana" size:13)} foreground:white activebackground:white activeforeground:black cursor:hand2 action:Historic_user.saveText_Database)
+                    button(text:"Clean user historic" height:2 width:20 background:c(29 125 242) borderwidth:1 font:{QTk.newFont font(family:"Verdana" size:13)} foreground:white activebackground:white activeforeground:black cursor:hand2 action:Historic_user.clean_UserHistoric)
                     button(text:"Load file as input" height:2 width:20 background:c(29 125 242) borderwidth:1 font:{QTk.newFont font(family:"Verdana" size:13)} foreground:white activebackground:white activeforeground:black cursor:hand2 action:LoadText)
                     button(text:"Quit" height:2 width:20 background:c(29 125 242) relief:sunken borderwidth:1 font:{QTk.newFont font(family:"Verdana" size:13)} foreground:white activebackground:white activeforeground:black cursor:hand2 action:proc{$} {Application.exit 0} end)
                     )

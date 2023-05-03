@@ -6,8 +6,9 @@ import
     OS
     System
     
-    Variables at 'variables.ozf'
-    Interface at 'interface.ozf'
+    Variables at '../variables.ozf'
+    Interface at '../interface.ozf'
+    Function at '../function.ozf'
 export
     ProposeAllTheWords
 define
@@ -69,8 +70,8 @@ define
             if {Float.is Probability} == true then Str_Probability = {Float.toString Probability}
             else Str_Probability = {Int.toString Probability} end
 
-            {Interface.insertText_Window Variables.outputText Row 0 none {Append "The frequency of the/these word(s) is : " {Append Str_Frequency "\n"}}}
-            {Interface.insertText_Window Variables.outputText Row+1 0 none {Append "The probability of the/these word(s) is : " Str_Probability}}
+            {Interface.insertText_Window Variables.outputText Row 0 none {Function.append_List "The frequency of the/these word(s) is : " {Function.append_List Str_Frequency "\n"}}}
+            {Interface.insertText_Window Variables.outputText Row+1 0 none {Function.append_List "The probability of the/these word(s) is : " Str_Probability}}
         end
     end
 end

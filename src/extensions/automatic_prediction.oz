@@ -6,11 +6,11 @@ import
     OS
     System
     
-    Variables at 'variables.ozf'
-    Function at 'function.ozf'
-    Interface at 'interface.ozf'
-    Parser at 'parser.ozf'
-    Tree at 'tree.ozf'
+    Variables at '../variables.ozf'
+    Function at '../function.ozf'
+    Interface at '../interface.ozf'
+    Parser at '../parser.ozf'
+    Tree at '../tree.ozf'
     Predict_All at 'predict_All.ozf'
 export
     Automatic_Prediction

@@ -13,7 +13,12 @@ import
     Parser at 'parser.ozf'
     Tree at 'tree.ozf'
     Reader at 'reader.ozf'
-    Extensions at 'extensions.ozf'
+
+    Automatic_prediction at 'extensions/automatic_prediction.ozf'
+    Historic_user at 'extensions/historic_user.ozf'
+    Interface_improved at 'extensions/interface_improved.ozf'
+    N_Grams at 'extensions/n_Grams.ozf'
+    Predict_All at 'extensions/predict_All.ozf'
 
 define
 

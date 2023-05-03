@@ -6,8 +6,8 @@ import
     OS
     System
     
-    Variables at 'variables.ozf'
-    Function at 'function.ozf'
+    Variables at '../variables.ozf'
+    Function at '../function.ozf'
 export
     N_Grams
 define

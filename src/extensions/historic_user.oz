@@ -6,12 +6,13 @@ import
     OS
     System
     
-    Variables at 'variables.ozf'
-    Function at 'function.ozf'
-    Reader at 'reader.ozf'
-    Parser at 'parser.ozf'
-    Tree at 'tree.ozf'
-    
+    Variables at '../variables.ozf'
+    Function at '../function.ozf'
+    Reader at '../reader.ozf'
+    Parser at '../parser.ozf'
+    Tree at '../tree.ozf'
+    N_Grams at 'n_Grams.ozf'
+
 export
     SaveText_Database
     Send_NewTree_ToPort
@@ -113,7 +114,7 @@ define
         case List_UserInput
         of nil then Main_Tree
         [] H|T then
-            {Create_Updated_Tree {Create_Updated_Tree_Aux Main_Tree {N_Grams {Function.tokens_String H 32}}} T}
+            {Create_Updated_Tree {Create_Updated_Tree_Aux Main_Tree {N_Grams.n_Grams {Function.tokens_String H 32}}} T}
         end
     end
 
