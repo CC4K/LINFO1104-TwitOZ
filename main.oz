@@ -22,12 +22,6 @@ import
 
 define
 
-    %%%%%%%%%%%%%%%%% Probleme dans la creation de l'arbre %%%%%%%%%%%%%%%%%
-    %%%%%%%%%%%%%%%%% Les valeurs changent d'une execution a l'autre %%%%%%%%%%%%%%%%%
-
-
-
-
     %%%
     % Displays to the output zone on the window the most likely prediction of the next word based on the N last entered words.
     % The value of N depends of the N-Grams asked by the user.
@@ -51,20 +45,19 @@ define
         
         % If the structure to stock all the datas of the database is created
         if Variables.tree_Over == true then
-            local InputUser SplittedText List_Words Key Parsed_Key Tree_Value ResultPress ProbableWords Frequency Probability in
+            local Input_User Splitted_Text List_Words Key Parsed_Key Tree_Value ResultPress ProbableWords Frequency Probability in
 
                 % Clean the input user and get the N last words (N depends of the N-Grams asked by the user)
-                InputUser = {Variables.inputText getText(p(1 0) 'end' $)}
-                SplittedText = {Parser.cleaningUserInput InputUser}
-                List_Words = {Function.get_Last_Nth_Word_List SplittedText Variables.idx_N_Grams}
+                Input_User = {Variables.inputText getText(p(1 0) 'end' $)}
+                Splitted_Text = {Parser.cleaningUserInput Input_User}
+                List_Words = {Function.get_Last_Nth_Word_List Splitted_Text Variables.idx_N_Grams}
                 
 
                 if {Length List_Words} >= Variables.idx_N_Grams then
 
                     % Get the subtree representing the value at the key created by the concatenation of the N last words
                     Key = {Function.concatenateElemOfList List_Words 32}
-                    Parsed_Key = {String.toAtom {Parser.parseInputUser Key}} % Parses the key to avoid problems with special characters
-                    Tree_Value = {Tree.lookingUp {Function.get_Tree} Parsed_Key}
+                    Tree_Value = {Tree.lookingUp {Function.get_Tree} {String.toAtom Key}}
 
                     if Tree_Value == notfound then
                         {Interface.setText_Window Variables.outputText "No words found."}
@@ -235,21 +228,15 @@ define
     %%%
     proc {Main}
 
-        Variables.nber_HistoricFiles = {Historic_user.get_Nber_HistoricFile}
-
         % Initialization of the global variables used in the program
+        Variables.nber_HistoricFiles = {Historic_user.get_Nber_HistoricFile}
         Variables.idx_N_Grams = 2     
         Variables.tweetsFolder_Name = {GetSentenceFolder}
         Variables.list_PathName_Tweets = {OS.getDir Variables.tweetsFolder_Name}
         Variables.nberFiles = {Length Variables.list_PathName_Tweets}
-
-        % More threads than files is useless in this case.
-        % We take the maximum because the threads are 'false' threads.
-        % They are not really threads but they are used to split the work between the files.
-        % There is no overhead to create more threads.
         Variables.nbThreads = Variables.nberFiles
-
         Variables.port_Tree = {NewPort Variables.stream_Tree}
+        Variables.separatedWordsPort = {NewPort Variables.separatedWordsStream}
     
         {Property.put print foo(width:1000 depth:1000)}
 
@@ -264,9 +251,6 @@ define
         {Interface.insertText_Window Variables.inputText 0 0 'end' "Loading... Please wait."}
         {Variables.inputText bind(event:"<Control-s>" action:proc {$} _ = {Press} end)} % You can also bind events
         {Interface.insertText_Window Variables.outputText 0 0 'end' "You must wait until the database is parsed.\nA message will notify you.\nDon't press the 'predict' button until the message appears!\n"}
-
-        % Create the Port to communicate between the threads
-        Variables.separatedWordsPort = {NewPort Variables.separatedWordsStream}
 
         % Launch all threads to reads and parses the files
         {LaunchThreads Variables.separatedWordsPort Variables.nbThreads}
@@ -283,11 +267,10 @@ define
             Main_Tree = {Tree.updateAll_Tree {Tree.createTree List_Line_Parsed} fun {$ NewTree Key Value}
                 {Tree.insert NewTree Key {Tree.createSubTree Value}} end fun {$ _ _} true end _} % The Condition is always true because we want to visit and update all the node of the tree
             {Send Variables.port_Tree Main_Tree}
-
-            {System.show {Tree.get_Result_Prediction {Tree.lookingUp Main_Tree 'i have'} none}}
         end
         
-        % We bound the value 'Variables.tree_Over' => {Press} can work now because the structure is ready
+        % We bound the value 'Variables.tree_Over'
+        % => {Press} can work now because the structure is ready
         Variables.tree_Over = true
 
         % Writes some text in the GUI to inform the users
@@ -303,6 +286,8 @@ define
             {Interface.setText_Window Variables.inputText ""}
         end
         
+        % Launch one thread that will predict the next word every 0.5sec
+        % => The user can write and the words will be predicted at the same time!
         thread {Automatic_prediction.automatic_Prediction 500} end
 
         %%ENDOFCODE%%
@@ -310,6 +295,5 @@ define
 
     % Call the main procedure
     {Main}
-    % style amp d => Bug database (see why)
-    %% Marche pas quand il y'a qu'une lettre ! Si deux lettre c'est ok => je pense que je remove la derniere lettre
+    
 end

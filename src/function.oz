@@ -33,6 +33,7 @@ define
         {Browser.browse Buf}
     end
 
+
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %%% ====== IMPLEMENTATION OF BASIC FUNCTIONS TO MAKE THEM RECURSIVE TERMINAL ====== %%%
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -91,6 +92,7 @@ define
                 end
             end
         in
+            % If N is negative, we return nil
             if N =< 0 then nil
             else {Nth_List_Aux List N} end
         end
@@ -130,12 +132,22 @@ define
     end
 
 
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    %%% ====== OTHER FUNCTIONS THAT CAN SOMETIMES BE USED FOR SEVERAL USAGES ====== %%%
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    %%% ====== OTHER FUNCTIONS USEFULL IN THE PROGRAMM ====== %%%
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
-    %%%% TODO %%%%
+    %%%%
+    % Checks if a value is in a list => return true if the value is in the list, false otherwise.
+    %
+    % Example usage:
+    % In1: [83 97 108 117 116] 83    In2: [83 97 108 117 116] 84
+    % Out1: true                     Out2: false
+    %
+    % @param List: a list
+    % @param Value: a value
+    % Note : the value and the elements of the list must be of the same type
+    % @return: true if the value is in the list, false otherwise
     fun {IsInList List Value}
         case List
         of nil then false
@@ -205,12 +217,12 @@ define
     % @param List: a list
     % @param Nth: a positive integer representing the number of elements to get from the end of the list
     % @return: a new list with the last Nth elements from the original list.
-    fun {Get_Last_Nth_Word_List ListWords Nth}
+    fun {Get_Last_Nth_Word_List List_Words Nth}
         local Length_Reversed in
-            Length_Reversed = {Length ListWords} - Nth
-            if Length_Reversed == 0 then ListWords
+            Length_Reversed = {Length List_Words} - Nth
+            if Length_Reversed == 0 then List_Words
             elseif Length_Reversed < 0 then nil
-            else {Remove_List_FirstNthElements ListWords Length_Reversed} end
+            else {Remove_List_FirstNthElements List_Words Length_Reversed} end
         end
      end
 
@@ -258,11 +270,7 @@ define
             String_To_Cleaned
 
             %%%
-            % Adds a word in reverse to a string
-            %
-            % Example usage:
-            % In: "hello there " " "
-            % Out: "olleh ereht "
+            % Reversed a word.
             %%%
             fun {AddReversedWord_ToString Str Word}
                 local
@@ -279,11 +287,11 @@ define
             end
 
             %%%
-            % Concatenates the elements of a list into a string
+            % Concatenates the elements of a list into a string using a delimiter.
             %%%
             fun {ConcatenateElemOfList_Aux List List_Str}
                 case List
-                of nil then List_Str
+                of nil then {Reverse List_Str}
                 [] H|T then
                     if Delimiter == none then
                         {ConcatenateElemOfList_Aux T {Append {AddReversedWord_ToString "" H} List_Str}}
@@ -293,7 +301,7 @@ define
                 end
             end
         in
-            String_To_Cleaned = {Reverse {ConcatenateElemOfList_Aux List ""}}
+            String_To_Cleaned = {ConcatenateElemOfList_Aux List ""}
             % Clean the string from the first space if there is one
             if String_To_Cleaned.1 == 32 then String_To_Cleaned.2
             else String_To_Cleaned end
@@ -303,9 +311,10 @@ define
 
     %%%
     % Get the list of strings from a stream associated with a port
+    % Note : the stream is ending with the element nil.
     %
     % Example usage:
-    % In: ['i am good and you']|['i am very good thanks']|['wow this is a port']|_ 
+    % In: ['i am good and you']|['i am very good thanks']|['wow this is a port']|nil|_
     % Out: ['i am good and you']|['i am very good thanks']|['wow this is a port']
     %
     % @return: the list of strings (from the stream 'Stream' associated with the port 'Port' (= global variable))
@@ -324,11 +333,22 @@ define
         end
     end
 
+    %%%
+    % Get the last version of the tree (the last updated one) from the stream associated with a port.
+    % Note : the stream isn't ending with any element (=> _ = unbound element).
+    %
+    % Example usage:
+    % In: [tree(1,2,3)]|[tree(4,5,6)]|[tree(7,8,9)]|_
+    % Out: tree(7,8,9)
+    %
+    % @return: the last version of the tree (from the stream 'Stream' associated with the port 'Port' (= global variable))
     fun {Get_Tree}
         local
             fun {Get_Tree_Aux Stream_Tree}
                 case Stream_Tree
                 of H|T then
+                    % {IsDet T} is used to check if the element T is bound or not (true in this case)
+                    % If it is unbound, then it means that H is the last element of the stream!
                     if {IsDet T} == false then H
                     else {Get_Tree_Aux T} end
                 end
@@ -337,4 +357,5 @@ define
             {Get_Tree_Aux Variables.stream_Tree}
         end
     end
+    
 end

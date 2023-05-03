@@ -15,11 +15,10 @@ define
     % @return: /
     %%%
     proc {InsertText_Window Location_Text Row Col Special_Location Text}
-        if Special_Location == none then
-            {Location_Text tk(insert p(Row Col) Text)}
-        else
-            {Location_Text tk(insert Special_Location Text)}
-        end
+        % If the location is 'end' then we insert the text at the end of the window,
+        % else we insert the text at the given location
+        if Special_Location == none then {Location_Text tk(insert p(Row Col) Text)}
+        else {Location_Text tk(insert Special_Location Text)} end
     end
 
 
@@ -31,6 +30,7 @@ define
     % @return: /
     %%%
     proc {SetText_Window Location_Text Text}
+        % Delete all the text before and set the new text in the specified location
         {Location_Text set(Text)}
     end
 end

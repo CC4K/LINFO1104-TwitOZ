@@ -29,22 +29,28 @@ define
     %%%
     fun {Read Filename}
         local
+            Error_Name % Used to display an error message if the file cannot be read
             fun {GetLine TextFile List_Line}
-                try 
+                local Line in
+                    % If the file is not empty, read the next line and add it to the list
                     Line = {TextFile getS($)}
-                in
-                    if Line == false then
-                        {TextFile close}
-                        List_Line
+                    if Line == false then {TextFile close} List_Line
                     else {GetLine TextFile Line|List_Line} end
-                catch _ then {System.show 'Error when reading or closing the file'} {Application.exit 0} end
+                end
             end
         in
             try
+                % Open the file
                 TextOfFile = {New TextFile init(name:Filename flags:[read])}
             in
+                % Read the file and create the list of line and return it
                 {GetLine TextOfFile nil}
-            catch _ then {System.show 'Error when opening the file'} {Application.exit 0} end
+            catch _ then
+                % If the file cannot be read, display an error message and exit the program
+                Error_Name = {Function.append_List "Error when reading the file named : " Filename}
+                {System.show {String.toAtom Error_Name}}
+                {Application.exit 0}
+            end
         end
     end
     
@@ -60,6 +66,6 @@ define
     % @return: a string representing the desired filename (the Idxth filename in the list) preceded by the folder name + "/"
     %%%
     fun {GetFilename Idx}
-        {Function.append_List Variables.tweetsFolder_Name 47|{Function.nth_List Variables.list_PathName_Tweets Idx}}
+        {Function.append_List Variables.tweetsFolder_Name "/"|{Function.nth_List Variables.list_PathName_Tweets Idx}}
     end
 end
