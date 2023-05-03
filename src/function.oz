@@ -1,7 +1,6 @@
 functor
 import
     Browser
-    System
     Variables at 'variables.ozf'
 export
     Browse
@@ -357,5 +356,5 @@ define
             {Get_Tree_Aux Variables.stream_Tree}
         end
     end
-    
+
 end

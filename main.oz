@@ -177,9 +177,6 @@ define
                         end
         
                         End = Start + Current_Nber_Iter1 - 1
-                        {System.show Start}
-                        {System.show End}
-                        {System.show 'Next :'}
                         {Launch_AllThreads {Launch_OneThread Start End nil} Nber_Threads-1}
                     end
                 end
@@ -264,8 +261,7 @@ define
             {Interface.insertText_Window Variables.outputText 6 0 none "Step 1 Over : Reading + Parsing\n"}
 
             % Creation of the main binary tree (with all subtree as value)
-            Main_Tree = {Tree.updateAll_Tree {Tree.createTree List_Line_Parsed} fun {$ NewTree Key Value}
-                {Tree.insert NewTree Key {Tree.createSubTree Value}} end fun {$ _ _} true end _} % The Condition is always true because we want to visit and update all the node of the tree
+            Main_Tree = {Tree.create_Main_Tree {Tree.create_Basic_Tree List_Line_Parsed}}
             {Send Variables.port_Tree Main_Tree}
         end
         
@@ -295,5 +291,5 @@ define
 
     % Call the main procedure
     {Main}
-    
+
 end

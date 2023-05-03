@@ -129,7 +129,7 @@ define
                     Value_to_Insert = {String.toAtom {Reverse {Function.tokens_String List_Keys.1 32}}.1}
                     Tree_Value = {Tree.lookingUp New_Tree Key}
                     New_Tree_Value = {Update_SubTree Tree_Value Key Value_to_Insert}
-                    {Tree.insert New_Tree Key New_Tree_Value}
+                    {Tree.insert_Value New_Tree Key New_Tree_Value}
                 end
             end
         in
@@ -145,14 +145,14 @@ define
 
     %%%% TODO %%%%
     fun {Update_SubTree SubTree Key NewValue}
-        if SubTree == notfound then {Tree.insert leaf 1 [NewValue]}
+        if SubTree == notfound then {Tree.insert_Value leaf 1 [NewValue]}
         else
             local Updated_SubTree List_Value in
                 Updated_SubTree = {Get_List_Value SubTree NewValue}
                 if SubTree == Updated_SubTree then
                     List_Value = {Tree.lookingUp SubTree 1}
-                    if List_Value == notfound then {Tree.insert SubTree 1 [NewValue]}
-                    else {Tree.insert SubTree 1 NewValue|List_Value} end
+                    if List_Value == notfound then {Tree.insert_Value SubTree 1 [NewValue]}
+                    else {Tree.insert_Value SubTree 1 NewValue|List_Value} end
                 else
                     Updated_SubTree
                 end
@@ -175,7 +175,7 @@ define
                             else
                                 New_List_Value = {RemoveElemOfList Value_List Value_Word}
                                 if Length_Value_List == {Length New_List_Value} then {AddElemToList_InTree Updated_SubTree Key+1 Value_Word}
-                                else {AddElemToList_InTree {Tree.insert Updated_SubTree Key New_List_Value} Key+1 Value_Word} end
+                                else {AddElemToList_InTree {Tree.insert_Value Updated_SubTree Key New_List_Value} Key+1 Value_Word} end
                             end
                         else
                             T1 = {Get_List_Value_Aux TLeft Updated_SubTree}
@@ -194,8 +194,8 @@ define
     fun {AddElemToList_InTree SubTree Key Word_Value}
         local Value_List in
             Value_List = {Tree.lookingUp SubTree Key}
-            if Value_List == notfound then {Tree.insert SubTree Key [Word_Value]}
-            else {Tree.insert SubTree Key Word_Value|Value_List} end
+            if Value_List == notfound then {Tree.insert_Value SubTree Key [Word_Value]}
+            else {Tree.insert_Value SubTree Key Word_Value|Value_List} end
         end
     end
 

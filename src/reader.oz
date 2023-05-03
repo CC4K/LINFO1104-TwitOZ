@@ -11,13 +11,6 @@ export
 define
 
     %%%
-    % Class used to open the files, read it and close it.
-    %%%
-    class TextFile
-        from Open.file Open.text
-    end
-
-    %%%
     % Reads a text file (given its filename) and creates a list of all its lines
     %
     % Example usage:
@@ -29,27 +22,28 @@ define
     %%%
     fun {Read Filename}
         local
+            Name_File % Used to get the oponed file
             Error_Name % Used to display an error message if the file cannot be read
-            fun {GetLine TextFile List_Line}
+            fun {GetLine Text_File List_Line}
                 local Line in
                     % If the file is not empty, read the next line and add it to the list
-                    Line = {TextFile getS($)}
-                    if Line == false then {TextFile close} List_Line
-                    else {GetLine TextFile Line|List_Line} end
+                    Line = {Text_File getS($)}
+                    if Line == false then {Text_File close} List_Line
+                    else {GetLine Text_File Line|List_Line} end
                 end
             end
         in
             try
                 % Open the file
-                TextOfFile = {New TextFile init(name:Filename flags:[read])}
-            in
+                Name_File = {New Open.file init(name:Filename flags:[read])}
                 % Read the file and create the list of line and return it
-                {GetLine TextOfFile nil}
+                {GetLine Name_File nil}
             catch _ then
                 % If the file cannot be read, display an error message and exit the program
                 Error_Name = {Function.append_List "Error when reading the file named : " Filename}
                 {System.show {String.toAtom Error_Name}}
                 {Application.exit 0}
+                none
             end
         end
     end
@@ -66,6 +60,11 @@ define
     % @return: a string representing the desired filename (the Idxth filename in the list) preceded by the folder name + "/"
     %%%
     fun {GetFilename Idx}
-        {Function.append_List Variables.tweetsFolder_Name "/"|{Function.nth_List Variables.list_PathName_Tweets Idx}}
+        local PathName in
+            PathName = {Function.nth_List Variables.list_PathName_Tweets Idx}
+            if {String.is PathName} then
+                {Function.append_List Variables.tweetsFolder_Name 47|PathName}
+            else {Function.append_List Variables.tweetsFolder_Name 47|{Atom.toString PathName}} end
+        end
     end
 end

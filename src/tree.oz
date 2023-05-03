@@ -4,15 +4,20 @@ import
     Function at 'function.ozf'
     N_Grams at 'extensions/n_grams.ozf'
 export
-    CreateSubTree
-    CreateTree
     LookingUp
-    Insert
-    UpdateAll_Tree
-    Update_Line_To_Tree
-    Get_Result_Prediction
+    Insert_Value
     Insert_Key
+    
+    Create_Basic_Tree
+    Create_Main_Tree
+
+    Get_Result_Prediction
 define
+
+
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    %%%%%%%%%% Function very usefull to create the all tree structure %%%%%%%%%%
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
     %%%
     % Structure of the recursive binary tree : 
@@ -66,7 +71,7 @@ define
     % @param Value: a value to insert into the binary tree
     % @return: a new tree with the inserted value
     %%%
-    fun {Insert Tree Key Value}
+    fun {Insert_Value Tree Key Value}
         case Tree
         of leaf then tree(key:Key value:Value t_left:leaf t_right:leaf)
 
@@ -74,14 +79,17 @@ define
             tree(key:K value:Value t_left:TLeft t_right:TRight)
 
         [] tree(key:K value:V t_left:TLeft t_right:TRight) andthen K < Key then
-            tree(key:K value:V t_left:TLeft t_right:{Insert TRight Key Value})
+            tree(key:K value:V t_left:TLeft t_right:{Insert_Value TRight Key Value})
 
         [] tree(key:K value:V t_left:TLeft t_right:TRight) andthen K > Key then
-            tree(key:K value:V t_left:{Insert TLeft Key Value} t_right:TRight)
+            tree(key:K value:V t_left:{Insert_Value TLeft Key Value} t_right:TRight)
         end
     end
 
-    %%% TODO
+    %%%
+    % Exactly the same as Insert, but with a new key to insert and not a value.
+    % See documentation of Insert for more details.
+    %%%
     fun {Insert_Key Tree Key NewKey}
         case Tree
         of leaf then tree(key:Key value:Value t_left:leaf t_right:leaf)
@@ -96,6 +104,7 @@ define
             tree(key:K value:V t_left:{Insert_Key TLeft Key NewKey} t_right:TRight)
         end
     end
+
 
     %%%
     % Updates a list to increase the frequency of specified element
@@ -132,157 +141,183 @@ define
     end
 
 
-    % Creates the all binary tree structure (to store the datas).
-    % To do it, the function 'Update_Tree' is applied on all
-    % the element of the list given as parameter.
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    %%%%%%%%%% Create the all tree structure => binary tree with binary tree as value %%%%%%%%%%
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+    % Creates the all basic binary tree structure (without the binary tree as value).
     %
-    % Check the docstring of 'Update_Tree' to see an example usage.
-    %
+    % Example usage:    evidement que     je suis    suis daccord     daccord avec
+    % In: [[["je suis d'accord avec toi"] ["evidemment que oui"]]   [[...] [...] ...] ...]
+    % Out: tree(key:'je suis' value:['d'accord']
+    %                         t_left:tree(key:'evidement que' value:['oui']
+    %                             t_left:tree(key:'je suis' value:['d'accord']
+    %                                  t_left:leaf
+    %                                  t_right:leaf)
+    %                             t_right:leaf)
+    %                         t_right:tree(key:'suis d'accord' value:['avec'] t_left:leaf t_right:leaf) t_right:leaf))
+    %             
     % @param Parsed_Datas: a list composed of lists of lists of strings
     % @return: the all binary tree with all the datas added
     %%%
-    fun {CreateTree Parsed_Datas}
+    fun {Create_Basic_Tree Parsed_Datas}
         local
-            fun {CreateTree_Aux Parsed_Datas Updated_Tree}
-                case Parsed_Datas
-                of nil then Updated_Tree
-                [] H|T then
-                    {CreateTree_Aux T {Update_File_To_Tree Updated_Tree H}}
-                end
-            end
-        in
-            {CreateTree_Aux Parsed_Datas leaf}
-        end
-    end
+            % Usefull variables for the function 'Update_Values_Tree'
+            Key Value_to_Insert Current_List_Value New_List_Value
 
+            % Usefull variables for the function 'Deal_Line'
+            List_Keys_N_Grams Value_Updated
 
-    %%%
-    % Creates a part of the complete binary tree structure (to store the datas)
-    %
-    % Example usage:
-    % In: L = [["i am the boss man"] ["no problem sir"] ["the boss is here"] ["the boss is here"]]
-    % Out: tree(key:'i am' value:['the'#1] t_left:tree(key:'boss is' value:['here'#2] t_left:
-    %      tree(key:'am the' value:['boss'#1] t_left:leaf t_right:leaf) t_right:leaf) t_right:
-    %      tree(key:'no problem' value:['sir'#1] t_left:leaf t_right:tree(key:'the boss' value:['man'#1 'is'#2] t_left:leaf t_right:leaf)))
-    %
-    % @param Parsed_Datas: a list of lists of strings representing a line parsed (from a file)
-    % @param NewTree: the new binary tree initialized to 'leaf' that will be update
-    % @return: the new binary tree with some datas added
-    %%%
-    fun {Update_File_To_Tree Updated_Tree Parsed_Datas}
-        local
-            fun {Update_File_To_Tree_Aux Parsed_Datas Updated_Tree}
-                case Parsed_Datas
-                of nil then Updated_Tree
+            %%%
+            % Updates the values of the tree at the key X (where X is an element of 'List_Keys')
+            % with the new values (correspond to the next word).
+            % This function is generalized to be used with any number of N-Grams.
+            %
+            % Example usage (simplified):
+            % List_Keys = ['i am' 'am happy']
+            % The value of the tree at the key 'i am' is updated with the new value 'happy'
+            % 
+            % @param Tree: a binary tree
+            % @param List_Keys: a list of keys to access the value to update
+            % @return: a new tree with the new values updated
+            %%%
+            fun {Update_Values_Tree Tree List_Keys}
+                case List_Keys
+                of nil then Tree
+                [] _|nil then Tree
                 [] H|T then
-                    {Update_File_To_Tree_Aux T {Update_Line_To_Tree Updated_Tree {N_Grams.n_Grams {Function.tokens_String H 32}}}}
-                end
-            end
-        in
-            {Update_File_To_Tree_Aux Parsed_Datas Updated_Tree}
-        end
-    end
-    
-    
-    %%%
-    % Applies the function 'Update_Value' on all the keys of the keys list
-    %%%
-    fun {Update_Line_To_Tree Tree List_Keys}
-        local
-            %%%
-            % Changes the value with a new specified one at the location of a specified key in a binary tree
-            %%%
-            fun {Update_Value Tree Key List_Keys}
-                local Value_to_Insert List_Value New_List_Value in
+                    % The key to access the value to update
+                    Key = {String.toAtom H}
+
+                     % The new value to insert into the tree at the key H
                     Value_to_Insert = {String.toAtom {Reverse {Function.tokens_String List_Keys.1 32}}.1}
-                    List_Value = {LookingUp Tree Key}
-                    New_List_Value = {UpdateList List_Value Value_to_Insert}
-                    {Insert Tree Key New_List_Value}
+
+                    % The current value of the tree at the key H
+                    Current_List_Value = {LookingUp Tree Key}
+
+                    % The new list of values with the new value corrected inserted
+                    New_List_Value = {UpdateList Current_List_Value Value_to_Insert}
+
+                    % The new tree with the new value inserted
+                    {Update_Values_Tree {Insert_Value Tree Key New_List_Value} T}
                 end
             end
-        in
-            case List_Keys
-            of nil then Tree
-            [] _|nil then Tree
-            [] H|T then
-                {Update_Line_To_Tree {Update_Value Tree {String.toAtom H} T} T}
-            end
-        end
-    end
-    
 
-    %%%
-    % Creates a binary subtree representing a value of the main binary tree,
-    % given a list of Word#Frequency pairs
-    %
-    % Example usage:
-    % In: ['back'#1 'perfect'#9 'must'#3 'ok'#5 'okay'#3]  b m o p
-    % Out: tree(key:5 value:['ok'] t_left:tree(key:3 value:['must' 'okay'] t_left:
-    %      tree(key:1 value:['back'] t_left:leaf t_right:leaf) t_right:leaf) t_right:
-    %      tree(key:9 value:['perfect'] t_left:leaf t_right:leaf))
-    %
-    % @param List_Value: a list of pairs in the form Word#Frequence (where Word is an atom and Frequence is a integer)
-    % @return: a binary subtree representing a value of the main binary tree
-    %%%
-    fun {CreateSubTree List_Value}
-        local
-            fun {CreateSubTree_Aux List_Value SubTree}
-                case List_Value
-                of nil then SubTree
-                [] H|T then
-                    case H
-                    of Word#Freq then
-                        local Current_Value Updated_Value in
-                            Current_Value = {LookingUp SubTree Freq}
-                            if Current_Value == notfound then
-                                Updated_Value = [Word]
-                            else
-                                Updated_Value = Word|Current_Value
-                            end
-                            {CreateSubTree_Aux T {Insert SubTree Freq Updated_Value}}
+            %%%
+            % Deals with a line of the datas (a line is a list of lists of strings)
+            % This function is generalized to be used with any number of N-Grams.
+            % This function applies, for every line in 'Line_Datas', the function 'Update_Values_Tree'
+            % to the list of keys found with the function 'N_Grams.n_Grams'
+            %
+            % @param Updated_Tree: the tree to update
+            % @param Line_Datas: a list of lists of strings
+            % @return: a new tree with the new values updated
+            %%%
+            fun {Deal_File Updated_Tree Line_Datas}
+                local
+                    fun {Deal_File_Aux Line_Datas Updated_Tree}
+                        case Line_Datas
+                        of nil then Updated_Tree
+                        [] H|T then
+                            List_Keys_N_Grams = {N_Grams.n_Grams {Function.tokens_String H 32}}
+                            Value_Updated = {Update_Values_Tree Updated_Tree List_Keys_N_Grams}
+                            {Deal_File_Aux T Value_Updated}
                         end
                     end
+                in
+                    {Deal_File_Aux Line_Datas Updated_Tree}
+                end
+            end
+
+            %%%
+            % Applies the function 'Deal_File' to every list of line (corresponding to one file) in 'Parsed_Datas'.
+            %
+            % @param Parsed_Datas: a list composed of lists of lists of strings
+            % @param Updated_Tree: the tree to update
+            % @return: a new tree with the new values updated
+            %%%
+            fun {Create_Basic_Tree_Aux Parsed_Datas Updated_Tree}
+                case Parsed_Datas
+                of nil then Updated_Tree
+                [] H|T then
+                    {Create_Basic_Tree_Aux T {Deal_File Updated_Tree H}}
                 end
             end
         in
-            {CreateSubTree_Aux List_Value leaf}
+            {Create_Basic_Tree_Aux Parsed_Datas leaf}
         end
     end
+  
 
     %%%
-    % Traverse a binary tree in a Pre-Order traversal to update the tree
-    % A function Updater_Tree is used to update the tree
-    % This function is mainly used to update the value of the tree
+    % Traverse a binary tree in a Pre-Order traversal to update all the values of the tree.
     %
     % Example usage: 
     % In: Tree = tree(key:5 value:['ok'#1] t_left:tree(key:3 value:['must'#2 'okay'#1] t_left:leaf t_right:leaf) t_right:leaf)
-    %     UpdaterTree_ChangerValue = fun {$ Tree Key Value} {Insert Tree Key {CreateSubtree Value}} end
     % Out: tree(key:5 value:tree(key:1 value:['ok'] t_left:leaf t_right:leaf) t_left:tree(key:2 value:tree(key: value:['okay'] t_left:tree(key:1 value:['must'] t_left:leaf t_right:leaf) t_right:leaf) t_left:leaf t_right:leaf) t_right:leaf)
     %
     % @param Tree: a binary tree
-    % @param UpdaterTree_ChangerValue: a function that takes as input a tree, a key and a value and update the value at the specified key
     % @return: a new binary tree where each of these value has been updated by UpdaterTree_ChangerValue
     %%%
-    fun {UpdateAll_Tree Tree Updater_Tree Condition Key_Where_Update}
+    fun {Create_Main_Tree Tree}
         local
-            fun {UpdateAll_Tree_Aux Tree Updated_Tree}
+            Updater_Values = fun {$ Updated_Tree Key Value} {Insert_Value Updated_Tree Key {Create_SubTree Value}} end
+
+            %%%
+            % Creates a binary subtree representing a value of the main binary tree,
+            % given a list of Word#Frequency pairs
+            %
+            % Example usage:
+            % In: ['back'#1 'perfect'#9 'must'#3 'ok'#5 'okay'#3]  b m o p
+            % Out: tree(key:5 value:['ok'] t_left:tree(key:3 value:['must' 'okay'] t_left:
+            %      tree(key:1 value:['back'] t_left:leaf t_right:leaf) t_right:leaf) t_right:
+            %      tree(key:9 value:['perfect'] t_left:leaf t_right:leaf))
+            %
+            % @param List_Value: a list of pairs in the form Word#Frequence (where Word is an atom and Frequence is a integer)
+            % @return: a binary subtree representing a value of the main binary tree
+            %%%
+            fun {Create_SubTree List_Value}
+                local
+                    fun {Create_SubTree_Aux List_Value SubTree}
+                        case List_Value
+                        of nil then SubTree
+                        [] H|T then
+                            case H
+                            of Word#Freq then
+                                local Current_Value = {LookingUp SubTree Freq} in
+                                    if Current_Value == notfound then {Create_SubTree_Aux T {Insert_Value SubTree Freq [Word]}}
+                                    else {Create_SubTree_Aux T {Insert_Value SubTree Freq Word|Current_Value}} end
+                                end
+                            end
+                        end
+                    end
+                in
+                    {Create_SubTree_Aux List_Value leaf}
+                end
+            end
+
+            fun {Create_Main_Tree_Aux Tree Updated_Tree}
                 case Tree
                 of leaf then Updated_Tree
                 [] tree(key:Key value:Value t_left:TLeft t_right:TRight) then
                     local T1 in
-                        if {Condition Key_Where_Update Key} == true then
-                            T1 = {UpdateAll_Tree_Aux TLeft {Updater_Tree Updated_Tree Key Value}}
-                        else
-                            T1 = {UpdateAll_Tree_Aux TLeft Updated_Tree}
-                        end
-                        _ = {UpdateAll_Tree_Aux TRight T1}
+                        T1 = {Create_Main_Tree_Aux TLeft {Updater_Values Updated_Tree Key Value}}
+                        _ = {Create_Main_Tree_Aux TRight T1}
                     end
                 end
             end
         in
-            {UpdateAll_Tree_Aux Tree Tree}
+            {Create_Main_Tree_Aux Tree Tree}
         end
     end
+
+
+
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    %%%%%%%%%% Functions to do a Traversal of the tree to get the prediction %%%%%%%%%%
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 
     %%%
     % Traverse a binary tree in Pre-Order traversal to get the following three items in a list:

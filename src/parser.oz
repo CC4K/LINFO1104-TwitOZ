@@ -5,7 +5,7 @@ export
     CleaningUserInput
     ParseInputUser
     Cleaning_UnNecessary_Spaces
-    Removes_SubString
+    Removes_All_SubString
     Parses_Line
     Parses_AllLines
 define
@@ -31,33 +31,43 @@ define
     % @return: a new list with all instances of the specified sublist removed
     %          (and their next character too if 'removeNextChar' is set to true)
     %%%
-    fun {Removes_SubString List SubList Replacer NextCharRemoveToo}
+    fun {Removes_All_SubString List SubList Replacer NextCharRemoveToo}
         local
             Length_SubList = {Length SubList}
             Length_List = {Length List}
-            fun {Removes_SubString_Aux List NewList Length_List}
+
+            %%%
+            % Removes the substring from the list
+            %%%
+            fun {Remove_SubString List NewList}
+                if NextCharRemoveToo == true then
+                    % 153 => = ' special not the basic => basic one is 39 (to replace with 39)
+                    if {Function.nth_List List Length_SubList+1} == 153 then
+                        {Removes_All_SubString_Aux {Function.remove_List_FirstNthElements List Length_SubList+1} 39|NewList Length_List-(Length_SubList+1)}
+                    else
+                        if Replacer == none then {Removes_All_SubString_Aux {Function.remove_List_FirstNthElements List Length_SubList+1} 32|NewList Length_List-(Length_SubList+1)}
+                        else {Removes_All_SubString_Aux {Function.remove_List_FirstNthElements List Length_SubList+1} Replacer|NewList Length_List-(Length_SubList+1)} end
+                    end
+                else
+                    if Replacer == none then {Removes_All_SubString_Aux {Function.remove_List_FirstNthElements List Length_SubList} 32|NewList Length_List-Length_SubList}
+                    else {Removes_All_SubString_Aux {Function.remove_List_FirstNthElements List Length_SubList} Replacer|NewList Length_List-Length_SubList} end
+                end
+            end
+
+            fun {Removes_All_SubString_Aux List NewList Length_List}
                 case List
                 of nil then NewList
                 [] H|T then
                     if {Function.findPrefix_InList List SubList} == true then
-                        if NextCharRemoveToo == true then
-                            % 153 => = ' special not the basic => basic one is 39 (to replace with 39)
-                            if {Function.nth_List List Length_SubList+1} == 153 then
-                                {Removes_SubString_Aux {Function.remove_List_FirstNthElements List Length_SubList+1} 39|NewList Length_List-(Length_SubList+1)}
-                            else
-                                if Replacer == none then {Removes_SubString_Aux {Function.remove_List_FirstNthElements List Length_SubList+1} 32|NewList Length_List-(Length_SubList+1)}
-                                else {Removes_SubString_Aux {Function.remove_List_FirstNthElements List Length_SubList+1} Replacer|NewList Length_List-(Length_SubList+1)} end
-                            end
-                        else
-                            if Replacer == none then {Removes_SubString_Aux {Function.remove_List_FirstNthElements List Length_SubList} 32|NewList Length_List-Length_SubList}
-                            else {Removes_SubString_Aux {Function.remove_List_FirstNthElements List Length_SubList} Replacer|NewList Length_List-Length_SubList} end
-                        end
-                    else {Removes_SubString_Aux T H|NewList Length_List} end
+                        {Remove_SubString List NewList}
+                    else
+                        {Removes_All_SubString_Aux T H|NewList Length_List}
+                    end
                 end
             end
         in
             if Length_List < Length_SubList then nil
-            else {Reverse {Removes_SubString_Aux List nil {Length List}}} end
+            else {Reverse {Removes_All_SubString_Aux List nil Length_List}} end
         end
     end
 
@@ -171,7 +181,7 @@ define
     fun {Parses_AllLines List}
         local
             % Function to parse a single line of the database
-            Parser = fun {$ Line_Str} {Cleaning_UnNecessary_Spaces {Parses_Line {Removes_SubString Line_Str [226 128] 32 true}}} end
+            Parser = fun {$ Line_Str} {Cleaning_UnNecessary_Spaces {Parses_Line {Removes_All_SubString Line_Str [226 128] 32 true}}} end
             fun {Parses_AllLines_Aux List NewList}
                 case List
                 of nil then NewList
@@ -190,6 +200,7 @@ define
             {Parses_AllLines_Aux List nil}
         end
     end
+
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %%%%%%%%%%%%%%%%%%%%% FUNCTIONS TO CLEAN THE INPUT OF THE USER %%%%%%%%%%%%%%%%%%%%%
@@ -210,16 +221,30 @@ define
             fun {ParseInputUser_Aux Str_Line NewLine}
                 case Str_Line
                 of nil then {Reverse NewLine}
-                [] H|T then {ParseInputUser_Aux T {GetNewChar_User H}.1|NewLine} end
+                [] H|T then {ParseInputUser_Aux T {GetNewChar_User H}|NewLine} end
             end
         in
             {ParseInputUser_Aux Str_Line nil}
         end
     end
 
+    %%%
+    % Replaces the character by an other one parsed.
+    % If the character is an uppercase letter => replaces it by its lowercase version
+    % If the character is a special character (all the other case) => replaces it by a space (32 in ASCII code)
+    % Keep also the character 39 (').
+    %
+    % Example usage:
+    % In1: 99     In2: 69     In3: 57     In4: 42
+    % Out1: 99    Out2: 101   Out3: 57    Out4: 32
+    %
+    % @param Char: a character (number in ASCII code)
+    % @return: the new characte parsed.
+    %%%
     fun {GetNewChar_User Char}
-        if Char == 39 then [Char false]
-        else {GetNewChar Char} end
+        % 39 is the character ' => keep it
+        if Char == 39 then Char
+        else {GetNewChar Char}.1 end
     end
 
     %%%
