@@ -69,7 +69,7 @@ define
                     else
 
                         % Get the most probable word(s) and the highest probability/frequency
-                        ResultPress = {Tree.get_Result_Prediction Tree_Value}
+                        ResultPress = {Tree.get_Result_Prediction Tree_Value none}
                         ProbableWords = ResultPress.1
                         Probability = ResultPress.2.1
                         Frequency = ResultPress.2.2.1

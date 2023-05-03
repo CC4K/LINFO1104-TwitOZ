@@ -298,25 +298,43 @@ define
     % @param Tree: a binary tree
     % @return: a list of length 3 => [The sum of all keys      The greater key      The value associated to the greater key]
     %%%
-    fun {Get_Result_Prediction Tree}
+    fun {Get_Result_Prediction Tree Key_Where_ToStop}
         local
             List_Result
             Total_Frequency
             Max_Frequency
             List_Words
             Probability
-            fun {Get_Result_Prediction_Aux Tree Total_Freq Max_Freq List_Words}
+            fun {Get_Result_Prediction_Aux Tree Total_Freq Max_Freq List_Words CanUpdateMaxFreq}
                 case Tree
                 of leaf then [Total_Freq Max_Freq List_Words]
                 [] tree(key:Key value:Value t_left:TLeft t_right:TRight) then
                     local T1 in
-                        T1 = {Get_Result_Prediction_Aux TLeft ({Length Value} * Key) + Total_Freq Key Value}
-                        _ = {Get_Result_Prediction_Aux TRight ({Length Value} * Key) + T1.1 Key Value}
+
+                        if Key_Where_ToStop == none then
+                            T1 = {Get_Result_Prediction_Aux TLeft ({Length Value} * Key) + Total_Freq Key Value true}
+                        else
+                            if Key == Key_Where_ToStop then
+                                if CanUpdateMaxFreq == true then
+                                    T1 = {Get_Result_Prediction_Aux TLeft ({Length Value} * Key) + Total_Freq Key Value false}
+                                else
+                                    T1 = {Get_Result_Prediction_Aux TLeft ({Length Value} * Key) + Total_Freq Max_Freq Value false}
+                                end
+                            else
+                                if CanUpdateMaxFreq == true then
+                                    T1 = {Get_Result_Prediction_Aux TLeft ({Length Value} * Key) + Total_Freq Key Value true}
+                                else
+                                    T1 = {Get_Result_Prediction_Aux TLeft ({Length Value} * Key) + Total_Freq Max_Freq Value false}
+                                end
+                            end
+                        end
+                        
+                        _ = {Get_Result_Prediction_Aux TRight ({Length Value} * Key) + T1.1 Key Value CanUpdateMaxFreq}
                     end
                 end
             end
         in
-            List_Result = {Get_Result_Prediction_Aux Tree 0 0 nil}
+            List_Result = {Get_Result_Prediction_Aux Tree 0 0 nil true}
             Total_Frequency = List_Result.1 div 2
             Max_Frequency = List_Result.2.1
             List_Words = List_Result.2.2.1

@@ -53,7 +53,7 @@ define
                         else % If the key is found
 
                             % Get the result of the prediction
-                            ResultPress = {Tree.get_Result_Prediction Value_Tree}
+                            ResultPress = {Tree.get_Result_Prediction Value_Tree none}
                             ProbableWords = ResultPress.1
                             Probability = ResultPress.2.1
                             Frequency = ResultPress.2.2.1
@@ -73,31 +73,38 @@ define
                         % Get the subtree associated to the first key
                         Value_Tree = {Tree.lookingUp {Function.get_Tree} {String.toAtom First_Key}}
 
+                        {System.show {String.toAtom First_Key}}
+                        {System.show Value_Tree}
+
                         % If the first key is not found
                         if Value_Tree == notfound then
                             
                             % Get the subtree associated to the second key
-                            Value_Tree2 = {LookingUp_Extensions {Function.get_Tree} {String.toAtom Second_Key} {Reverse List_Words}.1}
-                            % If the second key is not found
-                            if Value_Tree2 == notfound then
+                            Value_Tree2 = {Tree.lookingUp {Function.get_Tree} {String.toAtom Second_Key}}
+                            ProbableWords = {LookingUp_Extensions {Function.get_Tree} {String.toAtom Second_Key} {Reverse List_Words}.1}
+                            {System.show Value_Tree2}
+                            {System.show ProbableWords}
 
+                            % If the second key is not found
+                            if ProbableWords == nil then
                                 % Display that no word has been found
                                 {Interface.insertText_Window Variables.outputText 1 0 none "Words not found."}
 
                             else % If the second key is found
 
-                                ResultPress = {Tree.get_Result_Prediction Value_Tree2}
-                                ProbableWords = ResultPress.1
+                                %% CHANGE ! => Need to get the probability
+
+                                ResultPress = {Tree.get_Result_Prediction Value_Tree2 ProbableWords.1}
                                 Probability = ResultPress.2.1
                                 Frequency = ResultPress.2.2.1
 
-                                % Predict and display the result
-                                if ProbableWords == nil then {Interface.insertText_Window Variables.outputText 1 0 none "Words not found."}
-                                else {Predict_All.proposeAllTheWords ProbableWords Frequency Probability} end
+                                {Predict_All.proposeAllTheWords ProbableWords Frequency Probability}
                             end
                         else % If the first key is found
 
-                            ResultPress = {Tree.get_Result_Prediction Value_Tree}
+                            {System.show 'WTF'}
+
+                            ResultPress = {Tree.get_Result_Prediction Value_Tree none}
                             ProbableWords = ResultPress.1
                             Probability = ResultPress.2.1
                             Frequency = ResultPress.2.2.1
@@ -160,8 +167,6 @@ define
                 case List
                 of nil then NewList
                 [] H|T then
-                    {System.show {Atom.toString H}}
-                    {System.show Prefix}
                     if {Function.findPrefix_InList {Atom.toString H} Prefix} == true then
                         {GetListWithPrefix_Aux T H|NewList}
                     else
@@ -182,21 +187,18 @@ define
                 of leaf then BestWord
                 [] tree(key:Key value:Value t_left:TLeft t_right:TRight) then
                     local T1 List_Words in
-                        {System.show Prefix_Value}
-                        {System.show Value}
                         List_Words = {GetListWithPrefix Value Prefix_Value}
-                        {System.show List_Words}
                         if List_Words == nil then
                             T1 = {SearchPrefixValue_Aux TLeft BestWord}
                         else
                             T1 = {SearchPrefixValue_Aux TLeft List_Words}
                         end
-                        _ = {SearchPrefixValue_Aux TRight BestWord}
+                        _ = {SearchPrefixValue_Aux TRight T1}
                     end
                 end
             end
         in
-            {SearchPrefixValue_Aux SubTree notfound}
+            {SearchPrefixValue_Aux SubTree nil}
         end
     end
 

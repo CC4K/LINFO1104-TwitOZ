@@ -210,11 +210,16 @@ define
             fun {ParseInputUser_Aux Str_Line NewLine}
                 case Str_Line
                 of nil then {Reverse NewLine}
-                [] H|T then {ParseInputUser_Aux T {GetNewChar H}.1|NewLine} end
+                [] H|T then {ParseInputUser_Aux T {GetNewChar_User H}.1|NewLine} end
             end
         in
             {ParseInputUser_Aux Str_Line nil}
         end
+    end
+
+    fun {GetNewChar_User Char}
+        if Char == 39 then [Char false]
+        else {GetNewChar Char} end
     end
 
     %%%
@@ -230,7 +235,7 @@ define
     %%%
     fun {CleaningUserInput Text_Line}
         local
-            Cleaner = fun {$ Str_Line} {Cleaning_UnNecessary_Spaces {ParseInputUser {Removes_SubString Str_Line [10] 32 false}}} end
+            Cleaner = fun {$ Str_Line} {Cleaning_UnNecessary_Spaces {ParseInputUser Str_Line}} end
             fun {CleaningUserInput_Aux SplittedText NewSplittedText}
                 case SplittedText
                 of nil then {Filter NewSplittedText fun {$ X} X \= nil end}
