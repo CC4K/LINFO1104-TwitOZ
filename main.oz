@@ -51,7 +51,6 @@ define
                 Input_User = {Variables.inputText getText(p(1 0) 'end' $)}
                 Splitted_Text = {Parser.cleaningUserInput Input_User}
                 List_Words = {Function.get_Last_Nth_Word_List Splitted_Text Variables.idx_N_Grams}
-                
 
                 if {Length List_Words} >= Variables.idx_N_Grams then
 
@@ -262,6 +261,7 @@ define
 
             % Creation of the main binary tree (with all subtree as value)
             Main_Tree = {Tree.create_Main_Tree {Tree.create_Basic_Tree List_Line_Parsed}}
+            % {System.show {Tree.create_Basic_Tree List_Line_Parsed}}
             {Send Variables.port_Tree Main_Tree}
         end
         
@@ -284,7 +284,7 @@ define
         
         % Launch one thread that will predict the next word every 0.5sec
         % => The user can write and the words will be predicted at the same time!
-        thread {Automatic_prediction.automatic_Prediction 500} end
+        % thread {Automatic_prediction.automatic_Prediction 500} end
 
         %%ENDOFCODE%%
     end

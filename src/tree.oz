@@ -163,11 +163,6 @@ define
     %%%
     fun {Create_Basic_Tree Parsed_Datas}
         local
-            % Usefull variables for the function 'Update_Values_Tree'
-            Key Value_to_Insert Current_List_Value New_List_Value
-
-            % Usefull variables for the function 'Deal_Line'
-            List_Keys_N_Grams Value_Updated
 
             %%%
             % Updates the values of the tree at the key X (where X is an element of 'List_Keys')
@@ -187,20 +182,22 @@ define
                 of nil then Tree
                 [] _|nil then Tree
                 [] H|T then
-                    % The key to access the value to update
-                    Key = {String.toAtom H}
+                    local Key Value_to_Insert Current_List_Value New_List_Value in
+                        % The key to access the value to update
+                        Key = {String.toAtom H}
 
-                     % The new value to insert into the tree at the key H
-                    Value_to_Insert = {String.toAtom {Reverse {Function.tokens_String List_Keys.1 32}}.1}
+                        % The new value to insert into the tree at the specified key
+                        Value_to_Insert = {String.toAtom {Reverse {Function.tokens_String T.1 32}}.1}
 
-                    % The current value of the tree at the key H
-                    Current_List_Value = {LookingUp Tree Key}
+                        % The current value of the tree at the key H
+                        Current_List_Value = {LookingUp Tree Key}
 
-                    % The new list of values with the new value corrected inserted
-                    New_List_Value = {UpdateList Current_List_Value Value_to_Insert}
+                        % The new list of values with the new value corrected inserted
+                        New_List_Value = {UpdateList Current_List_Value Value_to_Insert}
 
-                    % The new tree with the new value inserted
-                    {Update_Values_Tree {Insert_Value Tree Key New_List_Value} T}
+                        % The new tree with the new value inserted
+                        {Update_Values_Tree {Insert_Value Tree Key New_List_Value} T}
+                    end
                 end
             end
 
@@ -220,9 +217,11 @@ define
                         case Line_Datas
                         of nil then Updated_Tree
                         [] H|T then
-                            List_Keys_N_Grams = {N_Grams.n_Grams {Function.tokens_String H 32}}
-                            Value_Updated = {Update_Values_Tree Updated_Tree List_Keys_N_Grams}
-                            {Deal_File_Aux T Value_Updated}
+                            local List_Keys_N_Grams Value_Updated in
+                                List_Keys_N_Grams = {N_Grams.n_Grams {Function.tokens_String H 32}}
+                                Value_Updated = {Update_Values_Tree Updated_Tree List_Keys_N_Grams}
+                                {Deal_File_Aux T Value_Updated}
+                            end
                         end
                     end
                 in
@@ -285,7 +284,8 @@ define
                         [] H|T then
                             case H
                             of Word#Freq then
-                                local Current_Value = {LookingUp SubTree Freq} in
+                                local Current_Value in
+                                    Current_Value = {LookingUp SubTree Freq}
                                     if Current_Value == notfound then {Create_SubTree_Aux T {Insert_Value SubTree Freq [Word]}}
                                     else {Create_SubTree_Aux T {Insert_Value SubTree Freq Word|Current_Value}} end
                                 end
@@ -335,33 +335,31 @@ define
     %%%
     fun {Get_Result_Prediction Tree Prefix_Value}
         local
-            List_Result
-            Total_Frequency
-            Max_Frequency
-            List_Words
-            Probability
+            % Usefull variables to make it easier to understand the code
+            List_Result Total_Frequency Max_Frequency List_Words Probability
+
             fun {Get_Result_Prediction_Aux Tree Total_Freq Max_Freq List_Words}
                 case Tree
                 of leaf then [Total_Freq Max_Freq List_Words]
                 [] tree(key:Key value:Value t_left:TLeft t_right:TRight) then
                     local T1 NewList_Value in
                         if Prefix_Value == none then
-                            T1 = {Get_Result_Prediction_Aux TLeft ({Length Value} * Key) + Total_Freq Key Value}
+                            T1 = {Get_Result_Prediction_Aux TLeft ({Length Value} * Key)+Total_Freq Key Value}
                         else
                             NewList_Value = {GetNewListValue Value Prefix_Value}
                             if NewList_Value == nil then
-                                T1 = {Get_Result_Prediction_Aux TLeft ({Length Value} * Key) + Total_Freq Max_Freq List_Words}
+                                T1 = {Get_Result_Prediction_Aux TLeft ({Length Value} * Key)+Total_Freq Max_Freq List_Words}
                             else
-                                T1 = {Get_Result_Prediction_Aux TLeft ({Length Value} * Key) + Total_Freq Key NewList_Value}
+                                T1 = {Get_Result_Prediction_Aux TLeft ({Length Value} * Key)+Total_Freq Key NewList_Value}
                             end
                         end
-                        _ = {Get_Result_Prediction_Aux TRight ({Length Value} * Key) + T1.1 T1.2.1 T1.2.2.1}
+                        _ = {Get_Result_Prediction_Aux TRight T1.1 T1.2.1 T1.2.2.1}
                     end
                 end
             end
         in
             List_Result = {Get_Result_Prediction_Aux Tree 0 0 nil}
-            Total_Frequency = List_Result.1 div 2
+            Total_Frequency = List_Result.1
             Max_Frequency = List_Result.2.1
             List_Words = List_Result.2.2.1
             Probability = {Int.toFloat Max_Frequency} / {Int.toFloat Total_Frequency}
@@ -375,11 +373,8 @@ define
                 case List_Value_Tree
                 of nil then NewList
                 [] H|T then
-                    if {Function.findPrefix_InList {Atom.toString H} Prefix_Value} == true then
-                        {GetNewListValue_Aux T H|NewList}
-                    else
-                        {GetNewListValue_Aux T NewList}
-                    end
+                    if {Function.findPrefix_InList {Atom.toString H} Prefix_Value} == true then {GetNewListValue_Aux T H|NewList}
+                    else {GetNewListValue_Aux T NewList} end
                 end
             end
         in
