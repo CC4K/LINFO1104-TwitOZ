@@ -40,6 +40,7 @@ main.ozf :
 	$(OZC) -c src/tree.oz -o bin/tree.ozf
 	$(OZC) -c src/reader.oz -o bin/reader.ozf
 
+	if [ ! -d "bin/extensions" ]; then mkdir bin/extensions; fi
 	$(OZC) -c src/extensions/automatic_prediction.oz -o bin/extensions/automatic_prediction.ozf
 	$(OZC) -c src/extensions/interface_improved.oz -o bin/extensions/interface_improved.ozf
 	$(OZC) -c src/extensions/historic_user.oz -o bin/extensions/historic_user.ozf
@@ -59,4 +60,6 @@ clean_user_historic:
 
 clean:
 	rm -f bin/*.ozf
+	rm -f bin/extensions/*.ozf
+	rm -rf bin/extensions
 	rm -rf bin

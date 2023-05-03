@@ -9,6 +9,7 @@ import
     Variables at '../variables.ozf'
     Interface at '../interface.ozf'
     Function at '../function.ozf'
+    Automatic_Prediction at 'automatic_prediction.ozf'
 export
     ProposeAllTheWords
 define
@@ -43,9 +44,14 @@ define
                 end
             end
         in
-            {Interface.setText_Window Variables.outputText "The most probable word(s) : ["}
-            {ProposeAllTheWords_Aux List_MostProbableWords 30}
-            {DisplayFreq_And_Probability 2 Frequency Probability}
+            if {Automatic_Prediction.checkIfSamePrediction List_MostProbableWords Frequency Probability} == true then skip
+            else
+                {Interface.setText_Window Variables.outputText ""}
+                {Interface.setText_Window Variables.outputText "The most probable word(s) : ["}
+                {ProposeAllTheWords_Aux List_MostProbableWords 30}
+                {DisplayFreq_And_Probability 2 Frequency Probability}
+                {Automatic_Prediction.stockResultsInFile List_MostProbableWords Frequency Probability}
+            end
         end
     end
 
