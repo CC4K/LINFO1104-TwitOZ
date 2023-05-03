@@ -2,7 +2,7 @@ functor
 import
     System
     Function at 'function.ozf'
-    Extensions at 'extensions.ozf'
+    N_Grams at 'extensions/n_grams.ozf'
 export
     CreateSubTree
     CreateTree
@@ -33,37 +33,19 @@ define
     % @param Key: a value representing a specific location in the binary tree
     % @return: the value at the location of the key in the binary tree, or 'notfound' if the key is not present
     %%%
-    fun {LookingUp Tree Key Prefix_Value}
-        local
-            fun {LookingUp_Aux Tree Key KeyToReturn}
-                case Tree
-                of leaf then KeyToReturn
-                [] tree(key:K value:V t_left:_ t_right:_) andthen K == Key then
-                    if Prefix_Value == none then V
-                    else
-                        if {Function.findPrefix_InList V Prefix_Value} then V
-                        else KeyToReturn end
-                    end
+    fun {LookingUp Tree Key}
+        case Tree
+        of leaf then notfound
+        [] tree(key:K value:V t_left:_ t_right:_) andthen K == Key then V
 
-                [] tree(key:K value:V t_left:TLeft t_right:_) andthen K > Key then
-                    if Prefix_Value == none then {LookingUp_Aux TLeft Key KeyToReturn}
-                    else
-                        if {Function.findPrefix_InList V Prefix_Value} then {LookingUp_Aux TLeft Key K}
-                        else {LookingUp_Aux TLeft Key KeyToReturn} end
-                    end
+        [] tree(key:K value:V t_left:TLeft t_right:_) andthen K > Key then
+            {LookingUp TLeft Key}
 
-                [] tree(key:K value:V t_left:_ t_right:TRight) andthen K < Key then
-                    if Prefix_Value == none then {LookingUp_Aux TRight Key KeyToReturn}
-                    else
-                        if {Function.findPrefix_InList V Prefix_Value} then {LookingUp_Aux TRight Key K}
-                        else {LookingUp_Aux TRight Key KeyToReturn} end
-                    end
-                end
-            end
-        in
-            {LookingUp_Aux Tree Key notfound}
+        [] tree(key:K value:V t_left:_ t_right:TRight) andthen K < Key then
+            {LookingUp TRight Key}
         end
     end
+
 
     %%%
     % Inserts a value into a binary tree at the location of the given key
@@ -193,7 +175,7 @@ define
                 case Parsed_Datas
                 of nil then Updated_Tree
                 [] H|T then
-                    {Update_File_To_Tree_Aux T {Update_Line_To_Tree Updated_Tree {Extensions.n_Grams {Function.tokens_String H 32}}}}
+                    {Update_File_To_Tree_Aux T {Update_Line_To_Tree Updated_Tree {N_Grams.n_Grams {Function.tokens_String H 32}}}}
                 end
             end
         in
@@ -213,7 +195,7 @@ define
             fun {Update_Value Tree Key List_Keys}
                 local Value_to_Insert List_Value New_List_Value in
                     Value_to_Insert = {String.toAtom {Reverse {Function.tokens_String List_Keys.1 32}}.1}
-                    List_Value = {LookingUp Tree Key none}
+                    List_Value = {LookingUp Tree Key}
                     New_List_Value = {UpdateList List_Value Value_to_Insert}
                     {Insert Tree Key New_List_Value}
                 end
@@ -251,7 +233,7 @@ define
                     case H
                     of Word#Freq then
                         local Current_Value Updated_Value in
-                            Current_Value = {LookingUp SubTree Freq none}
+                            Current_Value = {LookingUp SubTree Freq}
                             if Current_Value == notfound then
                                 Updated_Value = [Word]
                             else

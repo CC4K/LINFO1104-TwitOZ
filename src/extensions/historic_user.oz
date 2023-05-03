@@ -128,7 +128,7 @@ define
             fun {Update_Value New_Tree Key List_Keys}
                 local Value_to_Insert Tree_Value New_Tree_Value in
                     Value_to_Insert = {String.toAtom {Reverse {Function.tokens_String List_Keys.1 32}}.1}
-                    Tree_Value = {Tree.lookingUp New_Tree Key none}
+                    Tree_Value = {Tree.lookingUp New_Tree Key}
                     New_Tree_Value = {Update_SubTree Tree_Value Key Value_to_Insert}
                     {Tree.insert New_Tree Key New_Tree_Value}
                 end
@@ -151,7 +151,7 @@ define
             local Updated_SubTree List_Value in
                 Updated_SubTree = {Get_List_Value SubTree NewValue}
                 if SubTree == Updated_SubTree then
-                    List_Value = {Tree.lookingUp SubTree 1 none}
+                    List_Value = {Tree.lookingUp SubTree 1}
                     if List_Value == notfound then {Tree.insert SubTree 1 [NewValue]}
                     else {Tree.insert SubTree 1 NewValue|List_Value} end
                 else
@@ -194,7 +194,7 @@ define
      %%%% TODO %%%%
     fun {AddElemToList_InTree SubTree Key Word_Value}
         local Value_List in
-            Value_List = {Tree.lookingUp SubTree Key none}
+            Value_List = {Tree.lookingUp SubTree Key}
             if Value_List == notfound then {Tree.insert SubTree Key [Word_Value]}
             else {Tree.insert SubTree Key Word_Value|Value_List} end
         end

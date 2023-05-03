@@ -58,7 +58,7 @@ define
                     % Get the subtree representing the value at the key created by the concatenation of the N last words
                     Key = {Function.concatenateElemOfList List_Words 32}
                     Parsed_Key = {String.toAtom {Parser.parseInputUser Key}} % Parses the key to avoid problems with special characters
-                    Tree_Value = {Tree.lookingUp {Function.get_Tree} Parsed_Key none}
+                    Tree_Value = {Tree.lookingUp {Function.get_Tree} Parsed_Key}
 
                     if Tree_Value == notfound then
                         {Interface.setText_Window Variables.outputText "No words found."}
@@ -79,7 +79,7 @@ define
                             [[nil] 0] % => no words found
                         else
                             % Display to the window the most probable word(s) and the highest probability/frequency
-                            {Extensions.proposeAllTheWords ProbableWords Frequency Probability}
+                            {Predict_All.proposeAllTheWords ProbableWords Frequency Probability}
 
                             % Return the most probable word(s) and the highest probability/frequency
                             [ProbableWords Probability]
@@ -194,7 +194,7 @@ define
             thread _ = List_Waiting_Threads = {Launch_AllThreads nil N} end
 
             % To also parse the historic user files (Extension)
-            thread _ = List_Waiting_Threads_2 = {Extensions.launchThreads_HistoricUser} end
+            thread _ = List_Waiting_Threads_2 = {Historic_user.launchThreads_HistoricUser} end
             
             % Wait for all the threads
             % When a thread have finished, the value P associated to this thread
@@ -228,7 +228,7 @@ define
     %%%
     proc {Main}
 
-        Variables.nber_HistoricFiles = {Extensions.get_Nber_HistoricFile}
+        Variables.nber_HistoricFiles = {Historic_user.get_Nber_HistoricFile}
 
         % Initialization of the global variables used in the program
         Variables.idx_N_Grams = 2     
@@ -247,7 +247,7 @@ define
         {Property.put print foo(width:1000 depth:1000)}
 
         % Description of the GUI
-        Variables.description = {Extensions.getDescriptionGUI proc{$} _={Press} end}
+        Variables.description = {Interface_improved.getDescriptionGUI proc{$} _={Press} end}
 
         % Creation of the GUI
         Variables.window = {QTk.build Variables.description}
@@ -294,7 +294,7 @@ define
             {Interface.setText_Window Variables.inputText ""}
         end
         
-        thread {Extensions.automatic_Prediction 2000} end
+        thread {Automatic_prediction.automatic_Prediction 2000} end
 
         %%ENDOFCODE%%
     end
