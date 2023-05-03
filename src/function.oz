@@ -15,6 +15,7 @@ export
     SplitList_AtIdx
     ConcatenateElemOfList
     Get_Tree
+    IsInList
 define
 
     %%%
@@ -133,6 +134,16 @@ define
     %%% ====== OTHER FUNCTIONS THAT CAN SOMETIMES BE USED FOR SEVERAL USAGES ====== %%%
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+
+    %%%% TODO %%%%
+    fun {IsInList List Value}
+        case List
+        of nil then false
+        [] H|T then
+            if H == Value then true
+            else {IsInList T Value} end
+        end
+    end
 
     %%%
     % Removes the first Nth elements from a list

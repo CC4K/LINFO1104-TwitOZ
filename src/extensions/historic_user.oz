@@ -21,7 +21,6 @@ export
     Update_SubTree
     Get_List_Value
     AddElemToList_InTree
-    IsInList
     RemoveElemOfList
     Clean_UserHistoric
     Delete_HistoricFiles
@@ -170,7 +169,7 @@ define
                 of leaf then Updated_SubTree
                 [] tree(key:Key value:Value_List t_left:TLeft t_right:TRight) then
                     local T1 New_List_Value Length_Value_List in
-                        if {IsInList Value_List Value_Word} == true then
+                        if {Function.isInList Value_List Value_Word} == true then
                             Length_Value_List = {Length Value_List}
                             if Length_Value_List == 1 then {Tree.insert_Key Updated_SubTree Key Key+1}
                             else
@@ -197,17 +196,6 @@ define
             Value_List = {Tree.lookingUp SubTree Key}
             if Value_List == notfound then {Tree.insert SubTree Key [Word_Value]}
             else {Tree.insert SubTree Key Word_Value|Value_List} end
-        end
-    end
-
-
-     %%%% TODO %%%%
-    fun {IsInList List Value}
-        case List
-        of nil then false
-        [] H|T then
-            if H == Value then true
-            else {IsInList T Value} end
         end
     end
 

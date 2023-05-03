@@ -81,28 +81,22 @@ define
                             
                             % Get the subtree associated to the second key
                             Value_Tree2 = {Tree.lookingUp {Function.get_Tree} {String.toAtom Second_Key}}
-                            ProbableWords = {LookingUp_Extensions {Function.get_Tree} {String.toAtom Second_Key} {Reverse List_Words}.1}
-                            {System.show Value_Tree2}
-                            {System.show ProbableWords}
 
-                            % If the second key is not found
-                            if ProbableWords == nil then
-                                % Display that no word has been found
-                                {Interface.insertText_Window Variables.outputText 1 0 none "Words not found."}
+                            if Value_Tree2 == notfound then {Interface.insertText_Window Variables.outputText 1 0 none "Words not found."}
+                            else
 
-                            else % If the second key is found
+                                ResultPress = {Tree.get_Result_Prediction Value_Tree2 {Reverse List_Words.2}.1}
+                                ProbableWords = ResultPress.1
 
-                                %% CHANGE ! => Need to get the probability
+                                if ProbableWords == nil then {Interface.insertText_Window Variables.outputText 1 0 none "Words not found."}
+                                else
+                                    Probability = ResultPress.2.1
+                                    Frequency = ResultPress.2.2.1
 
-                                ResultPress = {Tree.get_Result_Prediction Value_Tree2 ProbableWords.1}
-                                Probability = ResultPress.2.1
-                                Frequency = ResultPress.2.2.1
-
-                                {Predict_All.proposeAllTheWords ProbableWords Frequency Probability}
+                                    {Predict_All.proposeAllTheWords ProbableWords Frequency Probability}
+                                end
                             end
                         else % If the first key is found
-
-                            {System.show 'WTF'}
 
                             ResultPress = {Tree.get_Result_Prediction Value_Tree none}
                             ProbableWords = ResultPress.1
@@ -125,82 +119,10 @@ define
         end
     end
 
-    fun {Get_And_Display_Results Value_Tree}
-        0
-    end
+    % fun {Get_And_Display_Results Value_Tree}
+    %     0
+    % end
 
-    fun {LookingUp_Extensions Tree Key Prefix_Value}
-        local
-            fun {LookingUp_Extensions_Aux Tree Key ValueToReturn}
-                case Tree
-                of leaf then ValueToReturn
-                [] tree(key:K value:V t_left:_ t_right:_) andthen K == Key then
-                    local BestWord in
-                        BestWord = {SearchPrefixValue V Prefix_Value}
-                        if BestWord == notfound then notfound
-                        else BestWord end
-                    end
-
-                [] tree(key:K value:V t_left:TLeft t_right:_) andthen K > Key then
-                    local BestWord in
-                        BestWord = {SearchPrefixValue V Prefix_Value}
-                        if BestWord == notfound then {LookingUp_Extensions_Aux TLeft Key ValueToReturn}
-                        else {LookingUp_Extensions_Aux TLeft Key BestWord} end
-                    end
-
-                [] tree(key:K value:V t_left:_ t_right:TRight) andthen K < Key then
-                    local BestWord in
-                        BestWord = {SearchPrefixValue V Prefix_Value}
-                        if BestWord == notfound then {LookingUp_Extensions_Aux TRight Key ValueToReturn}
-                        else {LookingUp_Extensions_Aux TRight Key BestWord} end
-                    end
-                end
-            end
-        in
-            {LookingUp_Extensions_Aux Tree Key notfound}
-        end
-    end
-
-    fun {GetListWithPrefix List Prefix}
-        local
-            fun {GetListWithPrefix_Aux List NewList}
-                case List
-                of nil then NewList
-                [] H|T then
-                    if {Function.findPrefix_InList {Atom.toString H} Prefix} == true then
-                        {GetListWithPrefix_Aux T H|NewList}
-                    else
-                        {GetListWithPrefix_Aux T NewList}
-                    end
-                end
-            end
-
-        in
-            {GetListWithPrefix_Aux List nil}
-        end
-    end
-
-    fun {SearchPrefixValue SubTree Prefix_Value}
-        local
-            fun {SearchPrefixValue_Aux SubTree BestWord}
-                case SubTree
-                of leaf then BestWord
-                [] tree(key:Key value:Value t_left:TLeft t_right:TRight) then
-                    local T1 List_Words in
-                        List_Words = {GetListWithPrefix Value Prefix_Value}
-                        if List_Words == nil then
-                            T1 = {SearchPrefixValue_Aux TLeft BestWord}
-                        else
-                            T1 = {SearchPrefixValue_Aux TLeft List_Words}
-                        end
-                        _ = {SearchPrefixValue_Aux TRight T1}
-                    end
-                end
-            end
-        in
-            {SearchPrefixValue_Aux SubTree nil}
-        end
-    end
 
     fun {RemoveLastValue List}
         local
@@ -216,33 +138,4 @@ define
             {Reverse {RemoveLastValue_Aux List nil}}
         end
     end
-
-    fun {RemoveLastCharOfLastWord List_Words}
-        local
-            fun {RemoveLastChar Word}
-                local
-                    fun {RemoveLastChar_Aux Word NewWord}
-                        case Word
-                        of nil then nil
-                        [] H|nil then {Reverse NewWord}
-                        [] H|T then {RemoveLastChar_Aux T H|NewWord}
-                        end
-                    end
-                in
-                    {RemoveLastChar_Aux Word nil}
-                end
-            end
-
-            fun {RemoveLastCharOfLastWord_Aux List_Words NewList}
-                case List_Words
-                of nil then nil
-                [] H|nil then {Reverse {RemoveLastChar H}|NewList}
-                [] H|T then {RemoveLastCharOfLastWord_Aux T H|NewList}
-                end
-            end
-        in
-            {RemoveLastCharOfLastWord_Aux List_Words nil}
-        end
-    end
-
 end

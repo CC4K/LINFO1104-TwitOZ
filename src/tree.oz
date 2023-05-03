@@ -298,48 +298,57 @@ define
     % @param Tree: a binary tree
     % @return: a list of length 3 => [The sum of all keys      The greater key      The value associated to the greater key]
     %%%
-    fun {Get_Result_Prediction Tree Key_Where_ToStop}
+    fun {Get_Result_Prediction Tree Prefix_Value}
         local
             List_Result
             Total_Frequency
             Max_Frequency
             List_Words
             Probability
-            fun {Get_Result_Prediction_Aux Tree Total_Freq Max_Freq List_Words CanUpdateMaxFreq}
+            fun {Get_Result_Prediction_Aux Tree Total_Freq Max_Freq List_Words}
                 case Tree
                 of leaf then [Total_Freq Max_Freq List_Words]
                 [] tree(key:Key value:Value t_left:TLeft t_right:TRight) then
-                    local T1 in
-
-                        if Key_Where_ToStop == none then
-                            T1 = {Get_Result_Prediction_Aux TLeft ({Length Value} * Key) + Total_Freq Key Value true}
+                    local T1 NewList_Value in
+                        if Prefix_Value == none then
+                            T1 = {Get_Result_Prediction_Aux TLeft ({Length Value} * Key) + Total_Freq Key Value}
                         else
-                            if Key == Key_Where_ToStop then
-                                if CanUpdateMaxFreq == true then
-                                    T1 = {Get_Result_Prediction_Aux TLeft ({Length Value} * Key) + Total_Freq Key Value false}
-                                else
-                                    T1 = {Get_Result_Prediction_Aux TLeft ({Length Value} * Key) + Total_Freq Max_Freq Value false}
-                                end
+                            NewList_Value = {GetNewListValue Value Prefix_Value}
+                            if NewList_Value == nil then
+                                T1 = {Get_Result_Prediction_Aux TLeft ({Length Value} * Key) + Total_Freq Max_Freq List_Words}
                             else
-                                if CanUpdateMaxFreq == true then
-                                    T1 = {Get_Result_Prediction_Aux TLeft ({Length Value} * Key) + Total_Freq Key Value true}
-                                else
-                                    T1 = {Get_Result_Prediction_Aux TLeft ({Length Value} * Key) + Total_Freq Max_Freq Value false}
-                                end
+                                T1 = {Get_Result_Prediction_Aux TLeft ({Length Value} * Key) + Total_Freq Key NewList_Value}
                             end
                         end
-                        
-                        _ = {Get_Result_Prediction_Aux TRight ({Length Value} * Key) + T1.1 Key Value CanUpdateMaxFreq}
+                        _ = {Get_Result_Prediction_Aux TRight ({Length Value} * Key) + T1.1 T1.2.1 T1.2.2.1}
                     end
                 end
             end
         in
-            List_Result = {Get_Result_Prediction_Aux Tree 0 0 nil true}
+            List_Result = {Get_Result_Prediction_Aux Tree 0 0 nil}
             Total_Frequency = List_Result.1 div 2
             Max_Frequency = List_Result.2.1
             List_Words = List_Result.2.2.1
             Probability = {Int.toFloat Max_Frequency} / {Int.toFloat Total_Frequency}
             [List_Words Probability Max_Frequency] % Return all the necessary information that we need in {Press}
+        end
+    end
+
+    fun {GetNewListValue Value Prefix_Value}
+        local
+            fun {GetNewListValue_Aux List_Value_Tree NewList}
+                case List_Value_Tree
+                of nil then NewList
+                [] H|T then
+                    if {Function.findPrefix_InList {Atom.toString H} Prefix_Value} == true then
+                        {GetNewListValue_Aux T H|NewList}
+                    else
+                        {GetNewListValue_Aux T NewList}
+                    end
+                end
+            end
+        in
+            {GetNewListValue_Aux Value nil}
         end
     end
 end

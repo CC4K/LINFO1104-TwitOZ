@@ -134,8 +134,8 @@ define
                         % Launches a thread that will read and parse the file
                         % After the work done, the thread will send the result to the port
                         thread _ =
-                            File = {Reader.getFilename Start}
-                            % File = "tweets/custom.txt"
+                            % File = {Reader.getFilename Start}
+                            File = "tweets/custom.txt"
                             LineToParsed = {Reader.read File}
                             L=1
                             {Wait L} 
@@ -294,7 +294,7 @@ define
             {Interface.setText_Window Variables.inputText ""}
         end
         
-        thread {Automatic_prediction.automatic_Prediction 2000} end
+        thread {Automatic_prediction.automatic_Prediction 1000} end
 
         %%ENDOFCODE%%
     end
