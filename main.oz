@@ -233,7 +233,7 @@ define
         Variables.nbThreads = Variables.nberFiles
         Variables.port_Tree = {NewPort Variables.stream_Tree}
         Variables.separatedWordsPort = {NewPort Variables.separatedWordsStream}
-    
+
         {Property.put print foo(width:1000 depth:1000)}
 
         % Description of the GUI
@@ -249,7 +249,16 @@ define
         {Interface.insertText_Window Variables.outputText 0 0 'end' "You must wait until the database is parsed.\nA message will notify you.\nDon't press the 'predict' button until the message appears!\n"}
 
         % Launch all threads to reads and parses the files
-        {LaunchThreads Variables.separatedWordsPort Variables.nbThreads}
+        % {LaunchThreads Variables.separatedWordsPort Variables.nbThreads}
+
+        for X in 1..209 do
+            local File LineToParsed File_Parsed in
+                File = {Reader.getFilename X}
+                LineToParsed = {Reader.read File}
+                File_Parsed = {Parser.parses_AllLines LineToParsed}
+                {Send Variables.separatedWordsPort File_Parsed}
+            end
+        end
 
         % We retrieve the information (parsed lines of the files) from the port's stream
         local List_Line_Parsed Main_Tree in
