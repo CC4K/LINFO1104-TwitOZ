@@ -303,7 +303,7 @@ define
     % Digits are left untouched
 
     % Example usage:
-    % In: "FLATTENING of the CURVE! 888 IS a GoOd DIgit..#/!"
+    % In: "FLATTENING of the CURVE! 888 IS a GoOd DIgit../.!"
     % Out: "flattening of the curve  888 is a good digit     "
     %
     % @param Line: a string to be parsed
@@ -328,8 +328,8 @@ define
     % Applies a parsing function to each string in a list of strings
     %
     % Example usage:
-    % In: ["  _&Hello there...! General Kenobi!!! %100 "]
-    % Out: ["hello there general kenobi 100"] with Parser = fun {$ StrLine} {RemoveEmptySpace {ParseLine Str_Line}} end
+    % In: ["  !Hello there...! General Kenobi!!! ...100     "]
+    % Out: ["hello there general kenobi 100"]
     %
     % @param List: a list of strings
     % @return: a list of the parsed strings
@@ -345,7 +345,44 @@ define
                 end
             end
         in
-            {ParseAllLines_Aux List nil}
+            {Cleaning_UnNecessary_Spaces {ParseAllLines_Aux List nil}}
+        end
+    end
+
+
+    %%%
+    % Removes any space larger than one character wide (and therefore useless)
+    %
+    % Example usage:
+    % In: "  general    kenobi       you are a           bold   one   "
+    % Out: "general kenobi you are a bold one"
+    %
+    % @param Line: a string to be cleaned of unnecessary spaces.
+    % @return: a new string with all excess spaces removed
+    %%%
+    fun {Cleaning_UnNecessary_Spaces Line}
+        local
+            CleanLine
+            fun {Cleaning_UnNecessary_Spaces_Aux Line NewLine PreviousSpace}
+                case Line
+                of nil then NewLine
+                [] H|nil then
+                    if H == 32 then NewLine
+                    else H|NewLine end
+                [] H|T then
+                    if H == 32 then
+                        if PreviousSpace == true then {Cleaning_UnNecessary_Spaces_Aux T NewLine true}
+                        else {Cleaning_UnNecessary_Spaces_Aux T H|NewLine true} end
+                    else {Cleaning_UnNecessary_Spaces_Aux T H|NewLine false} end
+                end
+            end
+        in
+            CleanLine = {Cleaning_UnNecessary_Spaces_Aux Line nil true}
+            if CleanLine == nil then nil
+            else
+                if CleanLine.1 == 32 then {Reverse CleanLine.2}
+                else {Reverse CleanLine} end
+            end
         end
     end
 
@@ -866,6 +903,7 @@ define
                     end
                 end
             end
+
 
             %%%
             % Allows to launch N threads and to get the list with the value of each thread :
