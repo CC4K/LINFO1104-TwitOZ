@@ -251,6 +251,7 @@ define
         % Launch all threads to reads and parses the files
         % {LaunchThreads Variables.separatedWordsPort Variables.nbThreads}
 
+        % With this we don't have problem => Problem with threads !
         for X in 1..209 do
             local File LineToParsed File_Parsed in
                 File = {Reader.getFilename X}
@@ -270,7 +271,6 @@ define
 
             % Creation of the main binary tree (with all subtree as value)
             Main_Tree = {Tree.create_Main_Tree {Tree.create_Basic_Tree List_Line_Parsed}}
-            % {System.show {Tree.create_Basic_Tree List_Line_Parsed}}
             {Send Variables.port_Tree Main_Tree}
         end
         

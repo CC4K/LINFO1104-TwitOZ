@@ -342,18 +342,17 @@ define
                 case Tree
                 of leaf then [Total_Freq Max_Freq List_Words]
                 [] tree(key:Key value:Value t_left:TLeft t_right:TRight) then
-                    local T1 NewList_Value in
+                    local NewList_Value T1 in
                         if Prefix_Value == none then
-                            T1 = {Get_Result_Prediction_Aux TLeft ({Length Value} * Key)+Total_Freq Key Value}
+                            T1 = {Get_Result_Prediction_Aux TLeft Total_Freq Max_Freq List_Words}
+                            _ = {Get_Result_Prediction_Aux TRight ({Length Value} * Key)+T1.1 Key Value}
                         else
+                            T1 = {Get_Result_Prediction_Aux TLeft Total_Freq Max_Freq List_Words} % NewList_Value
+
                             NewList_Value = {GetNewListValue Value Prefix_Value}
-                            if NewList_Value == nil then
-                                T1 = {Get_Result_Prediction_Aux TLeft ({Length Value} * Key)+Total_Freq Max_Freq List_Words}
-                            else
-                                T1 = {Get_Result_Prediction_Aux TLeft ({Length Value} * Key)+Total_Freq Key NewList_Value}
-                            end
+                            if NewList_Value == nil then _ = {Get_Result_Prediction_Aux TRight ({Length Value} * Key)+Total_Freq Max_Freq List_Words}
+                            else _ = {Get_Result_Prediction_Aux TRight ({Length Value} * Key)+T1.1 Key NewList_Value} end
                         end
-                        _ = {Get_Result_Prediction_Aux TRight T1.1 T1.2.1 T1.2.2.1}
                     end
                 end
             end
