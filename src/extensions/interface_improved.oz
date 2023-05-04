@@ -14,11 +14,19 @@ export
     LoadText
 define
 
+
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %%%%%%%%%%%%%%%% ====== THIRD EXTENSION ====== %%%%%%%%%%%%%%%%%%%%%%%
     %%%%%%%%%%%%%% ============= IMPROVE GUI  ============= %%%%%%%%%%%%%%
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+
+    %%%
+    % Creates the GUI's description of the app.
+    %
+    % @param: CallerPress: the function to call when the button "Predict" is pressed.
+    % @return: the GUI's description.
+    %%%
     fun {GetDescriptionGUI CallerPress}
         lr( title: "TwitOZ"
             background:c(27 157 240)
@@ -28,7 +36,8 @@ define
             td( %label(image:{QTk.newImage photo(url:"./twit.png")} borderwidth:0 width:290)
                 td( button(text:"Predict" height:2 width:20 background:c(29 125 242) borderwidth:1 font:{QTk.newFont font(family:"Verdana" size:13)} foreground:white activebackground:white activeforeground:black cursor:hand2 action:CallerPress)
                     button(text:"Save as .txt file" height:2 width:20 background:c(29 125 242) borderwidth:1 font:{QTk.newFont font(family:"Verdana" size:13)} foreground:white activebackground:white activeforeground:black cursor:hand2 action:SaveText_UserFinder)
-                    button(text:"Save file in database" height:2 width:20 background:c(29 125 242) borderwidth:1 font:{QTk.newFont font(family:"Verdana" size:13)} foreground:white activebackground:white activeforeground:black cursor:hand2 action:Historic_user.saveText_Database)
+                    button(text:"Save file .txt in database" height:2 width:20 background:c(29 125 242) borderwidth:1 font:{QTk.newFont font(family:"Verdana" size:13)} foreground:white activebackground:white activeforeground:black cursor:hand2 action:Historic_user.saveFile_Database)
+                    button(text:"Save input text in database" height:2 width:20 background:c(29 125 242) borderwidth:1 font:{QTk.newFont font(family:"Verdana" size:13)} foreground:white activebackground:white activeforeground:black cursor:hand2 action:Historic_user.saveText_Database)
                     button(text:"Clean user historic" height:2 width:20 background:c(29 125 242) borderwidth:1 font:{QTk.newFont font(family:"Verdana" size:13)} foreground:white activebackground:white activeforeground:black cursor:hand2 action:Historic_user.clean_UserHistoric)
                     button(text:"Load file as input" height:2 width:20 background:c(29 125 242) borderwidth:1 font:{QTk.newFont font(family:"Verdana" size:13)} foreground:white activebackground:white activeforeground:black cursor:hand2 action:LoadText)
                     button(text:"Quit" height:2 width:20 background:c(29 125 242) relief:sunken borderwidth:1 font:{QTk.newFont font(family:"Verdana" size:13)} foreground:white activebackground:white activeforeground:black cursor:hand2 action:proc{$} {Application.exit 0} end)
@@ -55,7 +64,7 @@ define
         in 
             {User_File write(vs:Contents)}
             {User_File close}
-        catch _ then {System.show 'Error when saving the file into the user specified file'} {Application.exit} end 
+        catch _ then {System.show 'Error when saving the file into the user specified file'} {Application.exit 0} end 
     end
 
 
@@ -76,6 +85,6 @@ define
         in 
             {Variables.inputText set(Contents)}
             {File close}
-        catch _ then {System.show 'Error when loading the file into the window'} {Application.exit} end 
+        catch _ then {System.show 'Error when loading the file into the window'} {Application.exit 0} end 
     end
 end

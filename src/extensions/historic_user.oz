@@ -21,6 +21,7 @@ export
     Delete_HistoricFiles
     Get_Nber_HistoricFile
     LaunchThreads_HistoricUser
+    SaveFile_Database
 define
 
 
@@ -64,6 +65,31 @@ define
     end
 
 
+    proc {SaveFile_Database}
+        try
+            local User_File_Name User_File Contents New_Nber_HistoricFiles Historic_NberFiles_File Name_File Historic_File in
+
+                User_File_Name = {QTk.dialogbox load(defaultextension:"txt"
+                                filetypes:q(q("Txt files" q(".txt")) q("All files" q("*"))) $)}
+
+                User_File = {New Open.file init(name:User_File_Name flags:[read])}
+                Contents = {User_File read(list:$ size:all)}
+                {User_File close}
+
+                New_Nber_HistoricFiles = {Get_Nber_HistoricFile} + 1
+                {Write_New_Nber_HistoricFile New_Nber_HistoricFiles}
+
+                % Get the name of the new file to create and open it
+                Name_File = {Function.append_List "user_historic/user_files/historic_part" {Function.append_List {Int.toString New_Nber_HistoricFiles} ".txt"}}
+                Historic_File = {New Open.file init(name:Name_File flags:[write create truncate])}
+                {Historic_File write(vs:Contents)}
+                {Historic_File close}
+                
+                % Send the new upated tree to a global port
+                {Send_NewTree_ToPort Name_File}
+            end
+        catch _ then {System.show 'Error when saving the file into the databse'} {Application.exit 0} end 
+    end
 
 
     %%%
@@ -79,12 +105,7 @@ define
             local New_Nber_HistoricFiles Historic_NberFiles_File Name_File Historic_File Contents in
 
                 New_Nber_HistoricFiles = {Get_Nber_HistoricFile} + 1
-
-                % Open the file where the number of historic files is stored
-                % And increment the number of historic files by 1
-                Historic_NberFiles_File = {New Open.file init(name:"user_historic/nber_historic_files.txt" flags:[write create truncate])}
-                {Historic_NberFiles_File write(vs:{Int.toString New_Nber_HistoricFiles})}
-                {Historic_NberFiles_File close}
+                {Write_New_Nber_HistoricFile New_Nber_HistoricFiles}
 
                 % Get the name of the new file to create and open it
                 Name_File = {Function.append_List "user_historic/user_files/historic_part" {Function.append_List {Int.toString New_Nber_HistoricFiles} ".txt"}}
@@ -92,12 +113,12 @@ define
                 Contents = {Variables.inputText get($)}
                 {Historic_File write(vs:Contents)}
                 {Historic_File close}
-
+                
                 % Send the new upated tree to a global port
                 {Send_NewTree_ToPort Name_File}
             end
 
-        catch _ then {System.show 'Error when saving the file into the database'} {Application.exit 0} end
+        catch _ then {System.show 'Error when saving the user text into the database'} {Application.exit 0} end
     end
 
 
@@ -116,6 +137,14 @@ define
         end
     end
 
+    proc {Write_New_Nber_HistoricFile New_Nber_HistoricFiles}
+        local Historic_NberFiles_File in
+            Historic_NberFiles_File = {New Open.file init(name:"user_historic/nber_historic_files.txt" flags:[write create truncate])}
+            {Historic_NberFiles_File write(vs:{Int.toString New_Nber_HistoricFiles})}
+            {Historic_NberFiles_File close}
+        end
+    end
+
 
     %%%%
     % Launch a thread to read and parse a file and
@@ -131,10 +160,12 @@ define
                 L=1
                 {Wait L} 
                 File_Parsed = {Parser.parses_AllLines LineToParsed}
-                {System.show File_Parsed}
                 P=1
+                {Wait P}
+                {System.show 'passe par la'}
                 NewTree = {Create_Updated_Tree {Function.get_Tree} File_Parsed}
                 % Send to the port the new update tree with the new datas
+                {System.show 'passe par la ici'}
                 {Send Variables.port_Tree NewTree}
             end
         end
@@ -170,35 +201,38 @@ define
             end
 
             % Variables usefull to clarrify the code
-            Updated_SubTree Current_List_Value
+            Updated_SubTree Current_List_Value Result Value_Key1
 
             %%%
             % Update one Subtree of the main tree's value.
             %%%
-            fun {Update_SubTree SubTree Key New_Value}
+            fun {Update_SubTree SubTree New_Value}
                 local 
                     fun {Update_SubTree_Aux SubTree Updated_SubTree}
                         case SubTree
-                        of leaf then Updated_SubTree
+                        of leaf then [Updated_SubTree false]
                         [] tree(key:Key value:Value_List t_left:TLeft t_right:TRight) then
 
-                            local T1 New_List_Value First_Updated_Tree ValueAtKeySupp in
+                            local New_List_Value First_Updated_Tree ValueAtKeySupp in
 
                                 if {Function.isInList Value_List New_Value} == false then
-                                    T1 = {Update_SubTree_Aux TLeft Updated_SubTree}
-                                    _ = {Update_SubTree_Aux TRight T1}
+                                    _ = {Update_SubTree_Aux TLeft Updated_SubTree}
+                                    _ = {Update_SubTree_Aux TRight Updated_SubTree}
                                 else
 
-                                    if {Length Value_List} == 1 then {Tree.insert_Key Updated_SubTree Key Key+1}
+                                    if {Length Value_List} == 1 then [{Tree.insert_Key Updated_SubTree Key Key+1} true]
                                     else
                                         New_List_Value = {RemoveElemOfList Value_List New_Value}
+
+                                        {System.show 'ok1'}
                                         First_Updated_Tree = {Tree.insert_Value Updated_SubTree Key New_List_Value}
+                                        {System.show 'ok2'}
 
                                         ValueAtKeySupp = {Tree.lookingUp First_Updated_Tree Key+1}
                                         if ValueAtKeySupp == notfound then
-                                            {Tree.insert_Value First_Updated_Tree Key+1 [New_Value]}
+                                            [{Tree.insert_Value First_Updated_Tree Key+1 [New_Value]} true]
                                         else
-                                            {Tree.insert_Value First_Updated_Tree Key+1 New_Value|ValueAtKeySupp}
+                                            [{Tree.insert_Value First_Updated_Tree Key+1 New_Value|ValueAtKeySupp} true]
                                         end
                                     end
                                 end
@@ -206,7 +240,14 @@ define
                         end
                     end
                 in
-                    {Update_SubTree_Aux SubTree SubTree}
+                    Result = {Update_SubTree_Aux SubTree SubTree}
+                    {System.show 'ok3'}
+                    if Result.2.1 == true then Result.1
+                    else
+                        Value_Key1 = {Tree.lookingUp SubTree 1}
+                        if Value_Key1 == notfound then {Tree.insert_Value SubTree 1 [New_Value]}
+                        else {Tree.insert_Value SubTree 1 New_Value|Value_Key1} end
+                    end
                 end
             end
     
@@ -214,23 +255,25 @@ define
             % Get the new subtree updated with the new datas added.
             % The key is an element of the n-gram and the value associated is the last word of the next element in the n-gram.
             %%%
-            fun {Deal_ListKeys New_Tree List_Keys}
+            fun {Deal_ListKeys Tree_To_Update List_Keys}
                 case List_Keys
-                of nil then New_Tree
-                [] _|nil then New_Tree
+                of nil then Tree_To_Update
+                [] _|nil then Tree_To_Update
                 [] H|T then
-                    local Key Value_to_Insert Tree_Value New_Tree_Value Updated_Tree in
+
+                    local Key Value_to_Insert New_Tree_Value Tree_Value Tree_To_Update Updated_Tree in
+
                         Key = {String.toAtom H}
                         Value_to_Insert = {String.toAtom {Reverse {Function.tokens_String T.1 32}}.1}
-                        Tree_Value = {Tree.lookingUp New_Tree Key}
-
+                        Tree_Value = {Tree.lookingUp Tree_To_Update Key}
+                        
                         if Tree_Value == notfound then
                             New_Tree_Value = {Tree.insert_Value leaf 1 [Value_to_Insert]}
                         else
-                            New_Tree_Value = {Update_SubTree Tree_Value Key Value_to_Insert}
+                            New_Tree_Value = {Update_SubTree Tree_Value Value_to_Insert}
                         end
 
-                        Updated_Tree = {Tree.insert_Value New_Tree Key New_Tree_Value}
+                        Updated_Tree = {Tree.insert_Value Tree_To_Update Key New_Tree_Value}
                         {Deal_ListKeys Updated_Tree T}
                     end
                 end
@@ -250,7 +293,6 @@ define
                     end
                 end
             end
-
         in
             {Create_Updated_Tree_Aux Main_Tree List_UserInput}
         end
