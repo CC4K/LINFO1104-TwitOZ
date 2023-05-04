@@ -24,7 +24,7 @@ run_all:
 	$(OZC) -c src/extensions/automatic_prediction.oz -o bin/extensions/automatic_prediction.ozf
 	$(OZC) -c src/extensions/interface_improved.oz -o bin/extensions/interface_improved.ozf
 	$(OZC) -c src/extensions/historic_user.oz -o bin/extensions/historic_user.ozf
-	$(OZC) -c src/extensions/n_Grams.oz -o bin/extensions/n_Grams.ozf
+	$(OZC) -c src/extensions/n_Grams.oz -o bin/extensions/n_grams.ozf
 	$(OZC) -c src/extensions/predict_All.oz -o bin/extensions/predict_All.ozf
 
 	$(OZC) -c main.oz -o bin/main.ozf
@@ -44,7 +44,7 @@ main.ozf :
 	$(OZC) -c src/extensions/automatic_prediction.oz -o bin/extensions/automatic_prediction.ozf
 	$(OZC) -c src/extensions/interface_improved.oz -o bin/extensions/interface_improved.ozf
 	$(OZC) -c src/extensions/historic_user.oz -o bin/extensions/historic_user.ozf
-	$(OZC) -c src/extensions/n_Grams.oz -o bin/extensions/n_Grams.ozf
+	$(OZC) -c src/extensions/n_Grams.oz -o bin/extensions/n_grams.ozf
 	$(OZC) -c src/extensions/predict_All.oz -o bin/extensions/predict_All.ozf
 
 	$(OZC) -c main.oz -o bin/main.ozf
