@@ -724,7 +724,7 @@ define
                 of leaf then [TotalFreq MaxFreq ListWord]
                 [] tree(key:Key value:Value t_left:TLeft t_right:TRight) then
                     local T1 in
-                        T1 = {TraverseToGetProbability_Aux TLeft ({Length Value}*Key)+TotalFreq Key Value}
+                        T1 = {TraverseToGetProbability_Aux TLeft TotalFreq MaxFreq ListWord}
                         _ = {TraverseToGetProbability_Aux TRight ({Length Value}*Key)+T1.1 Key Value}
                     end
                 end
@@ -733,7 +733,7 @@ define
             if Tree == leaf then [[nil] 0.0]
             else
                 List = {TraverseToGetProbability_Aux Tree 0 0 nil}
-                TotalFreq = List.1 div 2
+                TotalFreq = List.1
                 MaxFreq = List.2.1
                 List_Word = List.2.2.1
                 Probability = {Int.toFloat MaxFreq} / {Int.toFloat TotalFreq}
@@ -741,6 +741,40 @@ define
             end
         end
     end
+
+
+    % fun {Get_Result_Prediction Tree Prefix_Value}
+    %     local
+    %         % Usefull variables to make it easier to understand the code
+    %         List_Result Total_Frequency Max_Frequency List_Words Probability
+
+    %         fun {Get_Result_Prediction_Aux Tree Total_Freq Max_Freq List_Words}
+    %             case Tree
+    %             of leaf then [Total_Freq Max_Freq List_Words]
+    %             [] tree(key:Key value:Value t_left:TLeft t_right:TRight) then
+    %                 local NewList_Value T1 in
+    %                     if Prefix_Value == none then
+    %                         T1 = {Get_Result_Prediction_Aux TLeft Total_Freq Max_Freq List_Words}
+    %                         _ = {Get_Result_Prediction_Aux TRight ({Length Value} * Key)+T1.1 Key Value}
+    %                     else
+    %                         T1 = {Get_Result_Prediction_Aux TLeft Total_Freq Max_Freq List_Words} % NewList_Value
+
+    %                         NewList_Value = {GetNewListValue Value Prefix_Value}
+    %                         if NewList_Value == nil then _ = {Get_Result_Prediction_Aux TRight ({Length Value} * Key)+Total_Freq Max_Freq List_Words}
+    %                         else _ = {Get_Result_Prediction_Aux TRight ({Length Value} * Key)+T1.1 Key NewList_Value} end
+    %                     end
+    %                 end
+    %             end
+    %         end
+    %     in
+    %         List_Result = {Get_Result_Prediction_Aux Tree 0 0 nil}
+    %         Total_Frequency = List_Result.1
+    %         Max_Frequency = List_Result.2.1
+    %         List_Words = List_Result.2.2.1
+    %         Probability = {Int.toFloat Max_Frequency} / {Int.toFloat Total_Frequency}
+    %         [List_Words Probability Max_Frequency] % Return all the necessary information that we need in {Press}
+    %     end
+    % end
 
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
