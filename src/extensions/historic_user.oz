@@ -17,11 +17,6 @@ export
     SaveText_Database
     Send_NewTree_ToPort
     Create_Updated_Tree
-    Create_Updated_Tree_Aux
-    Update_SubTree
-    Get_List_Value
-    AddElemToList_InTree
-    RemoveElemOfList
     Clean_UserHistoric
     Delete_HistoricFiles
     Get_Nber_HistoricFile
@@ -35,221 +30,14 @@ define
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
-    %%%
-    % Saves an input text from the app window as a text file into the database.
-    % The datas will be therefore be used for the next prediction.
-    % @param: /
-    % @return: /
-    %%%
-    proc {SaveText_Database}
 
-        % Name folder to stock the historic of user
-        PathHistoricFile = "user_historic/user_files/historic_part"
-    in
-        try
-            % Open the file where the number of historic files is stored
-            Historic_NberFiles_File_Reading = {New Open.file init(name:"user_historic/nber_historic_files.txt" flags:[read])}
-
-            % Read this file to get the number of historic files incremented of 1
-            Nber_HistoricFiles = {String.toInt {Historic_NberFiles_File_Reading read(list:$ size:all)}} + 1
-
-            {Historic_NberFiles_File_Reading close}
-
-            Historic_NberFiles_File_Writing = {New Open.file init(name:"user_historic/nber_historic_files.txt" flags:[write create truncate])}
-
-            % Write the new number of historic files in the file
-            {Historic_NberFiles_File_Writing write(vs:{Int.toString Nber_HistoricFiles})}
-
-            % Get the name of the new file to create
-            Name_File = {Function.append_List PathHistoricFile {Function.append_List {Int.toString Nber_HistoricFiles} ".txt"}}
-
-            % Open the file
-            Historic_File = {New Open.file init(name:Name_File flags:[write create truncate])}
-
-            % Get the contents of the user
-            Contents = {Variables.inputText get($)}
-        in
-            % Close the file where the number of historic files is stored
-            {Historic_NberFiles_File_Writing close}
-
-            % Write the datas in the file to save them for the next usage
-            {Historic_File write(vs:Contents)}
-
-            % Close the file where the user historic datas are stored
-            {Historic_File close}
-
-            % Send the new tree to the port
-            {Send_NewTree_ToPort Name_File}
-        catch _ then {System.show 'Error when saving the file into the database'} {Application.exit 0} end
-    end
-
-
-    %%%% TODO %%%%
-    proc {Send_NewTree_ToPort Name_File}
-        local NewTree LineToParsed File_Parsed L P in
-            thread _ =
-                LineToParsed = {Reader.read Name_File}
-                L=1
-                {Wait L} 
-                File_Parsed = {Parser.parses_AllLines LineToParsed}
-                P=1
-                {Wait P}
-                NewTree = {Create_Updated_Tree {Function.get_Tree} File_Parsed}
-                % Send to the port the new update tree with the new datas
-                {Send Variables.port_Tree NewTree}
-            end
-        end
-    end
-
-    
-    %%%
-    % Adds the datas of a text to the main tree.
+    %%%%
+    % Launches a thread for evry historic files of the user.
+    % This function is called at the beginning of the program.
     %
-    % @param Tree: The tree to which we want to add the datas
-    % @param TextUserInput: The user text from which we want to add the datas
-    % @return: The new main tree updated with the new datas added
-    %%%
-    fun {Create_Updated_Tree Main_Tree List_UserInput}
-        case List_UserInput
-        of nil then Main_Tree
-        [] H|T then
-            {Create_Updated_Tree {Create_Updated_Tree_Aux Main_Tree {N_Grams.n_Grams {Function.tokens_String H 32}}} T}
-        end
-    end
-
-
-     %%%% TODO %%%%
-    fun {Create_Updated_Tree_Aux New_Tree List_Keys}
-        local
-            %%%
-            % Changes the value with a new specified one at the location of a specified key in a binary tree
-            %%%
-            fun {Update_Value New_Tree Key List_Keys}
-                local Value_to_Insert Tree_Value New_Tree_Value in
-                    Value_to_Insert = {String.toAtom {Reverse {Function.tokens_String List_Keys.1 32}}.1}
-                    Tree_Value = {Tree.lookingUp New_Tree Key}
-                    New_Tree_Value = {Update_SubTree Tree_Value Key Value_to_Insert}
-                    {Tree.insert_Value New_Tree Key New_Tree_Value}
-                end
-            end
-        in
-            case List_Keys
-            of nil then New_Tree
-            [] _|nil then New_Tree
-            [] H|T then
-                {Create_Updated_Tree_Aux {Update_Value New_Tree {String.toAtom H} T} T}
-            end
-        end
-    end
-
-
-    %%%% TODO %%%%
-    fun {Update_SubTree SubTree Key NewValue}
-        if SubTree == notfound then {Tree.insert_Value leaf 1 [NewValue]}
-        else
-            local Updated_SubTree List_Value in
-                Updated_SubTree = {Get_List_Value SubTree NewValue}
-                if SubTree == Updated_SubTree then
-                    List_Value = {Tree.lookingUp SubTree 1}
-                    if List_Value == notfound then {Tree.insert_Value SubTree 1 [NewValue]}
-                    else {Tree.insert_Value SubTree 1 NewValue|List_Value} end
-                else
-                    Updated_SubTree
-                end
-            end
-        end
-    end
-
-
-     %%%% TODO %%%%
-    fun {Get_List_Value SubTree Value_Word}
-        local
-            fun {Get_List_Value_Aux SubTree Updated_SubTree}
-                case SubTree
-                of leaf then Updated_SubTree
-                [] tree(key:Key value:Value_List t_left:TLeft t_right:TRight) then
-                    local T1 New_List_Value Length_Value_List in
-                        if {Function.isInList Value_List Value_Word} == true then
-                            Length_Value_List = {Length Value_List}
-                            if Length_Value_List == 1 then {Tree.insert_Key Updated_SubTree Key Key+1}
-                            else
-                                New_List_Value = {RemoveElemOfList Value_List Value_Word}
-                                if Length_Value_List == {Length New_List_Value} then {AddElemToList_InTree Updated_SubTree Key+1 Value_Word}
-                                else {AddElemToList_InTree {Tree.insert_Value Updated_SubTree Key New_List_Value} Key+1 Value_Word} end
-                            end
-                        else
-                            T1 = {Get_List_Value_Aux TLeft Updated_SubTree}
-                            _ = {Get_List_Value_Aux TRight T1}
-                        end
-                    end
-                end
-            end
-        in
-            {Get_List_Value_Aux SubTree SubTree}
-        end
-    end
-
-
-     %%%% TODO %%%%
-    fun {AddElemToList_InTree SubTree Key Word_Value}
-        local Value_List in
-            Value_List = {Tree.lookingUp SubTree Key}
-            if Value_List == notfound then {Tree.insert_Value SubTree Key [Word_Value]}
-            else {Tree.insert_Value SubTree Key Word_Value|Value_List} end
-        end
-    end
-
-
-     %%%% TODO %%%%
-    fun {RemoveElemOfList Value_List Value_Word}
-        local
-            fun {RemoveElemOfList_Aux Value_List New_Value_List}
-                case Value_List
-                of nil then New_Value_List
-                [] H|T then
-                    if H == Value_Word then {Function.append_List New_Value_List T}
-                    else {RemoveElemOfList_Aux T H|New_Value_List} end
-                end
-            end
-        in
-            {RemoveElemOfList_Aux Value_List nil}
-        end
-    end
-
-
-     %%%% TODO %%%%
-    proc {Clean_UserHistoric}
-        local Historic_NberFiles_File in
-            % Open the file where the number of historic files is stored and reset it to 0
-            Historic_NberFiles_File = {New Open.file init(name:"user_historic/nber_historic_files.txt" flags:[write])}
-            {Historic_NberFiles_File write(vs:{Int.toString 0})}
-            {Historic_NberFiles_File close}
-
-            % Delete all the historic files
-            {Delete_HistoricFiles}
-        end
-    end
-
-
-    %%%% TODO %%%%
-    proc {Delete_HistoricFiles}
-        {OS.pipe make "clean_user_historic"|nil _ _}
-    end
-
-
-
-     %%%% TODO %%%%
-    fun {Get_Nber_HistoricFile}
-        local Historic_NberFiles_File Nber_HistoricFiles in
-            Historic_NberFiles_File = {New Open.file init(name:"user_historic/nber_historic_files.txt" flags:[read])}
-            Nber_HistoricFiles = {String.toInt {Historic_NberFiles_File read(list:$ size:all)}}
-            {Historic_NberFiles_File close}
-            Nber_HistoricFiles
-        end
-    end
-
-     
-    %%%% TODO %%%%
+    % @param: /
+    % @return: a list of waiting threads numbers
+    %%%%
     fun {LaunchThreads_HistoricUser}
         local
             fun {LaunchThreads_HistoricUser_Aux Id_Thread List_Waiting_Threads}
@@ -273,6 +61,232 @@ define
         in
             {LaunchThreads_HistoricUser_Aux 1 nil}
         end
+    end
+
+
+
+
+    %%%
+    % Saves an input text from the app window as a text file into the database (historic user).
+    % The datas will be directly therefore be used for the next prediction.
+    % When the user will close the app, the datas won't be deleted.
+    %
+    % @param: /
+    % @return: /
+    %%%
+    proc {SaveText_Database}
+        try
+            local New_Nber_HistoricFiles Historic_NberFiles_File Name_File Historic_File Contents in
+
+                New_Nber_HistoricFiles = {Get_Nber_HistoricFile} + 1
+
+                % Open the file where the number of historic files is stored
+                % And increment the number of historic files by 1
+                Historic_NberFiles_File = {New Open.file init(name:"user_historic/nber_historic_files.txt" flags:[write create truncate])}
+                {Historic_NberFiles_File write(vs:{Int.toString New_Nber_HistoricFiles})}
+                {Historic_NberFiles_File close}
+
+                % Get the name of the new file to create and open it
+                Name_File = {Function.append_List "user_historic/user_files/historic_part" {Function.append_List {Int.toString New_Nber_HistoricFiles} ".txt"}}
+                Historic_File = {New Open.file init(name:Name_File flags:[write create truncate])}
+                Contents = {Variables.inputText get($)}
+                {Historic_File write(vs:Contents)}
+                {Historic_File close}
+
+                % Send the new upated tree to a global port
+                {Send_NewTree_ToPort Name_File}
+            end
+
+        catch _ then {System.show 'Error when saving the file into the database'} {Application.exit 0} end
+    end
+
+
+    %%%%
+    % Get the number of current historic files.
+    %
+    % @param: /
+    % @return: The number of current historic files
+    %%%%
+    fun {Get_Nber_HistoricFile}
+        local Historic_NberFiles_File Nber_HistoricFiles in
+            Historic_NberFiles_File = {New Open.file init(name:"user_historic/nber_historic_files.txt" flags:[read])}
+            Nber_HistoricFiles = {String.toInt {Historic_NberFiles_File read(list:$ size:all)}}
+            {Historic_NberFiles_File close}
+            Nber_HistoricFiles
+        end
+    end
+
+
+    %%%%
+    % Launch a thread to read and parse a file and
+    % send the new updated tree to a global port.
+    %
+    % @param Name_File: The name of the file to read and parses
+    % @return: /
+    %%%%
+    proc {Send_NewTree_ToPort Name_File}
+        local NewTree LineToParsed File_Parsed L P in
+            thread _ =
+                LineToParsed = {Reader.read Name_File}
+                L=1
+                {Wait L} 
+                File_Parsed = {Parser.parses_AllLines LineToParsed}
+                {System.show File_Parsed}
+                P=1
+                NewTree = {Create_Updated_Tree {Function.get_Tree} File_Parsed}
+                % Send to the port the new update tree with the new datas
+                {Send Variables.port_Tree NewTree}
+            end
+        end
+    end
+
+    
+    %%%
+    % Create the new updated tree with the new datas added.
+    %
+    % @param Main_Tree: The tree to which we want to add the datas
+    % @param List_UserInput: The user text parsed
+    % @return: The new main tree updated with the new datas added
+    %%%
+    fun {Create_Updated_Tree Main_Tree List_UserInput}
+        local
+
+            %%%
+            % Remove an element from a list.
+            %%%
+            fun {RemoveElemOfList Value_List Value_To_Remove}
+                local
+                    fun {RemoveElemOfList_Aux Value_List New_Value_List}
+                        case Value_List
+                        of nil then New_Value_List
+                        [] H|T then
+                            if H == Value_To_Remove then {Function.append_List New_Value_List T}
+                            else {RemoveElemOfList_Aux T H|New_Value_List} end
+                        end
+                    end
+                in
+                    {RemoveElemOfList_Aux Value_List nil}
+                end
+            end
+
+            % Variables usefull to clarrify the code
+            Updated_SubTree Current_List_Value
+
+            %%%
+            % Update one Subtree of the main tree's value.
+            %%%
+            fun {Update_SubTree SubTree Key New_Value}
+                local 
+                    fun {Update_SubTree_Aux SubTree Updated_SubTree}
+                        case SubTree
+                        of leaf then Updated_SubTree
+                        [] tree(key:Key value:Value_List t_left:TLeft t_right:TRight) then
+
+                            local T1 New_List_Value First_Updated_Tree ValueAtKeySupp in
+
+                                if {Function.isInList Value_List New_Value} == false then
+                                    T1 = {Update_SubTree_Aux TLeft Updated_SubTree}
+                                    _ = {Update_SubTree_Aux TRight T1}
+                                else
+
+                                    if {Length Value_List} == 1 then {Tree.insert_Key Updated_SubTree Key Key+1}
+                                    else
+                                        New_List_Value = {RemoveElemOfList Value_List New_Value}
+                                        First_Updated_Tree = {Tree.insert_Value Updated_SubTree Key New_List_Value}
+
+                                        ValueAtKeySupp = {Tree.lookingUp First_Updated_Tree Key+1}
+                                        if ValueAtKeySupp == notfound then
+                                            {Tree.insert_Value First_Updated_Tree Key+1 [New_Value]}
+                                        else
+                                            {Tree.insert_Value First_Updated_Tree Key+1 New_Value|ValueAtKeySupp}
+                                        end
+                                    end
+                                end
+                            end
+                        end
+                    end
+                in
+                    {Update_SubTree_Aux SubTree SubTree}
+                end
+            end
+    
+            %%%
+            % Get the new subtree updated with the new datas added.
+            % The key is an element of the n-gram and the value associated is the last word of the next element in the n-gram.
+            %%%
+            fun {Deal_ListKeys New_Tree List_Keys}
+                case List_Keys
+                of nil then New_Tree
+                [] _|nil then New_Tree
+                [] H|T then
+                    local Key Value_to_Insert Tree_Value New_Tree_Value Updated_Tree in
+                        Key = {String.toAtom H}
+                        Value_to_Insert = {String.toAtom {Reverse {Function.tokens_String T.1 32}}.1}
+                        Tree_Value = {Tree.lookingUp New_Tree Key}
+
+                        if Tree_Value == notfound then
+                            New_Tree_Value = {Tree.insert_Value leaf 1 [Value_to_Insert]}
+                        else
+                            New_Tree_Value = {Update_SubTree Tree_Value Key Value_to_Insert}
+                        end
+
+                        Updated_Tree = {Tree.insert_Value New_Tree Key New_Tree_Value}
+                        {Deal_ListKeys Updated_Tree T}
+                    end
+                end
+            end
+
+            %%%
+            % Create the new updated tree with the new datas added.
+            %%%
+            fun {Create_Updated_Tree_Aux Main_Tree List_UserInput}
+                case List_UserInput
+                of nil then Main_Tree
+                [] H|T then
+                    local List_Keys_N_Grams Updated_Tree in
+                        List_Keys_N_Grams = {N_Grams.n_Grams {Function.tokens_String H 32}}
+                        Updated_Tree = {Deal_ListKeys Main_Tree List_Keys_N_Grams}
+                        {Create_Updated_Tree_Aux Updated_Tree T}
+                    end
+                end
+            end
+
+        in
+            {Create_Updated_Tree_Aux Main_Tree List_UserInput}
+        end
+    end
+
+
+
+    %%%%
+    % Clean the historic of the user.
+    % Delete all the files of the historic and reset the number of historic files to 0.
+    %
+    % @param: /
+    % @return: /
+    %%%%
+    proc {Clean_UserHistoric}
+        local Historic_NberFiles_File in
+            % Open the file where the number of historic files is stored and reset it to 0
+            Historic_NberFiles_File = {New Open.file init(name:"user_historic/nber_historic_files.txt" flags:[write])}
+            {Historic_NberFiles_File write(vs:{Int.toString 0})}
+            {Historic_NberFiles_File close}
+
+            % Delete all the historic files
+            {Delete_HistoricFiles}
+        end
+    end
+
+
+    %%%%
+    % Delete all the historic files.
+    % To do it, we use a pipe to execute a shell command in the MakFile.
+    %
+    % @param: /
+    % @return: /
+    %%%%
+    proc {Delete_HistoricFiles}
+        {OS.pipe make "clean_user_historic"|nil _ _}
     end
 
 end
