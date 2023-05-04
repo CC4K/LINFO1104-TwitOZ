@@ -253,16 +253,6 @@ define
         end
     end
 
-    fun {Split_List List List_Delimiter}
-        local 
-            fun {Split_List_Aux List NewList}
-            end
-        in
-            if Idx == 0 then List
-            else {Split_List_Aux List nil} end
-        end
-    end
-
 
     %%%
     % Concatenates the elements of a list into a string using a delimiter

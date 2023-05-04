@@ -28,23 +28,27 @@ define
     % @param Frequency: The frequency of the word(s)
     % @param Probability: The probability of the word(s)
     % @return: /
-    proc {ProposeAllTheWords List_MostProbableWords Frequency Probability}
+    fun {ProposeAllTheWords List_MostProbableWords Frequency Probability Corr_auto}
         local
-            proc {ProposeAllTheWords_Aux List_MostProbableWords LastPos}
+            Str_Line
+            fun {ProposeAllTheWords_Aux List_MostProbableWords String_Associated}
                 case List_MostProbableWords
-                of nil then {Interface.insertText_Window Variables.outputText 1 LastPos none " ]\n"}
+                of nil then {Function.append_List String_Associated " ]\n"}
                 [] H|T then
-                    {Interface.insertText_Window Variables.outputText 1 LastPos none 32|{Atom.toString H}}
-                    {ProposeAllTheWords_Aux T LastPos+1+{Length {Atom.toString H}}}
+                    {ProposeAllTheWords_Aux T {Function.append_List String_Associated 32|{Atom.toString H}}}
                 end
             end
         in
-
             {Interface.setText_Window Variables.outputText ""}
-            {Interface.setText_Window Variables.outputText "The most probable word(s) : ["}
-            {ProposeAllTheWords_Aux List_MostProbableWords 30}
-            {DisplayFreq_And_Probability 2 Frequency Probability}
-            {Automatic_Prediction.stockResultsInFile List_MostProbableWords Frequency Probability}
+        
+            Str_Line = {ProposeAllTheWords_Aux List_MostProbableWords "The most probable word(s) : ["}
+
+            if Corr_auto == false then
+                {Interface.insertText_Window Variables.outputText 0 0 none Str_Line}
+                {DisplayFreq_And_Probability 2 Frequency Probability}
+                {Automatic_Prediction.stockResultsInFile List_MostProbableWords Frequency Probability}
+                Str_Line
+            else Str_Line end
         end
     end
 

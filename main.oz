@@ -77,7 +77,7 @@ define
                             [[nil] 0] % => no words found
                         else
                             % Display to the window the most probable word(s) and the highest probability/frequency
-                            {Predict_All.proposeAllTheWords ProbableWords Frequency Probability}
+                            _ = {Predict_All.proposeAllTheWords ProbableWords Frequency Probability false}
 
                             % Return the most probable word(s) and the highest probability/frequency
                             [ProbableWords Probability]

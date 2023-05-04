@@ -125,7 +125,7 @@ define
                         {Interface.insertText_Window Variables.outputText 1 0 none {Append "Need at least " {Append {Int.toString Variables.idx_N_Grams} " words to predict the next one."}}}
                         {StockResultsInFile none 0 0.0}
 
-                    else {Predict_All.proposeAllTheWords ProbableWords Frequency Probability} end
+                    else _ = {Predict_All.proposeAllTheWords ProbableWords Frequency Probability false} end
                     {Time.delay Time_Delay}
                     {Automatic_Prediction Time_Delay}
                 end
