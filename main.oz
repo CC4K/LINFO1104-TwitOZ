@@ -111,7 +111,7 @@ define
         local
             Basic_Nber_Iter = Variables.nberFiles div N
             Rest_Nber_Iter = Variables.nberFiles mod N
-            List_Waiting_Threads
+            List_Waiting_Threads_1
             List_Waiting_Threads_2
 
             %%%
@@ -176,7 +176,7 @@ define
                         end
         
                         End = Start + Current_Nber_Iter1 - 1
-                        {Launch_AllThreads {Launch_OneThread Start End nil} Nber_Threads-1}
+                        {Launch_AllThreads {Function.append_List {Launch_OneThread Start End nil} List_Waiting_Threads} Nber_Threads-1}
                     end
                 end
 
@@ -187,15 +187,19 @@ define
             % The parsing files are stocked in the Port
             % The variables to Wait all the threads are stocked in List_Waiting_Threads
 
-            thread _ = List_Waiting_Threads = {Launch_AllThreads nil N} end
+            thread _ =
+                List_Waiting_Threads_1 = {Launch_AllThreads nil N}
+            end
 
             % To also parse the historic user files (Extension)
-            thread _ = List_Waiting_Threads_2 = {Historic_user.launchThreads_HistoricUser} end
+            thread _ =
+                List_Waiting_Threads_2 = {Historic_user.launchThreads_HistoricUser}
+            end
             
             % Wait for all the threads
             % When a thread have finished, the value P associated to this thread
             % is bind and the program can move on 
-            {ForAll {Function.append_List List_Waiting_Threads List_Waiting_Threads_2} proc {$ P} {Wait P} end}
+            {ForAll {Function.append_List List_Waiting_Threads_1 List_Waiting_Threads_2} proc {$ P} {Wait P} end}
         end
     end
 
@@ -249,17 +253,17 @@ define
         {Interface.insertText_Window Variables.outputText 0 0 'end' "You must wait until the database is parsed.\nA message will notify you.\nDon't press the 'predict' button until the message appears!\n"}
 
         % Launch all threads to reads and parses the files
-        % {LaunchThreads Variables.separatedWordsPort Variables.nbThreads}
+        {LaunchThreads Variables.separatedWordsPort Variables.nbThreads}
 
         % With this we don't have problem => Problem with threads !
-        for X in 1..209 do
-            local File LineToParsed File_Parsed in
-                File = {Reader.getFilename X}
-                LineToParsed = {Reader.read File}
-                File_Parsed = {Parser.parses_AllLines LineToParsed}
-                {Send Variables.separatedWordsPort File_Parsed}
-            end
-        end
+        % for X in 1..209 do
+        %     local File LineToParsed File_Parsed in
+        %         File = {Reader.getFilename X}
+        %         LineToParsed = {Reader.read File}
+        %         File_Parsed = {Parser.parses_AllLines LineToParsed}
+        %         {Send Variables.separatedWordsPort File_Parsed}
+        %     end
+        % end
 
         % We retrieve the information (parsed lines of the files) from the port's stream
         local List_Line_Parsed Main_Tree in
