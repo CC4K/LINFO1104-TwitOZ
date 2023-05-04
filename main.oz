@@ -255,16 +255,6 @@ define
         % Launch all threads to reads and parses the files
         {LaunchThreads Variables.separatedWordsPort Variables.nbThreads}
 
-        % With this we don't have problem => Problem with threads !
-        % for X in 1..209 do
-        %     local File LineToParsed File_Parsed in
-        %         File = {Reader.getFilename X}
-        %         LineToParsed = {Reader.read File}
-        %         File_Parsed = {Parser.parses_AllLines LineToParsed}
-        %         {Send Variables.separatedWordsPort File_Parsed}
-        %     end
-        % end
-
         % We retrieve the information (parsed lines of the files) from the port's stream
         local List_Line_Parsed Main_Tree in
             {Send Variables.separatedWordsPort nil}
@@ -295,9 +285,9 @@ define
             {Interface.setText_Window Variables.inputText ""}
         end
         
-        % Launch one thread that will predict the next word every 0.5sec
+        % Launch one thread that will predict the next word every 1sec
         % => The user can write and the words will be predicted at the same time!
-        % thread {Automatic_prediction.automatic_Prediction 500} end
+        thread {Automatic_prediction.automatic_Prediction 1000} end
 
         %%ENDOFCODE%%
     end

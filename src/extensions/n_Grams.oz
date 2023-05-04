@@ -11,11 +11,7 @@ import
 export
     N_Grams
 define
-
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    %%%%%%%%%%%%%%%% ====== SECOND EXTENSION ====== %%%%%%%%%%%%%%%%%%%%%
-    %%%%%%%%%%% N-GRAMME IMPLEMENTATION (GENERAL => FOR ALL N) %%%%%%%%%%
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    
 
     %%%
     % Return the list of all the n-grams of the text.
