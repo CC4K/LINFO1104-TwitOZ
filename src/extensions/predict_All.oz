@@ -39,14 +39,12 @@ define
                 end
             end
         in
-            if {Automatic_Prediction.checkIfSamePrediction List_MostProbableWords Frequency Probability} == true then skip
-            else
-                {Interface.setText_Window Variables.outputText ""}
-                {Interface.setText_Window Variables.outputText "The most probable word(s) : ["}
-                {ProposeAllTheWords_Aux List_MostProbableWords 30}
-                {DisplayFreq_And_Probability 2 Frequency Probability}
-                {Automatic_Prediction.stockResultsInFile List_MostProbableWords Frequency Probability}
-            end
+
+            {Interface.setText_Window Variables.outputText ""}
+            {Interface.setText_Window Variables.outputText "The most probable word(s) : ["}
+            {ProposeAllTheWords_Aux List_MostProbableWords 30}
+            {DisplayFreq_And_Probability 2 Frequency Probability}
+            {Automatic_Prediction.stockResultsInFile List_MostProbableWords Frequency Probability}
         end
     end
 

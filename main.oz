@@ -228,6 +228,8 @@ define
     %%%
     proc {Main}
 
+        {Automatic_prediction.reset_LastPrediction_File}
+
         % Initialization of the global variables used in the program
         Variables.nber_HistoricFiles = {Historic_user.get_Nber_HistoricFile}
         Variables.idx_N_Grams = 2     
@@ -284,6 +286,10 @@ define
             % Remove all because the user add some texts between or before the line : "Loading... Please wait."
             {Interface.setText_Window Variables.inputText ""}
         end
+
+        % To see the message "The database is now parsed.\nYou can write and predict!" at the beginning of the program
+        % during 1.5 second.
+        {Time.delay 1500}
         
         % Launch one thread that will predict the next word every 0.5sec
         % => The user can write and the words will be predicted at the same time!

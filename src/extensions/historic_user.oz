@@ -155,10 +155,8 @@ define
                 File_Parsed = {Parser.parses_AllLines LineToParsed}
                 P=1
                 {Wait P}
-                {System.show 'passe par la'}
                 NewTree = {Create_Updated_Tree {Function.get_Tree} File_Parsed}
                 % Send to the port the new update tree with the new datas
-                {System.show 'passe par la ici'}
                 {Send Variables.port_Tree NewTree}
             end
         end

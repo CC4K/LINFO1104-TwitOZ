@@ -16,8 +16,8 @@ export
     Automatic_Prediction
     CheckIfSamePrediction
     StockResultsInFile
+    Reset_LastPrediction_File
 define
-
 
     %%%
     % Automatic_Prediction
@@ -115,8 +115,16 @@ define
                     {Time.delay Time_Delay}
                     {Automatic_Prediction Time_Delay}
                 else
-                    if ProbableWords == nil then {Interface.insertText_Window Variables.outputText 1 0 none "Words not found."}
-                    elseif ProbableWords == none then {Interface.insertText_Window Variables.outputText 1 0 none {Append "Need at least " {Append {Int.toString Variables.idx_N_Grams} " words to predict the next one."}}}
+                    if ProbableWords == nil then
+                        {Interface.setText_Window Variables.outputText ""}
+                        {Interface.insertText_Window Variables.outputText 1 0 none "Words not found."}
+                        {StockResultsInFile nil 0 0.0}
+
+                    elseif ProbableWords == none then
+                        {Interface.setText_Window Variables.outputText ""}
+                        {Interface.insertText_Window Variables.outputText 1 0 none {Append "Need at least " {Append {Int.toString Variables.idx_N_Grams} " words to predict the next one."}}}
+                        {StockResultsInFile none 0 0.0}
+
                     else {Predict_All.proposeAllTheWords ProbableWords Frequency Probability} end
                     {Time.delay Time_Delay}
                     {Automatic_Prediction Time_Delay}
@@ -137,7 +145,15 @@ define
                 {Path_LastPrediction_File write(vs:Str_Prediction)}
                 {Path_LastPrediction_File close}
             end
-        catch _ then {System.show 'Error in StockResultsInFile function'} {Application.exit 0} end
+        catch _ then {System.show 'Error in StockResultsInFile function'} {Reset_LastPrediction_File} {Application.exit 0} end
+    end
+
+    proc {Reset_LastPrediction_File}
+        local Path_LastPrediction_File in
+            Path_LastPrediction_File = {New Open.file init(name:"user_historic/last_prediction.txt" flags:[write create truncate])}
+            {Path_LastPrediction_File write(vs:"")} 
+            {Path_LastPrediction_File close}
+        end
     end
 
     %%%
@@ -145,33 +161,57 @@ define
     %%%
     fun {CheckIfSamePrediction ProbableWords Frequency Probability}
         try
-            local Path_LastPrediction_File Last_List_Prediction Max_Error Abs_Diff_Probability List_Words in
+            local Path_LastPrediction_File Last_List_Prediction Max_Error Abs_Diff_Probability List_Words Str_Prediction in
                 
                 Path_LastPrediction_File = {New Open.file init(name:"user_historic/last_prediction.txt" flags:[read])}
-                Last_List_Prediction = {Function.tokens_String {Path_LastPrediction_File read(list:$ size:all)} 32}
 
+                Str_Prediction = {Path_LastPrediction_File read(list:$ size:all)}
 
-                Max_Error = 0.000001
-                Abs_Diff_Probability = {Number.abs ~Probability+{String.toFloat Last_List_Prediction.1}}
-
-                % Compare if it's the same
-                if Frequency == {String.toInt Last_List_Prediction.2.1} andthen Abs_Diff_Probability < Max_Error then
-
-                    List_Words  = {Map Last_List_Prediction.2.2 fun {$ X} {String.toAtom X} end}
-
-                    if ProbableWords == none andthen Last_List_Prediction.1 == "none" then
+                if Str_Prediction == "0.0 0 none" then
+                    if ProbableWords == none then
                         {Path_LastPrediction_File close}
                         true
-                    elseif {Length List_Words} == {Length ProbableWords} then
+                    else
                         {Path_LastPrediction_File close}
-                        {CompareList List_Words ProbableWords}
+                        false
+                    end
+                elseif Str_Prediction == "0.0 0 nil" then
+                    if ProbableWords == nil then
+                        {Path_LastPrediction_File close}
+                        true
                     else
                         {Path_LastPrediction_File close}
                         false
                     end
                 else
-                    {Path_LastPrediction_File close}
-                    false
+                    % If the file is empty (= first prediction)
+                    if Str_Prediction == "" then false
+                    else
+                        Last_List_Prediction = {Function.tokens_String Str_Prediction 32}
+
+                        Max_Error = 0.000001
+                        Abs_Diff_Probability = {Number.abs ~Probability+{String.toFloat Last_List_Prediction.1}}
+
+                        % Compare if it's the same
+                        if Frequency == {String.toInt Last_List_Prediction.2.1} andthen Abs_Diff_Probability < Max_Error then
+
+                            List_Words  = {Map Last_List_Prediction.2.2 fun {$ X} {String.toAtom X} end}
+
+                            if ProbableWords == none andthen Last_List_Prediction.1 == "none" then
+                                {Path_LastPrediction_File close}
+                                true
+                            elseif {Length List_Words} == {Length ProbableWords} then
+                                {Path_LastPrediction_File close}
+                                {CompareList List_Words ProbableWords}
+                            else
+                                {Path_LastPrediction_File close}
+                                false
+                            end
+                        else
+                            {Path_LastPrediction_File close}
+                            false
+                        end
+                    end
                 end
             end
         catch _ then {System.show 'Error in CheckIfSamePrediction function'} {Application.exit 0} none end
@@ -190,7 +230,10 @@ define
                 end
             end
         in
-            {Function.concatenateElemOfList {Reverse {CreateList_Prediction_Aux ProbableWords [{Int.toString Frequency} {Float.toString Probability}]}} 32}
+            if ProbableWords == none then "0.0 0 none"
+            elseif ProbableWords == nil then "0.0 0 nil"
+            else {Function.concatenateElemOfList {Reverse {CreateList_Prediction_Aux ProbableWords [{Int.toString Frequency} {Float.toString Probability}]}} 32}
+            end
         end
     end
 
