@@ -20,7 +20,8 @@ define
     %% Il faudra aussi stoper le Thread qui predis automatiquement! %%
     proc {CorrectionSentences Word_User}
         local List_Keys in
-            List_Keys = {Get_List_All_N_Words_Before Word_User}
+            Word_User_Parsed = {Parser.cleaningUserInput Word_User}
+            List_Keys = {Get_List_All_N_Words_Before Word_User_Parsed}
             {DisplayResults List_Keys}
         end
     end
