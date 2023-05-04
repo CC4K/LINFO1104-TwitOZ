@@ -347,11 +347,14 @@ define
                             T1 = {Get_Result_Prediction_Aux TLeft Total_Freq Max_Freq List_Words}
                             _ = {Get_Result_Prediction_Aux TRight ({Length Value} * Key)+T1.1 Key Value}
                         else
-                            T1 = {Get_Result_Prediction_Aux TLeft Total_Freq Max_Freq List_Words} % NewList_Value
+                            T1 = {Get_Result_Prediction_Aux TLeft Total_Freq Max_Freq List_Words}
 
                             NewList_Value = {GetNewListValue Value Prefix_Value}
-                            if NewList_Value == nil then _ = {Get_Result_Prediction_Aux TRight ({Length Value} * Key)+Total_Freq Max_Freq List_Words}
-                            else _ = {Get_Result_Prediction_Aux TRight ({Length Value} * Key)+T1.1 Key NewList_Value} end
+                            if NewList_Value == nil then
+                                _ = {Get_Result_Prediction_Aux TRight ({Length Value} * Key)+T1.1 Max_Freq List_Words}
+                            else
+                                _ = {Get_Result_Prediction_Aux TRight ({Length Value} * Key)+T1.1 Key NewList_Value}
+                            end
                         end
                     end
                 end

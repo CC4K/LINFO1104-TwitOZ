@@ -285,9 +285,9 @@ define
             {Interface.setText_Window Variables.inputText ""}
         end
         
-        % Launch one thread that will predict the next word every 1sec
+        % Launch one thread that will predict the next word every 0.5sec
         % => The user can write and the words will be predicted at the same time!
-        thread {Automatic_prediction.automatic_Prediction 1000} end
+        thread {Automatic_prediction.automatic_Prediction 500} end
 
         %%ENDOFCODE%%
     end
