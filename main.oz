@@ -969,7 +969,7 @@ define
         
                         End = Start + Current_Nber_Iter1 - 1
 
-                        {Launch_AllThreads {Launch_OneThread Start End nil} Nber_Iter-1}
+                        {Launch_AllThreads {Append_List {Launch_OneThread Start End nil} List_Waiting_Threads} Nber_Iter-1}
 
                     end
                 end
