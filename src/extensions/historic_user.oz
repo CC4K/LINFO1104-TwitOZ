@@ -200,14 +200,12 @@ define
                 end
             end
 
-            % Variables usefull to clarrify the code
-            Updated_SubTree Current_List_Value Result Value_Key1
-
             %%%
             % Update one Subtree of the main tree's value.
             %%%
             fun {Update_SubTree SubTree New_Value}
-                local 
+                local
+                    Result Value_Key1
                     fun {Update_SubTree_Aux SubTree Updated_SubTree}
                         case SubTree
                         of leaf then [Updated_SubTree false]
@@ -223,11 +221,7 @@ define
                                     if {Length Value_List} == 1 then [{Tree.insert_Key Updated_SubTree Key Key+1} true]
                                     else
                                         New_List_Value = {RemoveElemOfList Value_List New_Value}
-
-                                        {System.show 'ok1'}
                                         First_Updated_Tree = {Tree.insert_Value Updated_SubTree Key New_List_Value}
-                                        {System.show 'ok2'}
-
                                         ValueAtKeySupp = {Tree.lookingUp First_Updated_Tree Key+1}
                                         if ValueAtKeySupp == notfound then
                                             [{Tree.insert_Value First_Updated_Tree Key+1 [New_Value]} true]
@@ -241,7 +235,6 @@ define
                     end
                 in
                     Result = {Update_SubTree_Aux SubTree SubTree}
-                    {System.show 'ok3'}
                     if Result.2.1 == true then Result.1
                     else
                         Value_Key1 = {Tree.lookingUp SubTree 1}
@@ -261,7 +254,7 @@ define
                 [] _|nil then Tree_To_Update
                 [] H|T then
 
-                    local Key Value_to_Insert New_Tree_Value Tree_Value Tree_To_Update Updated_Tree in
+                    local Key Value_to_Insert New_Tree_Value Tree_Value Updated_Tree in
 
                         Key = {String.toAtom H}
                         Value_to_Insert = {String.toAtom {Reverse {Function.tokens_String T.1 32}}.1}
