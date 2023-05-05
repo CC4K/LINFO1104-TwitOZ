@@ -21,10 +21,12 @@ define
         local Word_User Word_User_Parsed List_Keys in
             Word_User = {Variables.correctText get($)}
             Word_User_Parsed = {Parser.cleaningUserInput Word_User}
-            if {Length Word_User_Parsed} \= 1 then {Interface.insertText_Window Variables.outputText 0 0 none "Please enter only one word."}
+            if {Length Word_User_Parsed} \= 1 then
+                {Interface.setText_Window Variables.outputText ""}
+                {Interface.insertText_Window Variables.outputText 0 0 'end' "Please enter only one word.\n"}
             else
                 List_Keys = {Get_List_All_N_Words_Before Word_User_Parsed.1}
-                {DisplayResults List_Keys}
+                {DisplayResults List_Keys {String.toAtom Word_User_Parsed.1}}
             end
         end
     end
@@ -83,7 +85,7 @@ define
         end
     end
 
-    proc {DisplayResults List_Keys}
+    proc {DisplayResults List_Keys Word_To_Correct}
         local
             proc {DisplayResults_Aux List_Keys Idx}
                 case List_Keys
@@ -92,7 +94,7 @@ define
                     local Tree_Value Prediction_Result BestWords Probability Frequency Str_Line_Not_Cleaned Str_Line Second_Str Third_Str Total_Str in
                         Tree_Value = {Tree.lookingUp {Function.get_Last_Elem_Stream Variables.stream_Tree} {String.toAtom H}}
                         if Tree_Value == notfound then
-                            {Interface.insertText_Window Variables.outputText Idx 0 none {Function.append_List {Function.append_List "Correction " {Int.toString Idx+1}} ": No words found."}}
+                            {Interface.insertText_Window Variables.outputText Idx 0 'end' {Function.append_List {Function.append_List "Correction " {Int.toString Idx+1}} ": No words found.\n"}}
                             {DisplayResults_Aux T Idx+1}
                         else
                             Prediction_Result = {Tree.get_Result_Prediction Tree_Value none}
@@ -104,15 +106,16 @@ define
                                 Str_Line_Not_Cleaned = {Predict_All.proposeAllTheWords BestWords _ _ false}
                                 Str_Line = {Function.splitList_AtIdx Str_Line_Not_Cleaned {Length Str_Line_Not_Cleaned}-1}.1
                             else
-                                Str_Line = {Atom.toString BestWords.1}
+                                if BestWords.1 == Word_To_Correct then
+                                    {Interface.insertText_Window Variables.outputText Idx 0 'end' {Function.append_List {Function.append_List "Correction " {Int.toString Idx+1}} ": your word is correct.\n"}}
+                                else
+                                    Str_Line = {Atom.toString BestWords.1}
+                                    Second_Str = {Function.append_List " (frequency : " {Int.toString Frequency}}
+                                    Third_Str = {Function.append_List {Function.append_List " and probability : " {Float.toString Probability}} ")\n"}
+                                    Total_Str = {Function.append_List Str_Line {Function.append_List Second_Str Third_Str}}
+                                    {Interface.insertText_Window Variables.outputText Idx 0 'end' {Function.append_List {Function.append_List "Correction " {Int.toString Idx+1}} {Function.append_List " : " Total_Str}}}
+                                end
                             end
-
-                            Second_Str = {Function.append_List " (frequency : " {Int.toString Frequency}}
-                            Third_Str = {Function.append_List {Function.append_List " and probability : " {Float.toString Probability}} ")\n"}
-
-                            Total_Str = {Function.append_List Str_Line {Function.append_List Second_Str Third_Str}}
-                            {Interface.insertText_Window Variables.outputText Idx 0 none {Function.append_List {Function.append_List "Correction " {Int.toString Idx+1}} {Function.append_List " : " Total_Str}}}
-
                             {DisplayResults_Aux T Idx+1}
                         end
                     end
