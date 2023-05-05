@@ -64,22 +64,25 @@ define
 
                 User_File_Name = {QTk.dialogbox load(defaultextension:"txt"
                                 filetypes:q(q("Txt files" q(".txt")) q("All files" q("*"))) $)}
-
-                User_File = {New Open.file init(name:User_File_Name flags:[read])}
-                Contents = {User_File read(list:$ size:all)}
-                {User_File close}
-
-                New_Nber_HistoricFiles = {Get_Nber_HistoricFile} + 1
-                {Write_New_Nber_HistoricFile New_Nber_HistoricFiles}
-
-                % Get the name of the new file to create and open it
-                Name_File = {Function.append_List "user_historic/user_files/historic_part" {Function.append_List {Int.toString New_Nber_HistoricFiles} ".txt"}}
-                Historic_File = {New Open.file init(name:Name_File flags:[write create truncate])}
-                {Historic_File write(vs:Contents)}
-                {Historic_File close}
                 
-                % Send the new upated tree to a global port
-                {Send_NewTree_ToPort Name_File}
+                if User_File_Name == nil then skip
+                else
+                    User_File = {New Open.file init(name:User_File_Name flags:[read])}
+                    Contents = {User_File read(list:$ size:all)}
+                    {User_File close}
+
+                    New_Nber_HistoricFiles = {Get_Nber_HistoricFile} + 1
+                    {Write_New_Nber_HistoricFile New_Nber_HistoricFiles}
+
+                    % Get the name of the new file to create and open it
+                    Name_File = {Function.append_List "user_historic/user_files/historic_part" {Function.append_List {Int.toString New_Nber_HistoricFiles} ".txt"}}
+                    Historic_File = {New Open.file init(name:Name_File flags:[write create truncate])}
+                    {Historic_File write(vs:Contents)}
+                    {Historic_File close}
+                    
+                    % Send the new upated tree to a global port
+                    {Send_NewTree_ToPort Name_File}
+                end
             end
         catch _ then {System.show 'Error when saving the file into the databse'} {Application.exit 0} end 
     end

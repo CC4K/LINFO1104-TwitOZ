@@ -61,15 +61,18 @@ define
     % @return: /
     %%%
     proc {SaveText_UserFinder}
-        Name = {QTk.dialogbox save( defaultextension:"txt"
-                                    filetypes:q(q("Txt files" q(".txt")) q("All files" q("*"))) $)}
-    in 
-        try 
-            User_File = {New Open.file init(name:Name flags:[write create truncate])}
-            Contents = {Variables.inputText get($)}
-        in 
-            {User_File write(vs:Contents)}
-            {User_File close}
+        try
+            local Name User_File Contents in
+                Name = {QTk.dialogbox save( defaultextension:"txt"
+                                            filetypes:q(q("Txt files" q(".txt")) q("All files" q("*"))) $)}
+                if Name == nil then skip
+                else
+                    User_File = {New Open.file init(name:Name flags:[write create truncate])}
+                    Contents = {Variables.inputText get($)}
+                    {User_File write(vs:Contents)}
+                    {User_File close}
+                end
+            end
         catch _ then {System.show 'Error when saving the file into the user specified file'} {Application.exit 0} end 
     end
 
@@ -81,16 +84,19 @@ define
     % @return: /
     %%%
     proc {LoadText}
-        Name = {QTk.dialogbox load(defaultextension:"txt"
-                                   filetypes:q(q("Txt files" q(".txt")) q("All files" q("*"))) $)}
-        Contents = {Variables.inputText get($)}
-    in 
         try
-            File = {New Open.file init(name:Name)}
-            Contents = {File read(list:$ size:all)}
-        in 
-            {Variables.inputText set(Contents)}
-            {File close}
+            local Name File Contents in
+                Name = {QTk.dialogbox load(defaultextension:"txt"
+                                    filetypes:q(q("Txt files" q(".txt")) q("All files" q("*"))) $)}
+                if Name == nil then skip
+                else
+                    File = {New Open.file init(name:Name)}
+                    Contents = {File read(list:$ size:all)}
+                    {Variables.inputText set(Contents)}
+                    {File close}
+                end
+            end
         catch _ then {System.show 'Error when loading the file into the window'} {Application.exit 0} end 
     end
+
 end
