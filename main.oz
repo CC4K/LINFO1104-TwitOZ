@@ -208,10 +208,10 @@ define
     proc {Get_Arguments}
 
         UserOptions = {Application.getArgs record('folder'(single type:string optional:false)
-                                                'idx_n_grams'(single type:int optional:true)
-                                                'corr_word'(single type:bool optional:true)
-                                                'files_database'(single type:bool optional:true)
-                                                'auto_predict'(single type:bool optional:true))}
+                                                  'idx_n_grams'(single type:int default:2 optional:true)
+                                                  'corr_word'(single type:bool default:false optional:true)
+                                                  'files_database'(single type:bool default:false optional:true)
+                                                  'auto_predict'(single type:bool default:false optional:true))}
     in
         Variables.folder_Name = UserOptions.'folder'
         Variables.idx_N_Grams = UserOptions.'idx_n_grams'
@@ -220,12 +220,18 @@ define
         Variables.auto_Prediction = UserOptions.'auto_predict'
 
         % Not good yet (don't know why)
+        {System.show {String.toAtom Variables.folder_Name}}
+        {System.show Variables.idx_N_Grams}
         {System.show Variables.correction_Words}
         {System.show Variables.files_Database}
         {System.show Variables.auto_Prediction}
     end
 
-
+    %%%%%%%%%% folder %%%%%%%%%%%%%%%  => OK
+     %%%%%%%%%% auto_predict %%%%%%%%%%  => OK
+      %%%%%%%%%% idx_N_Grams %%%%%%%%%%%%   => OK
+       %%%%%%%%%% corr_word %%%%%%%%%%%%%%% => Faut juste dégager le boutton
+        %%%%%%%%%% files_database %%%%%%%%%%%% => Faut juste dégager le boutton
 
     %%%
     % Main procedure that creates the Qtk window and calls differents functions/procedures to make the program functional.
@@ -305,9 +311,11 @@ define
         % => {Press} can work now because the structure is ready
         Variables.tree_Over = true
 
-        % Launch one thread that will predict the next word every 0.5sec
-        % => The user can write and the words will be predicted at the same time!
-        thread {Automatic_prediction.automatic_Prediction 500} end
+        if Variables.auto_Prediction then
+            % Launch one thread that will predict the next word every 0.5sec
+            % => The user can write and the words will be predicted at the same time!
+            thread {Automatic_prediction.automatic_Prediction 500} end
+        else skip end
 
         %%ENDOFCODE%%
     end

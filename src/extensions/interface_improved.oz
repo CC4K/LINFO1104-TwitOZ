@@ -19,36 +19,61 @@ define
     % @param: CallerPress: the function to call when the button "Predict" is pressed.
     % @return: the GUI's description.
     %%%
-    fun {GetDescriptionGUI CallerPress}
-        lr( title: "TwitOZ"
-            background:c(27 157 240)
-            td( label(width:2 background:c(27 157 240)))
-            td( label(height:1 background:c(27 157 240) glue:we)%width:83
-                text(handle:Variables.inputText width:70 height:18 font:{QTk.newFont font(family:"Verdana" size:12)} background:c(52 53 65) foreground:white insertbackground:white selectbackground:c(13 101 212) wrap:word)
-                text(handle:Variables.outputText width:70 height:10 font:{QTk.newFont font(family:"Verdana" size:12)} background:c(68 70 84) foreground:white insertbackground:white selectbackground:c(13 101 212) wrap:word relief:sunken)
-                label(height:1 background:c(27 157 240) glue:we)
-                )
-            td( label(width:2 background:c(27 157 240)))
-            td( label(height:1 background:c(27 157 240) glue:we)
-                %label(image:{QTk.newImage photo(url:"./twit.png")} borderwidth:0 glue:we)
-                td( button(text:"Predict" height:2 width:24 background:c(29 125 242) borderwidth:1 font:{QTk.newFont font(family:"Arial" size:13 weight:bold)} foreground:white activebackground:white activeforeground:black cursor:hand2 action:CallerPress)
-                    lr( text(handle:Variables.correctText height:1 width:16 font:{QTk.newFont font(family:"Verdana" size:12)} background:c(52 53 65) foreground:white insertbackground:white selectbackground:c(13 101 212) wrap:none ipady:10 padx:2)
-                        button(text:"Correct\na word" height:2 width:8 background:c(29 125 242) borderwidth:1 font:{QTk.newFont font(family:"Arial" size:10)} foreground:white activebackground:white activeforeground:black cursor:hand2 action:proc {$} {Send Variables.port_Auto_Corr_Threads 5000} {Correction_prediction.correctionSentences} end)
-                        background:c(27 157 240)
-                        glue:we
-                        )
-                    button(text:"Load file from computer" height:2 width:24 background:c(29 125 242) borderwidth:1 font:{QTk.newFont font(family:"Arial" size:13 weight:bold)} foreground:white activebackground:white activeforeground:black cursor:hand2 action:LoadText)
-                    button(text:"Save on computer" height:2 width:24 background:c(29 125 242) borderwidth:1 font:{QTk.newFont font(family:"Arial" size:13 weight:bold)} foreground:white activebackground:white activeforeground:black cursor:hand2 action:SaveText_UserFinder)
-                    button(text:"Load file into database" height:2 width:24 background:c(29 125 242) borderwidth:1 font:{QTk.newFont font(family:"Arial" size:13 weight:bold)} foreground:white activebackground:white activeforeground:black cursor:hand2 action:Historic_user.saveFile_Database)
-                    button(text:"Save in database" height:2 width:24 background:c(29 125 242) borderwidth:1 font:{QTk.newFont font(family:"Arial" size:13 weight:bold)} foreground:white activebackground:white activeforeground:black cursor:hand2 action:Historic_user.saveText_Database)
-                    button(text:"Clean history" height:2 width:24 background:c(29 125 242) borderwidth:1 font:{QTk.newFont font(family:"Arial" size:13 weight:bold)} foreground:white activebackground:white activeforeground:black cursor:hand2 action:Historic_user.clean_UserHistoric)
-                    button(text:"Quit" height:2 width:24 background:c(29 125 242) relief:sunken borderwidth:1 font:{QTk.newFont font(family:"Arial" size:13 weight:bold)} foreground:white activebackground:white activeforeground:black cursor:hand2 action:proc{$} {Application.exit 0} end)
+    fun {GetDescriptionGUI CallerPress} 
+
+        local State_Correction State_Database State_Predict in
+
+            if Variables.auto_Prediction == true then
+                State_Predict = disabled
+            else
+                State_Predict = normal
+            end
+
+            if Variables.files_Database == true then
+                State_Database = normal
+            else
+                State_Database = disabled
+            end
+
+            if Variables.correction_Words == true then
+                State_Correction = normal
+            else
+                State_Correction = disabled
+            end
+
+            lr( title: "TwitOZ"
+                background:c(27 157 240)
+                td( label(width:2 background:c(27 157 240)))
+                td( label(height:1 background:c(27 157 240) glue:we)%width:83
+                    text(handle:Variables.inputText width:70 height:18 font:{QTk.newFont font(family:"Verdana" size:12)} background:c(52 53 65) foreground:white insertbackground:white selectbackground:c(13 101 212) wrap:word)
+                    text(handle:Variables.outputText width:70 height:10 font:{QTk.newFont font(family:"Verdana" size:12)} background:c(68 70 84) foreground:white insertbackground:white selectbackground:c(13 101 212) wrap:word relief:sunken)
+                    label(height:1 background:c(27 157 240) glue:we)
                     )
-                label(height:1 background:c(27 157 240) glue:wen)
+                td( label(width:2 background:c(27 157 240)))
+                td( label(height:1 background:c(27 157 240) glue:we)
+                    %label(image:{QTk.newImage photo(url:"./twit.png")} borderwidth:0 glue:we)
+
+                    td(
+                        button(text:"Predict" state:State_Predict height:2 width:24 background:c(29 125 242) borderwidth:1 font:{QTk.newFont font(family:"Arial" size:13 weight:bold)} foreground:white activebackground:white activeforeground:black cursor:hand2 action:CallerPress)
+                        lr( text(handle:Variables.correctText height:1 width:16 font:{QTk.newFont font(family:"Verdana" size:12)} background:c(52 53 65) foreground:white insertbackground:white selectbackground:c(13 101 212) wrap:none ipady:10 padx:2)
+                            button(text:"Correct\na word" state:State_Correction height:2 width:8 background:c(29 125 242) borderwidth:1 font:{QTk.newFont font(family:"Arial" size:10)} foreground:white activebackground:white activeforeground:black cursor:hand2 action:proc {$} {Send Variables.port_Auto_Corr_Threads 5000} {Correction_prediction.correctionSentences} end)
+                            background:c(27 157 240)
+                            glue:we
+                            )
+                        button(text:"Load file from computer" state:State_Database height:2 width:24 background:c(29 125 242) borderwidth:1 font:{QTk.newFont font(family:"Arial" size:13 weight:bold)} foreground:white activebackground:white activeforeground:black cursor:hand2 action:LoadText)
+                        button(text:"Save on computer" state:State_Database height:2 width:24 background:c(29 125 242) borderwidth:1 font:{QTk.newFont font(family:"Arial" size:13 weight:bold)} foreground:white activebackground:white activeforeground:black cursor:hand2 action:SaveText_UserFinder)
+                        button(text:"Load file into database" state:State_Database height:2 width:24 background:c(29 125 242) borderwidth:1 font:{QTk.newFont font(family:"Arial" size:13 weight:bold)} foreground:white activebackground:white activeforeground:black cursor:hand2 action:Historic_user.saveFile_Database)
+                        button(text:"Save in database" state:State_Database height:2 width:24 background:c(29 125 242) borderwidth:1 font:{QTk.newFont font(family:"Arial" size:13 weight:bold)} foreground:white activebackground:white activeforeground:black cursor:hand2 action:Historic_user.saveText_Database)
+                        button(text:"Clean history" state:State_Database height:2 width:24 background:c(29 125 242) borderwidth:1 font:{QTk.newFont font(family:"Arial" size:13 weight:bold)} foreground:white activebackground:white activeforeground:black cursor:hand2 action:Historic_user.clean_UserHistoric)
+
+                        button(text:"Quit" height:2 width:24 background:c(29 125 242) relief:sunken borderwidth:1 font:{QTk.newFont font(family:"Arial" size:13 weight:bold)} foreground:white activebackground:white activeforeground:black cursor:hand2 action:proc{$} {Application.exit 0} end)
+                        )
+                    label(height:1 background:c(27 157 240) glue:wen)
+                    )
+                td( label(width:2 background:c(27 157 240)))
+                action:proc{$} {Application.exit 0} end
                 )
-            td( label(width:2 background:c(27 157 240)))
-            action:proc{$} {Application.exit 0} end
-            )
+        end
     end
 
 
