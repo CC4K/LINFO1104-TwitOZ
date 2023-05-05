@@ -79,6 +79,18 @@ run: bin/$(ENTRY_POINT)
 clean_user_historic:
 	rm -f user_historic/user_files/*.txt
 
+# Help command
+help:
+	@echo \> 'make' : \ \ \ \ to compile all project files
+	@echo \> 'make run' : to run the project with simple prediction function and no extension activated
+	@echo \> The extension options are the following and must always be used as such : 'make run [options]':
+	@echo \> 'idx_n_grams=[int]' : specifies the n-gram algorithm the program will use for predictions [must be >= 1]
+	@echo \> 'corr_word=[int]' : \ \ \ \ \ activates word correction [1 = on \| 0 = off]
+	@echo \> 'files_database=[int]' : activates the ability to add samples in database [1 = on \| 0 = off]
+	@echo \> 'auto_predict=[int]' : \ \ activates auto-prediction and deactivates manual Predict button [1 = on \| 0 = off]
+	@echo \> 'folder=[string]' : \ \ \ \ \ specifies database folder [default folder is "tweets"]
+	@echo \> 'ext=all' : \ \ \ \ \ \ \ \ \ \ \ \ \ activates all extensions at once
+
 # Clean the ./bin folder and all its content.
 clean:
 	rm -f bin/*.ozf
