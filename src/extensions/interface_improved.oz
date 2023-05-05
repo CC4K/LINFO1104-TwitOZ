@@ -8,6 +8,7 @@ import
     
     Variables at '../variables.ozf'
     Historic_user at 'historic_user.ozf'
+    Correction_prediction at 'correction_prediction.ozf'
 export
     GetDescriptionGUI
     SaveText_UserFinder
@@ -34,8 +35,8 @@ define
             td( label(height:1 background:c(27 157 240) glue:we)
                 % label(image:{QTk.newImage photo(url:"./twit.png")} borderwidth:0 glue:we)
                 td( button(text:"Predict" height:2 width:24 background:c(29 125 242) borderwidth:1 font:{QTk.newFont font(family:"Arial" size:13 weight:bold)} foreground:white activebackground:white activeforeground:black cursor:hand2 action:CallerPress)
-                    lr( text(height:2 width:16 font:{QTk.newFont font(family:"Verdana" size:12)}) 
-                        button(text:"Correct\na word" height:2 width:7 font:{QTk.newFont font(family:"Arial" size:10)})
+                    lr( text(handle:Variables.correctText height:2 width:16 font:{QTk.newFont font(family:"Verdana" size:12)} background:c(52 53 65) foreground:white insertbackground:white selectbackground:c(13 101 212) wrap:word) 
+                        button(text:"Correct\na word" height:2 width:7 background:c(29 125 242) borderwidth:1 font:{QTk.newFont font(family:"Arial" size:10)} foreground:white activebackground:white activeforeground:black cursor:hand2 action:proc {$} {Correction_prediction.correctionSentences} end)
                         glue:we)
                     button(text:"Load file from computer" height:2 width:24 background:c(29 125 242) borderwidth:1 font:{QTk.newFont font(family:"Arial" size:13 weight:bold)} foreground:white activebackground:white activeforeground:black cursor:hand2 action:LoadText)
                     button(text:"Save on computer" height:2 width:24 background:c(29 125 242) borderwidth:1 font:{QTk.newFont font(family:"Arial" size:13 weight:bold)} foreground:white activebackground:white activeforeground:black cursor:hand2 action:SaveText_UserFinder)

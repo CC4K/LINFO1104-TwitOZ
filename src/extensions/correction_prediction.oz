@@ -16,10 +16,10 @@ export
     CorrectionSentences
 define
 
-    %% WORD USER DONT KNOW HOW TO Have it with the window %%
     %% Il faudra aussi stoper le Thread qui predis automatiquement! %%
-    proc {CorrectionSentences Word_User}
-        local Word_User_Parsed List_Keys in
+    proc {CorrectionSentences}
+        local Word_User Word_User_Parsed List_Keys in
+            Word_User = {Variables.correctText get($)}
             Word_User_Parsed = {Parser.cleaningUserInput Word_User}
             if {Length Word_User_Parsed} \= 1 then {Interface.insertText_Window Variables.outputText 0 0 none "Please enter only one word."}
             else

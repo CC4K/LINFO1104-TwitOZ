@@ -2,6 +2,7 @@ functor
 export
     InputText
     OutputText
+    CorrectText
     Idx_N_Grams
     TweetsFolder_Name
     List_PathName_Tweets
@@ -22,6 +23,7 @@ define
 
 	InputText % The input text of the window
     OutputText % The output text of the window
+    CorrectText % The correct text of the window
 
     Idx_N_Grams % The n-grams index
 
