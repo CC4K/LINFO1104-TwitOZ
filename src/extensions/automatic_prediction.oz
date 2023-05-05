@@ -106,46 +106,20 @@ define
                 end
             end
         in
-            Delay_Correction = {Function.get_Last_Elem_Stream Variables.stream_Auto_Corr_Threads}
-            if Delay_Correction \= 0 then
-                
-                {Time.delay Delay_Correction}
-                {Send Variables.port_Auto_Corr_Threads 0}
+            if Variables.tree_Over == true then
+                Delay_Correction = {Function.get_Last_Elem_Stream Variables.stream_Auto_Corr_Threads}
+                if Delay_Correction \= 0 then
+                    
+                    {Time.delay Delay_Correction}
+                    {Send Variables.port_Auto_Corr_Threads 0}
 
-                % Infinite loop
-                local ResultPrediction ProbableWords Frequency Probability in
-                    ResultPrediction = {Automatic_Prediction_Aux}
-                    ProbableWords = ResultPrediction.1
-                    Frequency = ResultPrediction.2.1
-                    Probability = ResultPrediction.2.2.1
+                    % Infinite loop
+                    local ResultPrediction ProbableWords Frequency Probability in
+                        ResultPrediction = {Automatic_Prediction_Aux}
+                        ProbableWords = ResultPrediction.1
+                        Frequency = ResultPrediction.2.1
+                        Probability = ResultPrediction.2.2.1
 
-                    if ProbableWords == nil then
-                        {Interface.setText_Window Variables.outputText ""}
-                        {Interface.insertText_Window Variables.outputText 1 0 none "Words not found."}
-                        {StockResultsInFile nil 0 0.0}
-
-                    elseif ProbableWords == none then
-                        {Interface.setText_Window Variables.outputText ""}
-                        {Interface.insertText_Window Variables.outputText 1 0 none {Append "Need at least " {Append {Int.toString Variables.idx_N_Grams} " words to predict the next one."}}}
-                        {StockResultsInFile none 0 0.0}
-
-                    else _ = {Predict_All.proposeAllTheWords ProbableWords Frequency Probability true} end
-                    {Automatic_Prediction Time_Delay}
-                end
-
-            else
-                {Time.delay Time_Delay}
-
-                % Infinite loop
-                local ResultPrediction ProbableWords Frequency Probability in
-                    ResultPrediction = {Automatic_Prediction_Aux}
-                    ProbableWords = ResultPrediction.1
-                    Frequency = ResultPrediction.2.1
-                    Probability = ResultPrediction.2.2.1
-
-                    if {CheckIfSamePrediction ProbableWords Frequency Probability} == true then
-                        {Automatic_Prediction Time_Delay}
-                    else
                         if ProbableWords == nil then
                             {Interface.setText_Window Variables.outputText ""}
                             {Interface.insertText_Window Variables.outputText 1 0 none "Words not found."}
@@ -159,7 +133,38 @@ define
                         else _ = {Predict_All.proposeAllTheWords ProbableWords Frequency Probability true} end
                         {Automatic_Prediction Time_Delay}
                     end
+
+                else
+                    {Time.delay Time_Delay}
+
+                    % Infinite loop
+                    local ResultPrediction ProbableWords Frequency Probability in
+                        ResultPrediction = {Automatic_Prediction_Aux}
+                        ProbableWords = ResultPrediction.1
+                        Frequency = ResultPrediction.2.1
+                        Probability = ResultPrediction.2.2.1
+
+                        if {CheckIfSamePrediction ProbableWords Frequency Probability} == true then
+                            {Automatic_Prediction Time_Delay}
+                        else
+                            if ProbableWords == nil then
+                                {Interface.setText_Window Variables.outputText ""}
+                                {Interface.insertText_Window Variables.outputText 1 0 none "Words not found."}
+                                {StockResultsInFile nil 0 0.0}
+
+                            elseif ProbableWords == none then
+                                {Interface.setText_Window Variables.outputText ""}
+                                {Interface.insertText_Window Variables.outputText 1 0 none {Append "Need at least " {Append {Int.toString Variables.idx_N_Grams} " words to predict the next one."}}}
+                                {StockResultsInFile none 0 0.0}
+
+                            else _ = {Predict_All.proposeAllTheWords ProbableWords Frequency Probability true} end
+                            {Automatic_Prediction Time_Delay}
+                        end
+                    end
                 end
+            else
+                {Time.delay Time_Delay}
+                {Automatic_Prediction Time_Delay}
             end
         end
     end

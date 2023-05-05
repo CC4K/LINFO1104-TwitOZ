@@ -148,8 +148,8 @@ define
 
     % Creates the all basic binary tree structure (without the binary tree as value).
     %
-    % Example usage:    evidement que     je suis    suis daccord     daccord avec
-    % In: [[["je suis d'accord avec toi"] ["evidemment que oui"]]   [[...] [...] ...] ...]
+    % Example usage:
+    % In: [[["je suis d'accord avec toi"] ["evidemment que oui"]]  [[...] [...] ...] ...]
     % Out: tree(key:'je suis' value:['d'accord']
     %                         t_left:tree(key:'evidement que' value:['oui']
     %                             t_left:tree(key:'je suis' value:['d'accord']
@@ -369,6 +369,19 @@ define
         end
     end
 
+
+    %%%
+    % Get the new list of words that are in the list Value and that have the prefix Prefix_Value.
+    % If there is no word in Value that has the prefix Prefix_Value, then return nil.
+    %
+    % Example usage:
+    % In: Value = ['ok' 'must' 'okay' 'perfect' 'back']  Prefix_Value = 'o'
+    % Out: ['ok' 'okay']
+    %
+    % @param Value: a list of atoms (words)
+    % @param Prefix_Value: an atom
+    % @return: a list of atoms (words) with all the atoms that have the prefix Prefix_Value
+    %%%
     fun {GetNewListValue Value Prefix_Value}
         local
             fun {GetNewListValue_Aux List_Value_Tree NewList}

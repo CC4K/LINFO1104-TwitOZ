@@ -272,10 +272,6 @@ define
             Main_Tree = {Tree.create_Main_Tree {Tree.create_Basic_Tree List_Line_Parsed}}
             {Send Variables.port_Tree Main_Tree}
         end
-        
-        % We bound the value 'Variables.tree_Over'
-        % => {Press} can work now because the structure is ready
-        Variables.tree_Over = true
 
         % Writes some text in the GUI to inform the users
         {Interface.insertText_Window Variables.outputText 7 0 none "Step 2 Over : Stocking datas\n"}
@@ -293,6 +289,10 @@ define
         % To see the message "The database is now parsed.\nYou can write and predict!" at the beginning of the program
         % during 1.5 second.
         {Time.delay 1500}
+        
+        % We bound the value 'Variables.tree_Over'
+        % => {Press} can work now because the structure is ready
+        Variables.tree_Over = true
         
         % Launch one thread that will predict the next word every 0.5sec
         % => The user can write and the words will be predicted at the same time!

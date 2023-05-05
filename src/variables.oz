@@ -3,26 +3,31 @@ export
     InputText
     OutputText
     CorrectText
+
     Idx_N_Grams
-    TweetsFolder_Name
-    List_PathName_Tweets
-    Tree_Over
+
     NberFiles
     NbThreads
-    SeparatedWordsPort
-    SeparatedWordsStream
-    Window
-    Description
-    Port_Tree
-    Stream_Tree
     Nber_HistoricFiles
 
+    TweetsFolder_Name
+    List_PathName_Tweets
+
+    Tree_Over
+
+    Port_Tree
+    Stream_Tree
+    SeparatedWordsPort
+    SeparatedWordsStream
     Port_Auto_Corr_Threads
     Stream_Auto_Corr_Threads
+
+    Window
+    Description
 define
 
     % Global variables that will not be modify during the execution
-    % of the program (except 'Stream_Tree' to store the future updated tree).
+    % of the program (except some Stream to store informations).
 
 	InputText % The input text of the window
     OutputText % The output text of the window
@@ -43,11 +48,10 @@ define
     Stream_Tree % The stream used to get the last updated tree
     SeparatedWordsPort % The port used to send to 'SeparatedWordsStream' the text parsed (from the tweets)
     SeparatedWordsStream % The stream used to get the text parsed (from the tweets)
+    Port_Auto_Corr_Threads % The port used to send to 'Stream_Auto_Corr_Threads' the time of delay for the thread that do the automatic_prediction
+    Stream_Auto_Corr_Threads % The stream used to get the time of delay for the thread that do the automatic_prediction
 
     Window % The window to display graphics and informations
     Description % The description of the window
-
-    Port_Auto_Corr_Threads
-    Stream_Auto_Corr_Threads
 
 end

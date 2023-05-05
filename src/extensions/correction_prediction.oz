@@ -18,17 +18,19 @@ define
 
     %% Il faudra aussi stoper le Thread qui predis automatiquement! %%
     proc {CorrectionSentences}
-        local Word_User Word_User_Parsed List_Keys in
-            Word_User = {Variables.correctText get($)}
-            Word_User_Parsed = {Parser.cleaningUserInput Word_User}
-            if {Length Word_User_Parsed} \= 1 then
-                {Interface.setText_Window Variables.outputText ""}
-                {Interface.insertText_Window Variables.outputText 0 0 'end' "Please enter only one word.\n"}
-            else
-                List_Keys = {Get_List_All_N_Words_Before Word_User_Parsed.1}
-                {DisplayResults List_Keys {String.toAtom Word_User_Parsed.1}}
+        if Variables.tree_Over == true then
+            local Word_User Word_User_Parsed List_Keys in
+                Word_User = {Variables.correctText get($)}
+                Word_User_Parsed = {Parser.cleaningUserInput Word_User}
+                if {Length Word_User_Parsed} \= 1 then
+                    {Interface.setText_Window Variables.outputText ""}
+                    {Interface.insertText_Window Variables.outputText 0 0 'end' "Please enter only one word.\n"}
+                else
+                    List_Keys = {Get_List_All_N_Words_Before Word_User_Parsed.1}
+                    {DisplayResults List_Keys {String.toAtom Word_User_Parsed.1}}
+                end
             end
-        end
+        else skip end
     end
 
     fun {Split_List_Delimiter List Delimiter}
@@ -105,6 +107,10 @@ define
                             if {Length BestWords} > 1 then
                                 Str_Line_Not_Cleaned = {Predict_All.proposeAllTheWords BestWords _ _ false}
                                 Str_Line = {Function.splitList_AtIdx Str_Line_Not_Cleaned {Length Str_Line_Not_Cleaned}-1}.1
+                                Second_Str = {Function.append_List " (frequency : " {Int.toString Frequency}}
+                                Third_Str = {Function.append_List {Function.append_List " and probability : " {Float.toString Probability}} ")\n"}
+                                Total_Str = {Function.append_List Str_Line {Function.append_List Second_Str Third_Str}}
+                                {Interface.insertText_Window Variables.outputText Idx 0 'end' {Function.append_List {Function.append_List "Correction " {Int.toString Idx+1}} {Function.append_List " : " Total_Str}}}
                             else
                                 if BestWords.1 == Word_To_Correct then
                                     {Interface.insertText_Window Variables.outputText Idx 0 'end' {Function.append_List {Function.append_List "Correction " {Int.toString Idx+1}} ": your word is correct.\n"}}
