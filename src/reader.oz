@@ -69,9 +69,9 @@ define
         local PathName in
             PathName = {Function.nth_List Variables.list_PathName_Tweets Idx}
             if {String.is PathName} then
-                {Function.append_List Variables.tweetsFolder_Name 47|PathName}
-            else {Function.append_List Variables.tweetsFolder_Name 47|{Atom.toString PathName}} end
+                {Function.append_List Variables.folder_Name 47|PathName}
+            else {Function.append_List Variables.folder_Name 47|{Atom.toString PathName}} end
         end
     end
-    
+
 end

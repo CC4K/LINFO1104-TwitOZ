@@ -3,6 +3,7 @@ import
     QTk at 'x-oz://system/wp/QTk.ozf'
     Application
     OS
+    System
     Property
 
     Variables at 'variables.ozf'
@@ -199,16 +200,32 @@ define
 
 
     %%%
-    % Fetches Tweets Folder specified in the command line arguments
-    %
+    % Get the arguments of the command line for the program and store them in global variables
+    % 
     % @param: /
-    % @return: the Tweets folder specified in the command line arguments
+    % @return: /
     %%%
-    fun {GetSentenceFolder}
-        Args = {Application.getArgs record('folder'(single type:string optional:false))}
+    proc {Get_Arguments}
+        Args = {Application.getArgs record('folder'(single type:string optional:false)
+                                            'idx_n_grams'(single type:string optional:true)
+                                            'corr_word'(single type:bool optional:true)
+                                            'files_database'(single type:bool optional:true)
+                                            'auto_predict'(single type:bool optional:true))}
     in
-        Args.'folder'
+        Variables.folder_Name = Args.'folder'
+        Variables.idx_N_Grams = {String.toInt Args.'idx_n_grams'}
+        Variables.correction_Words = Args.'corr_word'
+        Variables.files_Database = Args.'files_database'
+        Variables.auto_Prediction = Args.'auto_predict'
+
+        % Not good yet
+        {System.show Variables.folder_Name}
+        {System.show Variables.idx_N_Grams}
+        {System.show Variables.correction_Words}
+        {System.show Variables.files_Database}
+        {System.show Variables.auto_Prediction}
     end
+
 
 
     %%%
@@ -222,13 +239,13 @@ define
     %%%
     proc {Main}
 
+        {TestArgs}
+
         {Automatic_prediction.reset_LastPrediction_File}
 
         % Initialization of the global variables used in the program
         Variables.nber_HistoricFiles = {Historic_user.get_Nber_HistoricFile}
-        Variables.idx_N_Grams = 2     
-        Variables.tweetsFolder_Name = {GetSentenceFolder}
-        Variables.list_PathName_Tweets = {OS.getDir Variables.tweetsFolder_Name}
+        Variables.list_PathName_Tweets = {OS.getDir Variables.folder_Name}
         Variables.nberFiles = {Length Variables.list_PathName_Tweets}
         Variables.nbThreads = Variables.nberFiles
         Variables.port_Tree = {NewPort Variables.stream_Tree}

@@ -4,13 +4,10 @@ export
     OutputText
     CorrectText
 
-    Idx_N_Grams
-
     NberFiles
     NbThreads
     Nber_HistoricFiles
 
-    TweetsFolder_Name
     List_PathName_Tweets
 
     Tree_Over
@@ -24,6 +21,13 @@ export
 
     Window
     Description
+
+    Folder_Name
+    Idx_N_Grams
+    Correction_Words
+    Files_Database 
+    Auto_Prediction
+
 define
 
     % Global variables that will not be modify during the execution
@@ -39,7 +43,6 @@ define
     NbThreads % The number of threads to use
     Nber_HistoricFiles % The number of historic files to parses
 
-    TweetsFolder_Name % The name of the folder containing the tweets
     List_PathName_Tweets % The list of the relatives pathnames of the tweets
 
     Tree_Over % To know when the first main_tree is over and ready to be used
@@ -53,5 +56,12 @@ define
 
     Window % The window to display graphics and informations
     Description % The description of the window
+
+
+    Folder_Name
+    Idx_N_Grams2 
+    Correction_Words
+    Files_Database 
+    Auto_Prediction
 
 end
