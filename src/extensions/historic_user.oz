@@ -58,6 +58,14 @@ define
     end
 
 
+    %%%
+    % Saves a file from the app window as a text file into the database (historic user).
+    % The datas will be directly therefore be used for the next prediction.
+    % When the user will close the app, the datas won't be deleted.
+    %
+    % @param: /
+    % @return: /
+    %%%
     proc {SaveFile_Database}
         try
             local User_File_Name User_File Contents New_Nber_HistoricFiles Historic_NberFiles_File Name_File Historic_File in
@@ -133,6 +141,13 @@ define
         end
     end
 
+
+    %%%
+    % Writes the new number of historic files into the file "nber_historic_files.txt".
+    %
+    % @param New_Nber_HistoricFiles: The new number of historic files
+    % @return: /
+    %%%
     proc {Write_New_Nber_HistoricFile New_Nber_HistoricFiles}
         local Historic_NberFiles_File in
             Historic_NberFiles_File = {New Open.file init(name:"user_historic/nber_historic_files.txt" flags:[write create truncate])}
@@ -168,6 +183,9 @@ define
     
     %%%
     % Create the new updated tree with the new datas added.
+    %
+    % Note: we could probably try to merge some functions with the ones in "tree.oz",
+    % but we didn't want to have some extra parameter for nothing for the basic version.
     %
     % @param Main_Tree: The tree to which we want to add the datas
     % @param List_UserInput: The user text parsed

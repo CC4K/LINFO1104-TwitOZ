@@ -16,7 +16,14 @@ export
     CorrectionSentences
 define
 
-    %% Il faudra aussi stoper le Thread qui predis automatiquement! %%
+    
+    %%%
+    % Correct the word writed by the user in the input text.
+    % Give the best prediction instead the word writed by the user.
+    %
+    % @param: /
+    % @return: /
+    %%%
     proc {CorrectionSentences}
         if Variables.tree_Over == true then
             local Word_User Word_User_Parsed List_Keys in
@@ -33,6 +40,18 @@ define
         else skip end
     end
 
+
+    %%%
+    % Split a list with a delimiter.
+    %
+    % Example usage:
+    % In: "Hello, my name is John"    " "
+    % Out: ["Hello," "my" "name" "is" "John"]
+    %
+    % @param: List: list to split
+    % @param: Delimiter: delimiter to split the list
+    % @return: the list splitted into lists
+    %%%
     fun {Split_List_Delimiter List Delimiter}
         local
             Length_Delimiter = {Length Delimiter}
@@ -58,6 +77,17 @@ define
     end 
      
 
+    %%%
+    % Get all the N words before the word writed by the user.
+    % The result is a list because the user can write a sentence with the word writed multiple times.
+    %
+    % Example usage:
+    % In: "i have been there yeah. we all have been."    "been"
+    % Out: ["i have" "all have"]
+    %
+    % @param: Word_User: word writed by the user.
+    % @return: the list of all the N words before the word writed by the user.
+    %%%
     fun {Get_List_All_N_Words_Before Word_User}
 
         local
@@ -87,6 +117,14 @@ define
         end
     end
 
+
+    %%%
+    % Display the results of the correction.
+    %
+    % @param: List_Keys: list of all the N words before the word writed by the user.
+    % @param: Word_To_Correct: word writed by the user.
+    % @return: /
+    %%%
     proc {DisplayResults List_Keys Word_To_Correct}
         local
             proc {DisplayResults_Aux List_Keys Idx}

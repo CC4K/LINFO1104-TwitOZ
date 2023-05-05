@@ -58,7 +58,7 @@ define
 
     %%%
     % Saves an input text from the app window as a text file on the user's computer.
-    %
+    % 
     % @param: /
     % @return: /
     %%%

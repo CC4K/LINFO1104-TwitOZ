@@ -19,11 +19,13 @@ export
     Reset_LastPrediction_File
 define
 
-    %%%
-    % Automatic_Prediction
-    %%%
 
-
+    %%%
+    % Automatic Prediction done by a thread.
+    %
+    % @param Time_Delay: the time between each prediction.
+    % @return: /
+    %%%
     proc {Automatic_Prediction Time_Delay}
         local
             Delay_Correction User_Input Splitted_Text List_Words Length_Splitted_Text First_Key Second_Key Value_Tree Value_Tree2 ResultPress ProbableWords Probability Frequency
@@ -72,7 +74,7 @@ define
                         % List_Words = [i am a student that] => First_Key = [am a student that]
                         %                                       Second_Key = [i am a student]
                         First_Key = {Function.concatenateElemOfList List_Words.2 32}
-                        Second_Key = {Function.concatenateElemOfList {RemoveLastValue List_Words} 32}
+                        Second_Key = {Function.concatenateElemOfList {Function.removeLastValue List_Words} 32}
 
                         % Get the subtree associated to the first key
                         Value_Tree = {Tree.lookingUp {Function.get_Last_Elem_Stream Variables.stream_Tree} {String.toAtom First_Key}}
@@ -172,6 +174,13 @@ define
 
     %%%
     % Stocks the results of the prediction in a file "user_historic/last_prediction.txt".
+    % If the file doesn't exist, it is created.
+    % If the file exists, it is truncated.
+    %
+    % @param ProbableWords: list of the probable words
+    % @param Frequency: frequency of the prediction
+    % @param Probability: probability of the prediction
+    % @return: /
     %%%
     proc {StockResultsInFile ProbableWords Frequency Probability}
         try
@@ -184,6 +193,13 @@ define
         catch _ then {System.show 'Error in StockResultsInFile function'} {Reset_LastPrediction_File} {Application.exit 0} end
     end
 
+
+    %%%
+    % Reset the file "user_historic/last_prediction.txt" to the number 0.
+    %
+    % @param: /
+    % @return: /
+    %%%
     proc {Reset_LastPrediction_File}
         local Path_LastPrediction_File in
             Path_LastPrediction_File = {New Open.file init(name:"user_historic/last_prediction.txt" flags:[write create truncate])}
@@ -192,8 +208,14 @@ define
         end
     end
 
+
     %%%
     % Check if the prediction is the same as the last one.
+    %
+    % @param ProbableWords: list of the probable words
+    % @param Frequency: frequency of the prediction
+    % @param Probability: probability of the prediction
+    % @return: true if the prediction is the same, false otherwise.
     %%%
     fun {CheckIfSamePrediction ProbableWords Frequency Probability}
         try
@@ -238,7 +260,7 @@ define
                                 true
                             elseif {Length List_Words} == {Length ProbableWords} then
                                 {Path_LastPrediction_File close}
-                                {CompareList List_Words ProbableWords}
+                                {Function.compareList List_Words ProbableWords}
                             else
                                 {Path_LastPrediction_File close}
                                 false
@@ -254,7 +276,16 @@ define
     end
 
     %%%
-    % Create a string representing the prediction. 
+    % Create a string representing the prediction.
+    %
+    % Example usage:
+    % In: ['the' 'all' 'with'] 23 0.83763
+    % Out: "23 0.83763 the all with"
+    %
+    % @param ProbableWords: list of the probable words
+    % @param Frequency: frequency of the prediction
+    % @param Probability: probability of the prediction
+    % @return: string representing the prediction.
     %%%
     fun {CreateString_Prediction ProbableWords Frequency Probability}
         local
@@ -273,33 +304,4 @@ define
         end
     end
 
-    %%%
-    % Compare two lists and return true if they are the same (doesn't check the order!).
-    %%%
-    fun {CompareList L1_Str_InAtom L2_Atom}
-        case L1_Str_InAtom
-        of nil then true
-        [] H|T then
-            if {Function.isInList L2_Atom H} == true then {CompareList T L2_Atom}
-            else false end
-        end
-    end
-    
-    %%%
-    % Remove the last value of a list.
-    %%%
-    fun {RemoveLastValue List}
-        local
-            fun {RemoveLastValue_Aux List NewList}
-                case List
-                of nil then NewList
-                [] H|nil then NewList
-                [] H|T then
-                    {RemoveLastValue_Aux T H|NewList}
-                end
-            end
-        in
-            {Reverse {RemoveLastValue_Aux List nil}}
-        end
-    end
 end

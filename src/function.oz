@@ -15,6 +15,8 @@ export
     ConcatenateElemOfList
     Get_Last_Elem_Stream
     IsInList
+    CompareList
+    RemoveLastValue
 define
 
     %%%
@@ -354,6 +356,53 @@ define
             end
         in
             {Get_Last_Elem_Stream_Aux Stream}
+        end
+    end
+
+
+    %%%
+    % Compare two lists and return true if they are the same (doesn't check the order!).
+    %
+    % Example usage:
+    % In: ['the' 'all' 'with'] ['all' 'the' 'with']
+    % Out: true
+    %
+    % @param L1_Str_InAtom: list of atoms
+    % @param L2_Atom: list of atoms
+    % @return: true if the lists are the same, false otherwise.
+    %%%
+    fun {CompareList L1_Str_InAtom L2_Atom}
+        case L1_Str_InAtom
+        of nil then true
+        [] H|T then
+            if {IsInList L2_Atom H} == true then {CompareList T L2_Atom}
+            else false end
+        end
+    end
+    
+
+    %%%
+    % Remove the last value of a list.
+    %
+    % Example usage:
+    % In: [1 2 3 4]
+    % Out: [1 2 3]
+    %
+    % @param List: list of atoms
+    % @return: list without the last value.
+    %%%
+    fun {RemoveLastValue List}
+        local
+            fun {RemoveLastValue_Aux List NewList}
+                case List
+                of nil then NewList
+                [] H|nil then NewList
+                [] H|T then
+                    {RemoveLastValue_Aux T H|NewList}
+                end
+            end
+        in
+            {Reverse {RemoveLastValue_Aux List nil}}
         end
     end
 

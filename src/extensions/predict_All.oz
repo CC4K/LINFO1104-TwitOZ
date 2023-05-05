@@ -54,6 +54,7 @@ define
         end
     end
 
+
     %%%
     % Display the frequency and the probability of the word(s) in the output window
     %
@@ -79,4 +80,5 @@ define
             {Interface.insertText_Window Variables.outputText Row+1 0 none {Function.append_List "The probability of the/these word(s) is : " Str_Probability}}
         end
     end
+    
 end
