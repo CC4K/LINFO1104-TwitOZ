@@ -2,8 +2,8 @@ functor
 import
     QTk at 'x-oz://system/wp/QTk.ozf'
     Application
-    Open
     OS
+    Open
     System
     
     Variables at '../variables.ozf'
@@ -14,14 +14,11 @@ import
     N_Grams at 'n_Grams.ozf'
 
 export
-    SaveText_Database
-    Send_NewTree_ToPort
-    Create_Updated_Tree
-    Clean_UserHistoric
-    Delete_HistoricFiles
-    Get_Nber_HistoricFile
-    LaunchThreads_HistoricUser
-    SaveFile_Database
+    LaunchThreads_HistoricUser % Launches a thread for evry historic files of the user
+    SaveFile_Database % Saves a file from the app window as a text file into the database (historic user)
+    SaveText_Database % Saves an input text from the app window as a text file into the database (historic user)
+    Clean_UserHistoric % Deletes all the historic files of the user (historic user)
+    Get_Nber_HistoricFile % Get the number of current historic files
 define
 
 

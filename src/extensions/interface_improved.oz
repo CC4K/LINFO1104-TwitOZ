@@ -3,17 +3,13 @@ import
     QTk at 'x-oz://system/wp/QTk.ozf'
     Application
     Open
-    OS
     System
     
     Variables at '../variables.ozf'
     Historic_user at 'historic_user.ozf'
     Correction_prediction at 'correction_prediction.ozf'
-    Automatic_prediction at 'automatic_prediction.ozf'
 export
-    GetDescriptionGUI
-    SaveText_UserFinder
-    LoadText
+    GetDescriptionGUI % Creates the GUI's description of the app.
 define
     
 

@@ -3,9 +3,7 @@ import
     QTk at 'x-oz://system/wp/QTk.ozf'
     Application
     OS
-    Open
     Property
-    System
 
     Variables at 'variables.ozf'
     Interface at 'interface.ozf'
@@ -19,9 +17,9 @@ import
     Interface_improved at 'extensions/interface_improved.ozf'
     N_Grams at 'extensions/n_Grams.ozf'
     Predict_All at 'extensions/predict_All.ozf'
-    Correction_prediction at 'extensions/correction_prediction.ozf'
 
 define
+
 
     %%%
     % Displays to the output zone on the window the most likely prediction of the next word based on the N last entered words.
@@ -187,14 +185,10 @@ define
             % The parsing files are stocked in the Port
             % The variables to Wait all the threads are stocked in List_Waiting_Threads
 
-            thread _ =
-                List_Waiting_Threads_1 = {Launch_AllThreads nil N}
-            end
+            thread List_Waiting_Threads_1 = {Launch_AllThreads nil N} end
 
             % To also parse the historic user files (Extension)
-            thread _ =
-                List_Waiting_Threads_2 = {Historic_user.launchThreads_HistoricUser}
-            end
+            thread List_Waiting_Threads_2 = {Historic_user.launchThreads_HistoricUser} end
             
             % Wait for all the threads
             % When a thread have finished, the value P associated to this thread
@@ -240,7 +234,6 @@ define
         Variables.port_Tree = {NewPort Variables.stream_Tree}
         Variables.separatedWordsPort = {NewPort Variables.separatedWordsStream}
         Variables.port_Auto_Corr_Threads = {NewPort Variables.stream_Auto_Corr_Threads}
-
         {Send Variables.port_Auto_Corr_Threads 0}
 
         {Property.put print foo(width:1000 depth:1000)}
@@ -293,7 +286,7 @@ define
         % We bound the value 'Variables.tree_Over'
         % => {Press} can work now because the structure is ready
         Variables.tree_Over = true
-        
+
         % Launch one thread that will predict the next word every 0.5sec
         % => The user can write and the words will be predicted at the same time!
         thread {Automatic_prediction.automatic_Prediction 500} end
@@ -301,7 +294,6 @@ define
         %%ENDOFCODE%%
     end
 
-    % Call the main procedure
+    % Call the main procedure to start the program.
     {Main}
-
 end

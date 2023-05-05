@@ -1,17 +1,11 @@
 functor
-import
-    QTk at 'x-oz://system/wp/QTk.ozf'
-    Application
-    Open
-    OS
-    System
-    
+import    
     Variables at '../variables.ozf'
     Interface at '../interface.ozf'
     Function at '../function.ozf'
     Automatic_Prediction at 'automatic_prediction.ozf'
 export
-    ProposeAllTheWords
+    ProposeAllTheWords % Propose all the most probable words (can me more than one)
 define
     
 
@@ -80,5 +74,5 @@ define
             {Interface.insertText_Window Variables.outputText Row+1 0 none {Function.append_List "The probability of the/these word(s) is : " Str_Probability}}
         end
     end
-    
+
 end

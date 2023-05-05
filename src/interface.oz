@@ -1,5 +1,7 @@
 functor 
 export
+
+    %%% Functions to display some texts on the tk window %%%
     InsertText_Window
     SetText_Window
 define

@@ -1,9 +1,7 @@
 functor
 import
-    QTk at 'x-oz://system/wp/QTk.ozf'
     Application
     Open
-    OS
     System
     
     Variables at '../variables.ozf'
@@ -13,10 +11,9 @@ import
     Tree at '../tree.ozf'
     Predict_All at 'predict_All.ozf'
 export
-    Automatic_Prediction
-    CheckIfSamePrediction
-    StockResultsInFile
-    Reset_LastPrediction_File
+    Automatic_Prediction % To launch the automatic prediction
+    StockResultsInFile % To stock the results of the prediction in a file
+    Reset_LastPrediction_File % To reset the file of the last prediction to ""
 define
 
 

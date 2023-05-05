@@ -4,9 +4,13 @@ import
     Variables at 'variables.ozf'
 export
     Browse
+
+    %% Basic functions implemented in recursive terminal way %%
     Append_List
     Nth_List
     Tokens_String
+
+    %% Other usefull functions %%
     Remove_List_FirstNthElements
     FindPrefix_InList
     Get_Last_Nth_Word_List

@@ -1,15 +1,9 @@
 functor
 import
-    QTk at 'x-oz://system/wp/QTk.ozf'
-    Application
-    Open
-    OS
-    System
-    
     Variables at '../variables.ozf'
     Function at '../function.ozf'
 export
-    N_Grams
+    N_Grams % Get the list of all the n-grams of the text.
 define
     
 

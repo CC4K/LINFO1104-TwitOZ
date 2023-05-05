@@ -3,11 +3,12 @@ import
     Open
     Application
     System
+
     Function at 'function.ozf'
     Variables at 'variables.ozf'
 export
-    GetFilename
-    Read   
+    GetFilename % Get the filename of the Idxth file in the list of filenames
+    Read % Read a text file and return a list of all its lines
 define
 
     %%%
@@ -16,6 +17,7 @@ define
     class TextFile
         from Open.file Open.text
     end
+
 
     %%%
     % Reads a text file (given its filename) and creates a list of all its lines
@@ -71,4 +73,5 @@ define
             else {Function.append_List Variables.tweetsFolder_Name 47|{Atom.toString PathName}} end
         end
     end
+    
 end

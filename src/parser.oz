@@ -2,14 +2,12 @@ functor
 import
     Function at 'function.ozf'
 export
-    CleaningUserInput
-    ParseInputUser
-    Cleaning_UnNecessary_Spaces
-    Removes_All_SubString
-    Parses_Line
-    Parses_AllLines
+    CleaningUserInput % Cleans the user input
+    Cleaning_UnNecessary_Spaces % Removes any space larger than one character wide (and therefore useless)
+    Parses_AllLines % Parses all the lines of a file
 define
 
+    
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %%%%%%%%%%%%%%%%%%%%% FUNCTIONS TO CLEAN THE FILES OF THE DATABASE %%%%%%%%%%%%%%%%%%%%%
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

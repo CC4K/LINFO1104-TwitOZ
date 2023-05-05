@@ -1,11 +1,5 @@
 functor
 import
-    QTk at 'x-oz://system/wp/QTk.ozf'
-    Application
-    Open
-    OS
-    System
-    
     Variables at '../variables.ozf'
     Function at '../function.ozf'
     Interface at '../interface.ozf'
@@ -13,7 +7,7 @@ import
     Tree at '../tree.ozf'
     Predict_All at 'predict_All.ozf'
 export
-    CorrectionSentences
+    CorrectionSentences % Correct the word writed by the user in the input text.
 define
 
     

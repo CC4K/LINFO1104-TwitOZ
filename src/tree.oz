@@ -1,16 +1,18 @@
 functor
 import
-    System
     Function at 'function.ozf'
     N_Grams at 'extensions/n_grams.ozf'
 export
+    %% Usefull functions to search in a tree or replace a value in a tree (= update the tree) %%
     LookingUp
     Insert_Value
     Insert_Key
     
+    %% Usefull functions to create the tree structure %%
     Create_Basic_Tree
     Create_Main_Tree
 
+    %% Usefull functions to get the result of the prediction %%
     Get_Result_Prediction
 define
 
