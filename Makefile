@@ -5,6 +5,27 @@ CORR_WORD=false
 FILES_DATABASE=false
 AUTO_PREDICT=false
 
+# Récupération des options spécifiées par l'utilisateur
+ifdef folder
+    TWEETS_FOLDER=$(folder)
+endif
+
+ifdef idx_n_grams
+    IDX_N_GRAMS=$(idx_n_grams)
+endif
+
+ifdef corr_word
+    CORR_WORD=$(corr_word)
+endif
+
+ifdef files_database
+    FILES_DATABASE=$(files_database)
+endif
+
+ifdef auto_predict
+    AUTO_PREDICT=$(auto_predict)
+endif
+
 UNAME_S := $(shell uname -s)
 ENTRY_POINT=main.ozf
 

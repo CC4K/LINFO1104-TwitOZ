@@ -400,7 +400,7 @@ define
             fun {RemoveLastValue_Aux List NewList}
                 case List
                 of nil then NewList
-                [] H|nil then NewList
+                [] _|nil then NewList
                 [] H|T then
                     {RemoveLastValue_Aux T H|NewList}
                 end

@@ -11,7 +11,8 @@ make blablabla
 
 ### Running the app
 
-make run blablabla
+make run folder="tweets" idx_n_grams=3 corr_word=true files_database=false auto_predict=false
+
 
 
 ## How to use

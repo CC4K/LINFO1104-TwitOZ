@@ -206,21 +206,20 @@ define
     % @return: /
     %%%
     proc {Get_Arguments}
-        Args = {Application.getArgs record('folder'(single type:string optional:false)
-                                            'idx_n_grams'(single type:string optional:true)
-                                            'corr_word'(single type:bool optional:true)
-                                            'files_database'(single type:bool optional:true)
-                                            'auto_predict'(single type:bool optional:true))}
-    in
-        Variables.folder_Name = Args.'folder'
-        Variables.idx_N_Grams = {String.toInt Args.'idx_n_grams'}
-        Variables.correction_Words = Args.'corr_word'
-        Variables.files_Database = Args.'files_database'
-        Variables.auto_Prediction = Args.'auto_predict'
 
-        % Not good yet
-        {System.show Variables.folder_Name}
-        {System.show Variables.idx_N_Grams}
+        UserOptions = {Application.getArgs record('folder'(single type:string optional:false)
+                                                'idx_n_grams'(single type:int optional:true)
+                                                'corr_word'(single type:bool optional:true)
+                                                'files_database'(single type:bool optional:true)
+                                                'auto_predict'(single type:bool optional:true))}
+    in
+        Variables.folder_Name = UserOptions.'folder'
+        Variables.idx_N_Grams = UserOptions.'idx_n_grams'
+        Variables.correction_Words = UserOptions.'corr_word'
+        Variables.files_Database = UserOptions.'files_database'
+        Variables.auto_Prediction = UserOptions.'auto_predict'
+
+        % Not good yet (don't know why)
         {System.show Variables.correction_Words}
         {System.show Variables.files_Database}
         {System.show Variables.auto_Prediction}
@@ -239,8 +238,10 @@ define
     %%%
     proc {Main}
 
-        {TestArgs}
+        % Get the arguments of the command line and store them in global variables
+        {Get_Arguments}
 
+        % Reset the last prediction file (from the previous execution of the program)
         {Automatic_prediction.reset_LastPrediction_File}
 
         % Initialization of the global variables used in the program
