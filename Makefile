@@ -1,4 +1,4 @@
-# Args
+# Args default values.
 TWEETS_FOLDER="tweets"
 IDX_N_GRAMS=2
 CORR_WORD=0
@@ -33,6 +33,8 @@ endif
 
 
 UNAME_S := $(shell uname -s)
+
+# The entry point of the program.
 ENTRY_POINT=main.ozf
 
 ifeq ($(UNAME_S),Darwin)
@@ -45,7 +47,7 @@ endif
 
 all : $(ENTRY_POINT)
 
-
+# Compile all the files.
 main.ozf :
 	if [ ! -d "bin" ]; then mkdir bin; fi
 	$(OZC) -c src/variables.oz -o bin/variables.ozf
@@ -68,12 +70,16 @@ main.ozf :
 %.ozf: %.oz
 	$(OZC) -c $< -o "$@"
 
+
+# Run the program with the specified arguments.
 run: bin/$(ENTRY_POINT) 
 	$(OZENGINE) bin/$(ENTRY_POINT) --folder $(TWEETS_FOLDER) --idx_n_grams $(IDX_N_GRAMS) --ext $(EXT) --corr_word $(CORR_WORD) --files_database $(FILES_DATABASE) --auto_predict $(AUTO_PREDICT)
 
+# Clean the user historic.
 clean_user_historic:
 	rm -f user_historic/user_files/*.txt
 
+# Clean the ./bin folder and all its content.
 clean:
 	rm -f bin/*.ozf
 	rm -f bin/extensions/*.ozf
