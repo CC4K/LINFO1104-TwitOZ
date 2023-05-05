@@ -13,7 +13,7 @@ export
     Get_ListFromPortStream
     SplitList_AtIdx
     ConcatenateElemOfList
-    Get_Tree
+    Get_Last_Elem_Stream
     IsInList
 define
 
@@ -341,19 +341,19 @@ define
     % Out: tree(7,8,9)
     %
     % @return: the last version of the tree (from the stream 'Stream' associated with the port 'Port' (= global variable))
-    fun {Get_Tree}
+    fun {Get_Last_Elem_Stream Stream}
         local
-            fun {Get_Tree_Aux Stream_Tree}
-                case Stream_Tree
+            fun {Get_Last_Elem_Stream_Aux Stream}
+                case Stream
                 of H|T then
                     % {IsDet T} is used to check if the element T is bound or not (true in this case)
                     % If it is unbound, then it means that H is the last element of the stream!
                     if {IsDet T} == false then H
-                    else {Get_Tree_Aux T} end
+                    else {Get_Last_Elem_Stream_Aux T} end
                 end
             end
         in
-            {Get_Tree_Aux Variables.stream_Tree}
+            {Get_Last_Elem_Stream_Aux Stream}
         end
     end
 

@@ -88,7 +88,7 @@ define
                 of nil then skip
                 [] H|T then
                     local Tree_Value Prediction_Result BestWords Probability Frequency Str_Line_Not_Cleaned Str_Line Second_Str Third_Str Total_Str in
-                        Tree_Value = {Tree.lookingUp {Function.get_Tree} {String.toAtom H}}
+                        Tree_Value = {Tree.lookingUp {Function.get_Last_Elem_Stream Variables.stream_Tree} {String.toAtom H}}
                         if Tree_Value == notfound then
                             {Interface.insertText_Window Variables.outputText Idx 0 none {Function.append_List {Function.append_List "Correction " {Int.toString Idx+1}} ": No words found."}}
                             {DisplayResults_Aux T Idx+1}

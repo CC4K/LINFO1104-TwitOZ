@@ -155,7 +155,7 @@ define
                 File_Parsed = {Parser.parses_AllLines LineToParsed}
                 P=1
                 {Wait P}
-                NewTree = {Create_Updated_Tree {Function.get_Tree} File_Parsed}
+                NewTree = {Create_Updated_Tree {Function.get_Last_Elem_Stream Variables.stream_Tree} File_Parsed}
                 % Send to the port the new update tree with the new datas
                 {Send Variables.port_Tree NewTree}
             end

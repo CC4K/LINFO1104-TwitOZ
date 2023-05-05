@@ -16,6 +16,9 @@ export
     Port_Tree
     Stream_Tree
     Nber_HistoricFiles
+
+    Port_Auto_Corr_Threads
+    Stream_Auto_Corr_Threads
 define
 
     % Global variables that will not be modify during the execution
@@ -43,5 +46,8 @@ define
 
     Window % The window to display graphics and informations
     Description % The description of the window
+
+    Port_Auto_Corr_Threads
+    Stream_Auto_Corr_Threads
 
 end

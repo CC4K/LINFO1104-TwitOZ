@@ -57,7 +57,7 @@ define
 
                     % Get the subtree representing the value at the key created by the concatenation of the N last words
                     Key = {Function.concatenateElemOfList List_Words 32}
-                    Tree_Value = {Tree.lookingUp {Function.get_Tree} {String.toAtom Key}}
+                    Tree_Value = {Tree.lookingUp {Function.get_Last_Elem_Stream Variables.stream_Tree} {String.toAtom Key}}
 
                     if Tree_Value == notfound then
                         {Interface.setText_Window Variables.outputText "No words found."}
@@ -239,6 +239,9 @@ define
         Variables.nbThreads = Variables.nberFiles
         Variables.port_Tree = {NewPort Variables.stream_Tree}
         Variables.separatedWordsPort = {NewPort Variables.separatedWordsStream}
+        Variables.port_Auto_Corr_Threads = {NewPort Variables.stream_Auto_Corr_Threads}
+
+        {Send Variables.port_Auto_Corr_Threads 0}
 
         {Property.put print foo(width:1000 depth:1000)}
 
@@ -293,7 +296,7 @@ define
         
         % Launch one thread that will predict the next word every 0.5sec
         % => The user can write and the words will be predicted at the same time!
-        % thread {Automatic_prediction.automatic_Prediction 500} end
+        thread {Automatic_prediction.automatic_Prediction 500} end
 
         %%ENDOFCODE%%
     end

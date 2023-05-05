@@ -22,9 +22,11 @@ define
     %%%
     % Automatic_Prediction
     %%%
+
+
     proc {Automatic_Prediction Time_Delay}
         local
-            User_Input Splitted_Text List_Words Length_Splitted_Text First_Key Second_Key Value_Tree Value_Tree2 ResultPress ProbableWords Probability Frequency
+            Delay_Correction User_Input Splitted_Text List_Words Length_Splitted_Text First_Key Second_Key Value_Tree Value_Tree2 ResultPress ProbableWords Probability Frequency
             fun {Automatic_Prediction_Aux}
 
                 % Get user input, clean it and split it
@@ -49,7 +51,7 @@ define
 
                         % Get the only key (all the words concatenated) and the subtree associated
                         First_Key = {Function.concatenateElemOfList List_Words 32}
-                        Value_Tree = {Tree.lookingUp {Function.get_Tree} {String.toAtom First_Key}}
+                        Value_Tree = {Tree.lookingUp {Function.get_Last_Elem_Stream Variables.stream_Tree} {String.toAtom First_Key}}
 
                         % If the key is not found
                         if Value_Tree == notfound then
@@ -73,13 +75,13 @@ define
                         Second_Key = {Function.concatenateElemOfList {RemoveLastValue List_Words} 32}
 
                         % Get the subtree associated to the first key
-                        Value_Tree = {Tree.lookingUp {Function.get_Tree} {String.toAtom First_Key}}
+                        Value_Tree = {Tree.lookingUp {Function.get_Last_Elem_Stream Variables.stream_Tree} {String.toAtom First_Key}}
 
                         % If the first key is not found
                         if Value_Tree == notfound then
                             
                             % Get the subtree associated to the second key
-                            Value_Tree2 = {Tree.lookingUp {Function.get_Tree} {String.toAtom Second_Key}}
+                            Value_Tree2 = {Tree.lookingUp {Function.get_Last_Elem_Stream Variables.stream_Tree} {String.toAtom Second_Key}}
 
                             if Value_Tree2 == notfound then
                                 [nil 0 0.0]
@@ -104,17 +106,19 @@ define
                 end
             end
         in
-            % Infinite loop
-            local ResultPrediction ProbableWords Frequency Probability in
-                ResultPrediction = {Automatic_Prediction_Aux}
-                ProbableWords = ResultPrediction.1
-                Frequency = ResultPrediction.2.1
-                Probability = ResultPrediction.2.2.1
+            Delay_Correction = {Function.get_Last_Elem_Stream Variables.stream_Auto_Corr_Threads}
+            if Delay_Correction \= 0 then
+                
+                {Time.delay Delay_Correction}
+                {Send Variables.port_Auto_Corr_Threads 0}
 
-                if {CheckIfSamePrediction ProbableWords Frequency Probability} == true then
-                    {Time.delay Time_Delay}
-                    {Automatic_Prediction Time_Delay}
-                else
+                % Infinite loop
+                local ResultPrediction ProbableWords Frequency Probability in
+                    ResultPrediction = {Automatic_Prediction_Aux}
+                    ProbableWords = ResultPrediction.1
+                    Frequency = ResultPrediction.2.1
+                    Probability = ResultPrediction.2.2.1
+
                     if ProbableWords == nil then
                         {Interface.setText_Window Variables.outputText ""}
                         {Interface.insertText_Window Variables.outputText 1 0 none "Words not found."}
@@ -125,9 +129,36 @@ define
                         {Interface.insertText_Window Variables.outputText 1 0 none {Append "Need at least " {Append {Int.toString Variables.idx_N_Grams} " words to predict the next one."}}}
                         {StockResultsInFile none 0 0.0}
 
-                    else _ = {Predict_All.proposeAllTheWords ProbableWords Frequency Probability false} end
-                    {Time.delay Time_Delay}
+                    else _ = {Predict_All.proposeAllTheWords ProbableWords Frequency Probability true} end
                     {Automatic_Prediction Time_Delay}
+                end
+
+            else
+                {Time.delay Time_Delay}
+
+                % Infinite loop
+                local ResultPrediction ProbableWords Frequency Probability in
+                    ResultPrediction = {Automatic_Prediction_Aux}
+                    ProbableWords = ResultPrediction.1
+                    Frequency = ResultPrediction.2.1
+                    Probability = ResultPrediction.2.2.1
+
+                    if {CheckIfSamePrediction ProbableWords Frequency Probability} == true then
+                        {Automatic_Prediction Time_Delay}
+                    else
+                        if ProbableWords == nil then
+                            {Interface.setText_Window Variables.outputText ""}
+                            {Interface.insertText_Window Variables.outputText 1 0 none "Words not found."}
+                            {StockResultsInFile nil 0 0.0}
+
+                        elseif ProbableWords == none then
+                            {Interface.setText_Window Variables.outputText ""}
+                            {Interface.insertText_Window Variables.outputText 1 0 none {Append "Need at least " {Append {Int.toString Variables.idx_N_Grams} " words to predict the next one."}}}
+                            {StockResultsInFile none 0 0.0}
+
+                        else _ = {Predict_All.proposeAllTheWords ProbableWords Frequency Probability true} end
+                        {Automatic_Prediction Time_Delay}
+                    end
                 end
             end
         end
