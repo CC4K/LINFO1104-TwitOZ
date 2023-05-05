@@ -73,11 +73,13 @@ define
             end
         in
             Contents = {Variables.inputText get($)}
-            List_Without_Words_User = {Split_List_Delimiter {Parser.cleaningUserInput Contents} Word_User}.1
-            Length_List = {Length List_Without_Words_User}
-
-            if Length_List == 1 then nil
-            else {Get_List_All_N_Words_Before_Aux List_Without_Words_User nil nil nil} end
+            List_Without_Words_User = {Split_List_Delimiter {Parser.cleaningUserInput Contents} Word_User}
+            if List_Without_Words_User == nil then nil
+            else
+                Length_List = {Length List_Without_Words_User.1}
+                if Length_List == 1 then nil
+                else {Get_List_All_N_Words_Before_Aux List_Without_Words_User.1 nil nil nil} end
+            end
         end
     end
 
@@ -118,7 +120,8 @@ define
             end
         in
             {Interface.setText_Window Variables.outputText ""}
-            {DisplayResults_Aux List_Keys 0}
+            if List_Keys == nil then {Interface.insertText_Window Variables.outputText 0 0 none "Correction : No words found."}
+            else {DisplayResults_Aux List_Keys 0} end
         end
     end
 
