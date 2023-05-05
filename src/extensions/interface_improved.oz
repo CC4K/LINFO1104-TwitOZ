@@ -23,19 +23,19 @@ define
 
         local State_Correction State_Database State_Predict in
 
-            if Variables.auto_Prediction == true then
+            if Variables.auto_Prediction == 1 then
                 State_Predict = disabled
             else
                 State_Predict = normal
             end
 
-            if Variables.files_Database == true then
+            if Variables.files_Database == 1 then
                 State_Database = normal
             else
                 State_Database = disabled
             end
 
-            if Variables.correction_Words == true then
+            if Variables.correction_Words == 1 then
                 State_Correction = normal
             else
                 State_Correction = disabled

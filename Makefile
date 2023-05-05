@@ -1,11 +1,16 @@
 # Args
 TWEETS_FOLDER="tweets"
 IDX_N_GRAMS=2
-CORR_WORD=false
-FILES_DATABASE=false
-AUTO_PREDICT=false
+CORR_WORD=0
+FILES_DATABASE=0
+AUTO_PREDICT=0
+EXT=none
 
-# Récupération des options spécifiées par l'utilisateur
+# Get the options specified by the user.
+ifdef ext
+    EXT=$(ext)
+endif
+
 ifdef folder
     TWEETS_FOLDER=$(folder)
 endif
@@ -25,6 +30,7 @@ endif
 ifdef auto_predict
     AUTO_PREDICT=$(auto_predict)
 endif
+
 
 UNAME_S := $(shell uname -s)
 ENTRY_POINT=main.ozf
@@ -63,7 +69,7 @@ main.ozf :
 	$(OZC) -c $< -o "$@"
 
 run: bin/$(ENTRY_POINT) 
-	$(OZENGINE) bin/$(ENTRY_POINT) --folder $(TWEETS_FOLDER) --idx_n_grams $(IDX_N_GRAMS) --corr_word $(CORR_WORD) --files_database $(FILES_DATABASE) --auto_predict $(AUTO_PREDICT)
+	$(OZENGINE) bin/$(ENTRY_POINT) --folder $(TWEETS_FOLDER) --idx_n_grams $(IDX_N_GRAMS) --ext $(EXT) --corr_word $(CORR_WORD) --files_database $(FILES_DATABASE) --auto_predict $(AUTO_PREDICT)
 
 clean_user_historic:
 	rm -f user_historic/user_files/*.txt

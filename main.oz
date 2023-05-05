@@ -208,30 +208,48 @@ define
     proc {Get_Arguments}
 
         UserOptions = {Application.getArgs record('folder'(single type:string optional:false)
+                                                  'ext'(single type:string default:none optional:true)
                                                   'idx_n_grams'(single type:int default:2 optional:true)
-                                                  'corr_word'(single type:bool default:false optional:true)
-                                                  'files_database'(single type:bool default:false optional:true)
-                                                  'auto_predict'(single type:bool default:false optional:true))}
+                                                  'corr_word'(single type:int default:0 optional:true)
+                                                  'files_database'(single type:int default:0 optional:true)
+                                                  'auto_predict'(single type:int default:0 optional:true))}
     in
         Variables.folder_Name = UserOptions.'folder'
-        Variables.idx_N_Grams = UserOptions.'idx_n_grams'
-        Variables.correction_Words = UserOptions.'corr_word'
-        Variables.files_Database = UserOptions.'files_database'
-        Variables.auto_Prediction = UserOptions.'auto_predict'
+        local N_Grams in
+            N_Grams = UserOptions.'idx_n_grams'
+            if N_Grams >= 1 then
+                Variables.idx_N_Grams = N_Grams
+            else
+                {System.show 'The value of idx_n_grams must be greater or equal than 1.'}
+                {Application.exit 0}
+            end
+        end
 
-        % Not good yet (don't know why)
-        {System.show {String.toAtom Variables.folder_Name}}
-        {System.show Variables.idx_N_Grams}
-        {System.show Variables.correction_Words}
-        {System.show Variables.files_Database}
-        {System.show Variables.auto_Prediction}
+        if UserOptions.'ext' == "all" then
+            Variables.correction_Words = 1
+            Variables.files_Database = 1
+            Variables.auto_Prediction = 1
+        else
+            if UserOptions.'corr_word' \= 1 then 
+                Variables.correction_Words = 0
+            else
+                Variables.correction_Words = 1
+            end
+
+            if UserOptions.'files_database' \= 1 then 
+                Variables.files_Database = 0
+            else
+                Variables.files_Database = 1
+            end
+
+            if UserOptions.'auto_predict' \= 1 then 
+                Variables.auto_Prediction = 0
+            else
+                Variables.auto_Prediction = 1
+            end
+        end
     end
 
-    %%%%%%%%%% folder %%%%%%%%%%%%%%%  => OK
-     %%%%%%%%%% auto_predict %%%%%%%%%%  => OK
-      %%%%%%%%%% idx_N_Grams %%%%%%%%%%%%   => OK
-       %%%%%%%%%% corr_word %%%%%%%%%%%%%%% => Faut juste dégager le boutton
-        %%%%%%%%%% files_database %%%%%%%%%%%% => Faut juste dégager le boutton
 
     %%%
     % Main procedure that creates the Qtk window and calls differents functions/procedures to make the program functional.
@@ -311,7 +329,7 @@ define
         % => {Press} can work now because the structure is ready
         Variables.tree_Over = true
 
-        if Variables.auto_Prediction then
+        if Variables.auto_Prediction == 1 then
             % Launch one thread that will predict the next word every 0.5sec
             % => The user can write and the words will be predicted at the same time!
             thread {Automatic_prediction.automatic_Prediction 500} end
