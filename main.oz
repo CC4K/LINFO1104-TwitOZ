@@ -19,6 +19,7 @@ import
     Interface_improved at 'extensions/interface_improved.ozf'
     N_Grams at 'extensions/n_Grams.ozf'
     Predict_All at 'extensions/predict_All.ozf'
+    Correction_prediction at 'extensions/correction_prediction.ozf'
 
 define
 
@@ -96,7 +97,6 @@ define
             [[nil] 0] % => no tree created yet
         end
     end
-
     
     %%%
     % Launches N reading and parsing threads that will read and process all the files.
@@ -293,7 +293,7 @@ define
         
         % Launch one thread that will predict the next word every 0.5sec
         % => The user can write and the words will be predicted at the same time!
-        thread {Automatic_prediction.automatic_Prediction 500} end
+        % thread {Automatic_prediction.automatic_Prediction 500} end
 
         %%ENDOFCODE%%
     end

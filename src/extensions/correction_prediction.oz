@@ -19,10 +19,13 @@ define
     %% WORD USER DONT KNOW HOW TO Have it with the window %%
     %% Il faudra aussi stoper le Thread qui predis automatiquement! %%
     proc {CorrectionSentences Word_User}
-        local List_Keys in
+        local Word_User_Parsed List_Keys in
             Word_User_Parsed = {Parser.cleaningUserInput Word_User}
-            List_Keys = {Get_List_All_N_Words_Before Word_User_Parsed}
-            {DisplayResults List_Keys}
+            if {Length Word_User_Parsed} \= 1 then {Interface.insertText_Window Variables.outputText 0 0 none "Please enter only one word."}
+            else
+                List_Keys = {Get_List_All_N_Words_Before Word_User_Parsed.1}
+                {DisplayResults List_Keys}
+            end
         end
     end
 
@@ -54,25 +57,27 @@ define
     fun {Get_List_All_N_Words_Before Word_User}
 
         local
-            fun {Get_List_All_N_Words_Before_Aux List NewList}
+            Contents
+            List_Without_Words_User
+            Length_List
+            fun {Get_List_All_N_Words_Before_Aux List Last_Word Before_Last_Word NewList}
                 case List
-                of nil then nil
-                [] _|nil then nil
+                of nil then NewList
+                [] H|nil then
+                    if H == Word_User then {Reverse {Function.append_List Before_Last_Word 32|Last_Word}|NewList}
+                    else {Reverse NewList} end
                 [] H|T then
-                    if T.2 == nil then
-                        {Reverse {Get_Last_Nth_Word_List List_Words Nth}|NewList}
-                    else
-                        {Get_List_All_N_Words_Before_Aux T {Get_Last_Nth_Word_List List_Words Nth}|NewList}
-                    end
+                    if H == Word_User then {Get_List_All_N_Words_Before_Aux T H Last_Word {Function.append_List Before_Last_Word 32|Last_Word}|NewList}
+                    else {Get_List_All_N_Words_Before_Aux T H Last_Word NewList} end
                 end
             end
         in
             Contents = {Variables.inputText get($)}
-            List_Without_Words_User = {Split_List_Delimiter Contents Word_User}
+            List_Without_Words_User = {Split_List_Delimiter {Parser.cleaningUserInput Contents} Word_User}.1
             Length_List = {Length List_Without_Words_User}
 
             if Length_List == 1 then nil
-            else {Get_List_All_N_Words_Before_Aux List_Without_Words_User nil} end
+            else {Get_List_All_N_Words_Before_Aux List_Without_Words_User nil nil nil} end
         end
     end
 
@@ -83,32 +88,36 @@ define
                 of nil then skip
                 [] H|T then
                     local Tree_Value Prediction_Result BestWords Probability Frequency Str_Line_Not_Cleaned Str_Line Second_Str Third_Str Total_Str in
-                        Tree_Value = {Tree.lookingUp {String.toAtom H}}
-                        if Tree_Value == notfound then {Interface.insertText_Window Variables.outputText Idx 0 none {Function.append_List {Function.append_List "Correction " {Int.toString Idx}} ": No words found."}}
+                        Tree_Value = {Tree.lookingUp {Function.get_Tree} {String.toAtom H}}
+                        if Tree_Value == notfound then
+                            {Interface.insertText_Window Variables.outputText Idx 0 none {Function.append_List {Function.append_List "Correction " {Int.toString Idx+1}} ": No words found."}}
+                            {DisplayResults_Aux T Idx+1}
                         else
-                            Prediction_Result = {Tree.get_Result_Prediction Tree_Value}
+                            Prediction_Result = {Tree.get_Result_Prediction Tree_Value none}
                             BestWords = Prediction_Result.1
                             Probability = Prediction_Result.2.1
                             Frequency = Prediction_Result.2.2.1
 
                             if {Length BestWords} > 1 then
-                                Str_Line_Not_Cleaned = {ProposeAllTheWords_Aux BestWords 12+{Length {Int.toString Idx}} _ _ true}
-                                Str_Line = {SplitList_AtIdx Str_Line_Not_Cleaned {Length Str_Line_Not_Cleaned}-2}.1
+                                Str_Line_Not_Cleaned = {Predict_All.proposeAllTheWords BestWords _ _ false}
+                                Str_Line = {Function.splitList_AtIdx Str_Line_Not_Cleaned {Length Str_Line_Not_Cleaned}-1}.1
                             else
-                                Str_Line = {Atom.toString BestWords}
+                                Str_Line = {Atom.toString BestWords.1}
                             end
 
                             Second_Str = {Function.append_List " (frequency : " {Int.toString Frequency}}
-                            Third_Str = {Function.append_List {Function.append_List "and probability : " {Float.toString Probability}} ")\n"}
+                            Third_Str = {Function.append_List {Function.append_List " and probability : " {Float.toString Probability}} ")\n"}
 
-                            Total_Str = {List.append_List Str_Line {List.append_List Second_Str Third_Str}}
-                            {Interface.setText_Window Variables.outputText ""}
-                            {Interface.insertText_Window Variables.outputText Idx 0 none {Function.append_List {Function.append_List "Correction " {Int.toString Idx}} {Function.append_List " : " Total_Str}}}
+                            Total_Str = {Function.append_List Str_Line {Function.append_List Second_Str Third_Str}}
+                            {Interface.insertText_Window Variables.outputText Idx 0 none {Function.append_List {Function.append_List "Correction " {Int.toString Idx+1}} {Function.append_List " : " Total_Str}}}
+
+                            {DisplayResults_Aux T Idx+1}
                         end
                     end
                 end
             end
         in
+            {Interface.setText_Window Variables.outputText ""}
             {DisplayResults_Aux List_Keys 0}
         end
     end

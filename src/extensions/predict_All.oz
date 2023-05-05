@@ -40,15 +40,17 @@ define
             end
         in
             {Interface.setText_Window Variables.outputText ""}
-        
-            Str_Line = {ProposeAllTheWords_Aux List_MostProbableWords "The most probable word(s) : ["}
 
-            if Corr_auto == false then
+            if Corr_auto == true then
+                Str_Line = {ProposeAllTheWords_Aux List_MostProbableWords "The most probable word(s) : ["}
                 {Interface.insertText_Window Variables.outputText 0 0 none Str_Line}
                 {DisplayFreq_And_Probability 2 Frequency Probability}
                 {Automatic_Prediction.stockResultsInFile List_MostProbableWords Frequency Probability}
                 Str_Line
-            else Str_Line end
+            else
+                Str_Line = {ProposeAllTheWords_Aux List_MostProbableWords "["}
+                Str_Line
+            end
         end
     end
 
