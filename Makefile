@@ -52,10 +52,12 @@ main.ozf :
 
 	if [ ! -d "user_historic" ]; then mkdir user_historic; fi
 	if [ ! -d "user_historic/user_files" ]; then mkdir user_historic/user_files; fi
-	if [ ! -d "user_historic/last_prediction.txt" ]; then touch user_historic/last_prediction.txt; fi
-	if [ ! -d "user_historic/nber_historic_files.txt" ]; then touch user_historic/nber_historic_files.txt; fi
+	
+	if [ ! -f "user_historic/last_prediction.txt" ]; then touch user_historic/last_prediction.txt; fi
+	if [ ! -f "user_historic/nber_historic_files.txt" ]; then printf "0" > user_historic/nber_historic_files.txt; fi
 
 	if [ ! -d "bin" ]; then mkdir bin; fi
+
 	$(OZC) -c src/variables.oz -o bin/variables.ozf
 	$(OZC) -c src/function.oz -o bin/function.ozf
 	$(OZC) -c src/interface.oz -o bin/interface.ozf
@@ -64,6 +66,7 @@ main.ozf :
 	$(OZC) -c src/reader.oz -o bin/reader.ozf
 
 	if [ ! -d "bin/extensions" ]; then mkdir bin/extensions; fi
+
 	$(OZC) -c src/extensions/automatic_prediction.oz -o bin/extensions/automatic_prediction.ozf
 	$(OZC) -c src/extensions/interface_improved.oz -o bin/extensions/interface_improved.ozf
 	$(OZC) -c src/extensions/historic_user.oz -o bin/extensions/historic_user.ozf
@@ -78,15 +81,14 @@ main.ozf :
 
 
 # Run the program with the specified arguments.
-run: bin/$(ENTRY_POINT) 
+run: bin/$(ENTRY_POINT)
 	$(OZENGINE) bin/$(ENTRY_POINT) --folder $(TWEETS_FOLDER) --idx_n_grams $(IDX_N_GRAMS) --ext $(EXT) --corr_word $(CORR_WORD) --files_database $(FILES_DATABASE) --auto_predict $(AUTO_PREDICT)
 
 # Clean the user historic.
+# Not for user, only for dev (in the code).
+# The user can do the command 'make clean_historic' to clean all the folder.
 clean_user_historic:
 	rm -f user_historic/user_files/*.txt
-	rm -f user_historic/*.txt
-	rmdir user_historic/user_files
-	rmdir user_historic
 
 # Help command
 help:
@@ -102,9 +104,23 @@ help:
 	@echo \ \ \> 'folder=[string]' : \ \ \ \ \ specifies database folder [default folder: "tweets"].
 	@echo \ \ \> 'ext=all' : \ \ \ \ \ \ \ \ \ \ \ \ \ activates all extensions at once.
 
+# Clean the ./user_historic folder and all its content.
+# If applied, you must recompile the project with the command make.
+clean_historic:
+	rm -f user_historic/user_files/*.txt
+	rm -f user_historic/*.txt
+	rm -rf user_historic/user_files
+	rm -rf user_historic
+
 # Clean the ./bin folder and all its content.
+# If applied, you must recompile the project with the command make.
 clean:
 	rm -f bin/*.ozf
 	rm -f bin/extensions/*.ozf
 	rm -rf bin/extensions
 	rm -rf bin
+
+# Clean all
+clean_all:
+	make clean
+	make clean_historic
