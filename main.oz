@@ -211,7 +211,6 @@ define
     end
 
 
-
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %%% ================= READING SECTION ================= %%%
     %%% ================= READING SECTION ================= %%%
@@ -236,14 +235,14 @@ define
                     if Line == false then
                         {TextFile close}
                         List_Line
-                    else {GetLine TextFile Line|List_Line} end
+                    else {GetLine TextFile List_Line|32|Line} end
                 catch _ then {Application.exit} end
             end
         in
             try
                 TextOfFile = {New TextFile init(name:Filename flags:[read])}
             in
-                {GetLine TextOfFile nil}
+                {Flatten {GetLine TextOfFile nil}}
             catch _ then {Application.exit} end
         end
     end
@@ -305,33 +304,6 @@ define
 
 
     %%%
-    % Replaces special characters with spaces (== 32 in ASCII) and sets all letters to lowercase
-    % Digits are left untouched
-
-    % Example usage:
-    % In: "FLATTENING of the CURVE! 888 IS a GoOd DIgit../.!"
-    % Out: "flattening of the curve  888 is a good digit     "
-    %
-    % @param Line: a string to be parsed
-    % @param Parser: a function that parses a character
-    % @return: a parsed string without any special characters or capital letters
-    %%%
-    fun {ParseLine Line Parser}
-        local
-            fun {ParseLine_Aux Line NewLine}
-                case Line
-                of nil then {Reverse NewLine}
-                [] H|T then
-                    {ParseLine_Aux T {Parser H}|NewLine}
-                end
-            end
-        in
-            {ParseLine_Aux Line nil}
-        end
-    end
-
-
-    %%%
     % Applies a parsing function to each string in a list of strings
     %
     % Example usage:
@@ -341,18 +313,17 @@ define
     % @param List: a list of strings
     % @return: a list of the parsed strings
     %%%
-    fun {ParseAllLines List}
+    fun {ParseAllLines List Parser}
         local
-            Parser = fun {$ Line} {Cleaning_UnNecessary_Spaces {ParseLine Line fun {$ Char} {GetNewChar Char} end}} end
             fun {ParseAllLines_Aux List NewList}
                 case List
-                of nil then NewList
+                of nil then {Reverse NewList}
                 [] H|T then
                     {ParseAllLines_Aux T {Parser H}|NewList}
                 end
             end
         in
-            {ParseAllLines_Aux List nil}
+            {Cleaning_UnNecessary_Spaces {ParseAllLines_Aux List nil}}
         end
     end
 
@@ -414,7 +385,7 @@ define
                 end
             end
         in
-            {ParseLine Str_Line fun {$ Char} {ParseCharUser Char} end}
+            {ParseAllLines Str_Line fun {$ Char} {ParseCharUser Char} end}
         end
     end
 
@@ -609,33 +580,11 @@ define
     %%%
     fun {CreateTree List_List_Line}
         local
-            Updater_Tree = fun {$ List_Line NewTree} {Update_Tree List_Line NewTree} end
-            %%%
-            % Creates a part of the complete binary tree structure (to store the datas)
-            %
-            % Example usage:
-            % In: L = [["i     am the      boss man  "] ["no   problem sir"] ["  the boss is   here"] ["the boss is here"]]
-            % Out: tree(key:'i am' value:['the'#1] t_left:tree(key:'boss is' value:['here'#2] t_left:
-            %      tree(key:'am the' value:['boss'#1] t_left:leaf t_right:leaf) t_right:leaf) t_right:
-            %      tree(key:'no problem' value:['sir'#1] t_left:leaf t_right:tree(key:'the boss' value:['man'#1 'is'#2] t_left:leaf t_right:leaf)))
-            %
-            % @param List_Line: a list of lists of strings representing a line parsed (from a file)
-            % @param NewTree: the new binary tree initialized to 'leaf' that will be update
-            % @return: the new binary tree with some datas added
-            %%%
-            fun {Update_Tree List_Line NewTree}
-                case List_Line
-                of nil then NewTree
-                [] H|T then
-                    {Update_Tree T {UpdateElementsOfTree NewTree {BiGrams {Tokens_String H 32}}}}
-                end
-            end
-
             fun {CreateTree_Aux List_List_Line NewTree}
                 case List_List_Line
                 of nil then NewTree
                 [] H|T then
-                    {CreateTree_Aux T {Updater_Tree H NewTree}}
+                    {CreateTree_Aux T {UpdateElementsOfTree NewTree {BiGrams {Tokens_String H 32}}}}
                 end
             end
         in
@@ -885,7 +834,7 @@ define
 		local SplittedText List_Words BeforeLast Last Key Parsed_Key Tree_Value in
 
             % Clean the input user and get the 2 last words
-            SplittedText = {Tokens_String {ParseLine {InputText getText(p(1 0) 'end' $)} fun {$ Char} {GetNewChar Char} end} 32}
+            SplittedText = {Tokens_String {ParseAllLines {InputText getText(p(1 0) 'end' $)} fun {$ Char} {GetNewChar Char} end} 32}
             List_Words = {Get_TwoLastWord SplittedText}
 
             if List_Words == nil then  [[nil] 0.0] % If the user did't write at least two words => return [[nil] 0.0]
@@ -945,7 +894,7 @@ define
                             LineToParsed = {Read File}
                             L=1
                             {Wait L}
-                            File_Parsed = {ParseAllLines LineToParsed}
+                            File_Parsed = {ParseAllLines LineToParsed fun {$ Char} {GetNewChar Char} end}
                             P=1
                         end
                     
