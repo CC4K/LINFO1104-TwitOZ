@@ -18,7 +18,7 @@ To compile:
     make (automatically compile all the .oz files)
 
 To clean:
-    - make clean (clean all the binary files (.ozf files))
+    make clean (clean all the binary files (.ozf files))
 
 To run:
     make run
