@@ -51,7 +51,7 @@ define
                     )
                 td( label(width:2 background:c(27 157 240)))
                 td( label(height:1 background:c(27 157 240) glue:we)
-                    %label(image:{QTk.newImage photo(url:"./twit.png")} borderwidth:0 glue:we)
+                    label(image:{QTk.newImage photo(url:"./twit.png")} borderwidth:0 glue:we)
                     td( button(text:"Predict" state:State_Predict height:2 width:24 background:c(29 125 242) borderwidth:1 font:{QTk.newFont font(family:"Arial" size:13 weight:bold)} foreground:white activebackground:white activeforeground:black cursor:hand2 action:CallerPress)
                         lr( text(handle:Variables.correctText height:1 width:16 font:{QTk.newFont font(family:"Verdana" size:12)} background:c(52 53 65) foreground:white insertbackground:white selectbackground:c(13 101 212) wrap:none ipady:10 padx:2)
                             button(text:"Correct\na word" state:State_Correction height:2 width:8 background:c(29 125 242) borderwidth:1 font:{QTk.newFont font(family:"Arial" size:10)} foreground:white activebackground:white activeforeground:black cursor:hand2 action:proc {$} {Send Variables.port_Auto_Corr_Threads 5000} {Correction_prediction.correctionSentences} end)

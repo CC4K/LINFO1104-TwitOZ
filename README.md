@@ -54,3 +54,8 @@ Commands that the user can use:
 
 A detailed description of how each button works can be found in the "TwitOZ_Rapport.pdf" file.
 There is a version in French and in English, so enjoy!
+
+## Problems
+
+If you are on Mac and you have some problems to compile, you need to remove the image at Line 54 in the src/extensions/interface_improved file.
+In this case, you maybe can't see the colors of the buttons, or the image but we didn't find the source of the problem.
