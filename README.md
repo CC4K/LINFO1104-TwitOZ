@@ -46,10 +46,12 @@ The following commands are available to the user:
     #Special arguments:
         - ext=string [all = activate all the extensions] (Default none => do nothing)
 
-#Examples :
+#Examples 1:
     make run folder="my_folder" idx_n_grams=4 ext=all
+    
+#Examples 2:
     make run folder="my_folder corr_word=1
-    ,...
+,...
 
 ## How to use
 
