@@ -6,7 +6,7 @@
 TwitOZ is a text predictor project developped in the Oz programming language as part of the course LINFO1104.
 The principle is to predict the user's next word based on a database of tweets (N-grams algorithm).
 
-The user can also try the predictions on their very own database with the help of various extensions (see `How to use`).
+The user can also try the predictions on their very own database with the help of various extensions (see [How to use](#How-to-use)).
 
 This project was completed in two weeks.
 
@@ -62,7 +62,7 @@ make run folder="my_folder" corr_word=1
 ## How to use
 
 <p align="center">
-    <img src="TwitOZ_apercu.png" width="652" height="389"/>
+    <img src="TwitOZ_apercu.png" width="800"/>
 </p>
 
 ### Predict
