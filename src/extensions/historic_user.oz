@@ -11,7 +11,7 @@ import
     Reader at '../reader.ozf'
     Parser at '../parser.ozf'
     Tree at '../tree.ozf'
-    N_Grams at 'n_Grams.ozf'
+    N_grams at 'n_grams.ozf'
 
 export
     LaunchThreads_HistoricUser % Launches a thread for evry historic files of the user
@@ -288,9 +288,9 @@ define
                 case List_UserInput
                 of nil then Main_Tree
                 [] H|T then
-                    local List_Keys_N_Grams Updated_Tree in
-                        List_Keys_N_Grams = {N_Grams.n_Grams {Function.tokens_String H 32}}
-                        Updated_Tree = {Deal_ListKeys Main_Tree List_Keys_N_Grams}
+                    local List_Keys_N_grams Updated_Tree in
+                        List_Keys_N_grams = {N_grams.n_grams {Function.tokens_String H 32}}
+                        Updated_Tree = {Deal_ListKeys Main_Tree List_Keys_N_grams}
                         {Create_Updated_Tree_Aux Updated_Tree T}
                     end
                 end

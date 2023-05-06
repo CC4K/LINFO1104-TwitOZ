@@ -16,7 +16,7 @@ import
     Automatic_prediction at 'extensions/automatic_prediction.ozf'
     Historic_user at 'extensions/historic_user.ozf'
     Interface_improved at 'extensions/interface_improved.ozf'
-    N_Grams at 'extensions/n_Grams.ozf'
+    N_grams at 'extensions/n_grams.ozf'
     Predict_All at 'extensions/predict_All.ozf'
 
 define
@@ -24,7 +24,7 @@ define
 
     %%%
     % Displays to the output zone on the window the most likely prediction of the next word based on the N last entered words.
-    % The value of N depends of the N-Grams asked by the user.
+    % The value of N depends of the N-grams asked by the user.
     % This function is called when the prediction button is pressed.
     %
     % @param: /
@@ -47,12 +47,12 @@ define
         if Variables.tree_Over == true then
             local Input_User Splitted_Text List_Words Key Parsed_Key Tree_Value ResultPress ProbableWords Frequency Probability in
 
-                % Clean the input user and get the N last words (N depends of the N-Grams asked by the user)
+                % Clean the input user and get the N last words (N depends of the N-grams asked by the user)
                 Input_User = {Variables.inputText getText(p(1 0) 'end' $)}
                 Splitted_Text = {Parser.cleaningUserInput Input_User}
-                List_Words = {Function.get_Last_Nth_Word_List Splitted_Text Variables.idx_N_Grams}
+                List_Words = {Function.get_Last_Nth_Word_List Splitted_Text Variables.idx_N_grams}
 
-                if {Length List_Words} >= Variables.idx_N_Grams then
+                if {Length List_Words} >= Variables.idx_N_grams then
 
                     % Get the subtree representing the value at the key created by the concatenation of the N last words
                     Key = {Function.concatenateElemOfList List_Words 32}
@@ -88,7 +88,7 @@ define
                     end
                 else
                     % Not enough words to predict the next one
-                    {Interface.setText_Window Variables.outputText {Append "Need at least " {Append {Int.toString Variables.idx_N_Grams} " words to predict the next one."}}}
+                    {Interface.setText_Window Variables.outputText {Append "Need at least " {Append {Int.toString Variables.idx_N_grams} " words to predict the next one."}}}
                     [[nil] 0]
                 end
             end
@@ -214,10 +214,10 @@ define
                                                   'auto_predict'(single type:int default:0 optional:true))}
     in
         Variables.folder_Name = UserOptions.'folder'
-        local N_Grams in
-            N_Grams = UserOptions.'idx_n_grams'
-            if N_Grams >= 1 then
-                Variables.idx_N_Grams = N_Grams
+        local N_grams in
+            N_grams = UserOptions.'idx_n_grams'
+            if N_grams >= 1 then
+                Variables.idx_N_grams = N_grams
             else
                 {System.show 'The value of idx_n_grams must be greater or equal than 1.'}
                 {Application.exit 0}

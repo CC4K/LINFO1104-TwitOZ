@@ -1,7 +1,7 @@
 functor
 import
     Function at 'function.ozf'
-    N_Grams at 'extensions/n_grams.ozf'
+    N_grams at 'extensions/n_grams.ozf'
 export
     %% Usefull functions to search in a tree or replace a value in a tree (= update the tree) %%
     LookingUp
@@ -169,7 +169,7 @@ define
             %%%
             % Updates the values of the tree at the key X (where X is an element of 'List_Keys')
             % with the new values (correspond to the next word).
-            % This function is generalized to be used with any number of N-Grams.
+            % This function is generalized to be used with any number of N-grams.
             %
             % Example usage (simplified):
             % List_Keys = ['i am' 'am happy']
@@ -205,9 +205,9 @@ define
 
             %%%
             % Deals with a line of the datas (a line is a list of lists of strings)
-            % This function is generalized to be used with any number of N-Grams.
+            % This function is generalized to be used with any number of N-grams.
             % This function applies, for every line in 'Line_Datas', the function 'Update_Values_Tree'
-            % to the list of keys found with the function 'N_Grams.n_Grams'
+            % to the list of keys found with the function 'N_grams.n_grams'
             %
             % @param Updated_Tree: the tree to update
             % @param Line_Datas: a list of lists of strings
@@ -219,9 +219,9 @@ define
                         case Line_Datas
                         of nil then Updated_Tree
                         [] H|T then
-                            local List_Keys_N_Grams Value_Updated in
-                                List_Keys_N_Grams = {N_Grams.n_Grams {Function.tokens_String H 32}}
-                                Value_Updated = {Update_Values_Tree Updated_Tree List_Keys_N_Grams}
+                            local List_Keys_N_grams Value_Updated in
+                                List_Keys_N_grams = {N_grams.n_grams {Function.tokens_String H 32}}
+                                Value_Updated = {Update_Values_Tree Updated_Tree List_Keys_N_grams}
                                 {Deal_File_Aux T Value_Updated}
                             end
                         end

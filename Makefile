@@ -70,7 +70,7 @@ main.ozf :
 	$(OZC) -c src/extensions/automatic_prediction.oz -o bin/extensions/automatic_prediction.ozf
 	$(OZC) -c src/extensions/interface_improved.oz -o bin/extensions/interface_improved.ozf
 	$(OZC) -c src/extensions/historic_user.oz -o bin/extensions/historic_user.ozf
-	$(OZC) -c src/extensions/n_Grams.oz -o bin/extensions/n_grams.ozf
+	$(OZC) -c src/extensions/n_grams.oz -o bin/extensions/n_grams.ozf
 	$(OZC) -c src/extensions/predict_All.oz -o bin/extensions/predict_All.ozf
 	$(OZC) -c src/extensions/correction_prediction.oz -o bin/extensions/correction_prediction.ozf
 
@@ -92,11 +92,12 @@ clean_user_historic:
 
 # Help command
 help:
-	@echo \> 'make' : \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ to compile all project files.
-	@echo \> 'make clean_user_historic' : to delete user history from last sessions.
-	@echo \> 'make clean' : \ \ \ \ \ \ \ \ \ \ \ \ \ \ to delete all compiled binary files.
-	@echo \> 'make run' : \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ to run the project with simple prediction function and no extensions activated.
-	@echo \> 'make run [options]' : \ \ \ \ \ \ to run the project with a selection of extensions which are the following:
+	@echo \> 'make' : \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ to compile all project files.
+	@echo \> 'make clean_historic' : to delete user history from last sessions.
+	@echo \> 'make clean' : \ \ \ \ \ \ \ \ \ to delete all compiled binary files.
+	@echo \> 'make clean_all' : \ \ \ \ \ \ \ \ to delete all compiled binary files AND user history
+	@echo \> 'make run' : \ \ \ \ \ \ \ \ \ \ \ to run the project with simple prediction function and no extensions activated.
+	@echo \> 'make run [options]' : \ to run the project with a selection of extensions which are the following:
 	@echo \ \ \> 'idx_n_grams=[int]' : \ \ \ specifies the n-gram algorithm the program will use for predictions [must be \>= 1 \| default: 2].
 	@echo \ \ \> 'corr_word=[int]' : \ \ \ \ \ activates word correction [1 = on \| default: 0 = off].
 	@echo \ \ \> 'files_database=[int]' : activates the ability to add samples in database [1 = on \| default: 0 = off].

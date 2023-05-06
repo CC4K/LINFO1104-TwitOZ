@@ -34,19 +34,19 @@ define
                 Length_Splitted_Text = {Length Splitted_Text}
 
                 % Get the last N words into 'List_Words'
-                if Length_Splitted_Text == Variables.idx_N_Grams then
+                if Length_Splitted_Text == Variables.idx_N_grams then
                     List_Words = Splitted_Text
                 else
-                    List_Words = {Function.get_Last_Nth_Word_List Splitted_Text Variables.idx_N_Grams+1}
+                    List_Words = {Function.get_Last_Nth_Word_List Splitted_Text Variables.idx_N_grams+1}
                 end
 
                 % If there isn't enough words
-                if Length_Splitted_Text < Variables.idx_N_Grams then
+                if Length_Splitted_Text < Variables.idx_N_grams then
                     [none 0 0.0]
                 else % If there is enough words
 
                     % If there is only N words
-                    if Length_Splitted_Text == Variables.idx_N_Grams then
+                    if Length_Splitted_Text == Variables.idx_N_grams then
 
                         % Get the only key (all the words concatenated) and the subtree associated
                         First_Key = {Function.concatenateElemOfList List_Words 32}
@@ -126,7 +126,7 @@ define
 
                         elseif ProbableWords == none then
                             {Interface.setText_Window Variables.outputText ""}
-                            {Interface.insertText_Window Variables.outputText 1 0 none {Append "Need at least " {Append {Int.toString Variables.idx_N_Grams} " words to predict the next one."}}}
+                            {Interface.insertText_Window Variables.outputText 1 0 none {Append "Need at least " {Append {Int.toString Variables.idx_N_grams} " words to predict the next one."}}}
                             {StockResultsInFile none 0 0.0}
 
                         else _ = {Predict_All.proposeAllTheWords ProbableWords Frequency Probability true} end
@@ -153,7 +153,7 @@ define
 
                             elseif ProbableWords == none then
                                 {Interface.setText_Window Variables.outputText ""}
-                                {Interface.insertText_Window Variables.outputText 1 0 none {Append "Need at least " {Append {Int.toString Variables.idx_N_Grams} " words to predict the next one."}}}
+                                {Interface.insertText_Window Variables.outputText 1 0 none {Append "Need at least " {Append {Int.toString Variables.idx_N_grams} " words to predict the next one."}}}
                                 {StockResultsInFile none 0 0.0}
 
                             else _ = {Predict_All.proposeAllTheWords ProbableWords Frequency Probability true} end

@@ -23,7 +23,7 @@ export
     Description
 
     Folder_Name
-    Idx_N_Grams
+    Idx_N_grams
     Correction_Words
     Files_Database 
     Auto_Prediction
@@ -37,7 +37,7 @@ define
     OutputText % The output text of the window
     CorrectText % The correct text of the window
 
-    Idx_N_Grams % The n-grams index
+    Idx_N_grams % The n-grams index
 
     NberFiles % The number of files in the tweets folder
     NbThreads % The number of threads to use
@@ -59,7 +59,7 @@ define
 
     % Arguments specified by the user
     Folder_Name 
-    Idx_N_Grams2 
+    Idx_N_grams2 
     Correction_Words
     Files_Database 
     Auto_Prediction
