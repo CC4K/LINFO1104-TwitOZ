@@ -12,9 +12,21 @@ Delsart Mathis and Kheirallah Cedric.
 
 5 May 2023.
 
-### Compiling the project
+### Commands
 
-You just need to do the command make and that will automatically compile all the files .oz, including extensions's files.
+To compile:
+    make (automatically compile all the files .oz, including extensions's files.)
+
+To clean:
+    - make clean (clean the ./bin folder that contains all the binary files (.ozf files))
+    - make clean_historic (clean the ./historic_user folder that contains all the historic of the user)
+    - make clean_all (clean both)
+
+To run:
+    make run [option] (see option below in section 'Running the app')
+
+To have help:
+    make help (gives a message that contains all the information to compile and run the project)
 
 ### Running the app
 
@@ -41,4 +53,4 @@ Commands that the user can use:
 ## How to use
 
 A detailed description of how each button works can be found in the "TwitOZ_Rapport.pdf" file.
-The pdf has been written in French but you can easily translate it if you need.
+There is a version in French and in English, so enjoy!
