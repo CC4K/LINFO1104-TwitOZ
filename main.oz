@@ -1,230 +1,342 @@
 functor
 import 
     QTk at 'x-oz://system/wp/QTk.ozf'
-    System
     Application
     OS
+    System
     Property
-    Browser
 
-    Reader at 'bin/reader.ozf'
-    Parser at 'bin/parser.ozf'
-    Tree at 'bin/tree.ozf'
+    Variables at 'variables.ozf'
+    Interface at 'interface.ozf'
+    Function at 'function.ozf'
+    Parser at 'parser.ozf'
+    Tree at 'tree.ozf'
+    Reader at 'reader.ozf'
+
+    Automatic_prediction at 'extensions/automatic_prediction.ozf'
+    Historic_user at 'extensions/historic_user.ozf'
+    Interface_improved at 'extensions/interface_improved.ozf'
+    N_grams at 'extensions/n_grams.ozf'
+    Predict_All at 'extensions/predict_All.ozf'
+
 define
 
-    % Global variables
-	InputText OutputText TweetsFolder_Name List_PathName_Tweets Main_Tree Tree_Over NberFiles NbThreads
 
-    proc {Browse Buf}
-        {Browser.browse Buf}
-    end
-
-    %%%===================================================================%%%
-    %%% /!\ Fonction testee /!\
-    %%% @pre : les threads sont "ready"
-    %%% @post: Fonction appellee lorsqu on appuie sur le bouton de prediction
-    %%%        Affiche la prediction la plus probable du prochain mot selon les deux derniers mots entres
-    %%% @return: Retourne une liste contenant la liste du/des mot(s) le(s) plus probable(s) accompagnee de 
-    %%%          la probabilite/frequence la plus elevee. 
-    %%%          La valeur de retour doit prendre la forme:
-    %%%                  <return_val> := <most_probable_words> '|' <probability/frequence> '|' nil
-    %%%                  <most_probable_words> := <atom> '|' <most_probable_words> 
-    %%%                                           | nil
-    %%%                  <probability/frequence> := <int> | <float>
+    %%%
+    % Displays to the output zone on the window the most likely prediction of the next word based on the N last entered words.
+    % The value of N depends of the N-grams asked by the user.
+    % This function is called when the prediction button is pressed.
+    %
+    % @param: /
+    % @return: Returns a list containing the most probable word(s) list accompanied by the highest probability/frequency.
+    %          The return value must take the form:
+    %
+    %               <return_val> := <most_probable_words> '|' <probability/frequency> '|' nil
+    %
+    %               <most_probable_words> := <atom> '|' <most_probable_words>
+    %                                        | nil
+    %                                        | <no_word_found>
+    %
+    %               <no_word_found>         := nil '|' nil
+    %
+    %               <probability/frequency> := <int> | <float>
+    %%%
     fun {Press}
-		
-		local ProbableWords_Probability TreeMaxFreq SplittedText BeforeLast Last Key Tree_Value in
-            
-			SplittedText = {String.tokens {InputText getText(p(1 0) 'end' $)} & }
-            
-            if {List.length SplittedText} < 2 then % Pourrait optimisé pour ne pas devoir appelé List.length
-                none
-            else
-                Last = {String.tokens {List.last SplittedText} &\n}.1
-                BeforeLast = {List.nth SplittedText {List.length SplittedText} - 1}
-                
-                Key = {String.toAtom {List.append {List.append BeforeLast [32]} Last}}
-                Tree_Value = {Tree.lookingUp Main_Tree Key}
-                
-                % {System.show Tree_Value}
-
-                if Tree_Value == notfound then
-                    ProbableWords_Probability = {Tree.traverseToGetProbability leaf}
-                else
-                    ProbableWords_Probability = {Tree.traverseToGetProbability Tree_Value}
-                end
-                
-                %%% To have frequence and not the probability %%%
-
-                % TreeMaxFreq = {Tree.getTreeMaxFreq Tree_Value}
-
-                % if TreeMaxFreq == leaf then
-                %     [none 0]
-                % else
-                %     {Browse TreeMaxFreq.value}
-                %     {Browse TreeMaxFreq.key}
-                %     [TreeMaxFreq.value TreeMaxFreq.key]
-                % end
-
-            end
-		end
-    end
-
-
-	proc {CallPress}
-		local ResultPress ProbableWords MaxFreq in
-            
-            % But de Tree_Over : bloquer le programme le temps que la structure soit crée!
-            if Tree_Over == true then
-
-                ResultPress = {Press}
-
-                if ResultPress == none then
-                    {OutputText set("You must write minimum 2 words.")}
-                else
-                    ProbableWords = ResultPress.1
-                    MaxFreq = ResultPress.2.1
-
-                    {Browse ProbableWords}
-                    {Browse MaxFreq}
-
-                    if ProbableWords == none then
-                        {OutputText set("NO WORD FIND!")}
-                    else
-                        {OutputText set(ProbableWords.1)} % Faut-il renvoyer le premier si y'en a plusieurs ?
-                    end
-                end
-            else
-                % Never executed
-                {OutputText set("Will never be display.")}
-            end
-		end
-	end
-
-    % proc {ListAllFiles L}
-    %     case L
-    %     of nil then skip
-    %     [] H|T then
-    %         {Browse {String.toAtom H}} {ListAllFiles T}
-    %     end
-    % end
-
-    %%% Lance les N threads de lecture et de parsing qui liront et traiteront tous les fichiers
-    %%% Les threads de parsing envoient leur resultat au port Port
-    proc {LaunchThreads Port N}
         
-        local Basic_Nber_Iter Rest_Nber_Iter Current_Nber_Iter in
+        % If the structure to stock all the datas of the database is created
+        if Variables.tree_Over == true then
+            local Input_User Splitted_Text List_Words Key Parsed_Key Tree_Value ResultPress ProbableWords Frequency Probability in
 
-            Basic_Nber_Iter = NberFiles div N
-            Rest_Nber_Iter = NberFiles mod N
+                % Clean the input user and get the N last words (N depends of the N-grams asked by the user)
+                Input_User = {Variables.inputText getText(p(1 0) 'end' $)}
+                Splitted_Text = {Parser.cleaningUserInput Input_User}
+                List_Words = {Function.get_Last_Nth_Word_List Splitted_Text Variables.idx_N_grams}
 
-            for X in 1..N do
+                if {Length List_Words} >= Variables.idx_N_grams then
 
-                local Current_Nber_Iter1 Start End in
-                    
-                    if Rest_Nber_Iter - X >= 0 then
-                        Current_Nber_Iter1 = Basic_Nber_Iter + 1
-                        Start = (X - 1) * Current_Nber_Iter1 + 1
+                    % Get the subtree representing the value at the key created by the concatenation of the N last words
+                    Key = {Function.concatenateElemOfList List_Words 32}
+                    Tree_Value = {Tree.lookingUp {Function.get_Last_Elem_Stream Variables.stream_Tree} {String.toAtom Key}}
+
+                    if Tree_Value == notfound then
+                        {Interface.setText_Window Variables.outputText "No words found."}
+                        [[nil] 0] % => no words found
+                    elseif Tree_Value == leaf then
+                        {Interface.setText_Window Variables.outputText "No words found."}
+                        [[nil] 0] % => no words found
                     else
-                        Current_Nber_Iter1 = Basic_Nber_Iter
-                        %% Permet de répartir le mieux possible le travail entre les threads ! Formule trouvé par de la logique
-                        Start = Rest_Nber_Iter * (Current_Nber_Iter1 + 1) + (X - 1 - Rest_Nber_Iter) * Current_Nber_Iter1 + 1
-                    end
 
-                    End = Start + Current_Nber_Iter1 - 1
+                        % Get the most probable word(s) and the highest probability/frequency
+                        ResultPress = {Tree.get_Result_Prediction Tree_Value none}
+                        ProbableWords = ResultPress.1
+                        Probability = ResultPress.2.1
+                        Frequency = ResultPress.2.2.1
 
-                    for Y in Start..End do
+                        if ProbableWords == nil then
+                            {Interface.setText_Window Variables.outputText "No words found."}
+                            [[nil] 0] % => no words found
+                        else
+                            % Display to the window the most probable word(s) and the highest probability/frequency
+                            _ = {Predict_All.proposeAllTheWords ProbableWords Frequency Probability true}
 
-                        local File ThreadReader ThreadParser L P in
-                               
-                            File = {Reader.getFilename TweetsFolder_Name List_PathName_Tweets Y}
-                            thread ThreadReader = {Reader.reader File} L=1 end
-                            thread {Wait L} ThreadParser = {Parser.parseAllLines ThreadReader} P=1 end
-                            {Wait P}
-                            {Send Port ThreadParser}
+                            % Return the most probable word(s) and the highest probability/frequency
+                            [ProbableWords Probability]
+
+                            %% Basic version %%
+                            % {Interface.setText_Window OutputText ProbableWords.1}
                         end
                     end
+                else
+                    % Not enough words to predict the next one
+                    {Interface.setText_Window Variables.outputText {Append "Need at least " {Append {Int.toString Variables.idx_N_grams} " words to predict the next one."}}}
+                    [[nil] 0]
                 end
             end
+        else
+            [[nil] 0] % => no tree created yet
         end
     end
+    
+    %%%
+    % Launches N reading and parsing threads that will read and process all the files.
+    % The parsing threads send their results to the Port.
+    %
+    % @param Port: a port structure to store the results of the parser threads
+    % @param N: the number of threads used to read and parse all files
+    % @return: /
+    %%%
+    proc {LaunchThreads Port N}
 
-
-    fun {Get_Nth_FirstElem_Port Stream_Port N}
         local
-            fun {Get_Nth_FirstElem_Port Stream_Port Acc N}
-                if N == 0 then nil
+            Basic_Nber_Iter = Variables.nberFiles div N
+            Rest_Nber_Iter = Variables.nberFiles mod N
+            List_Waiting_Threads_1
+            List_Waiting_Threads_2
+
+            %%%
+            % Allows to launch a thread that will read and parse a file
+            % and to get the list with the value unbound until the thread has finished its work.
+            %
+            % @param Start: the number of the file where the thread begins to work (reads and parses)
+            % @param End: the number of the file where the thread stops to work (reads and parses)
+            % @param List_Waiting_Threads: a list initialized to nil
+            % @return: the list containing all the value unbound of all threads.
+            %          the value will be bound where the thread has finished its work.
+            fun {Launch_OneThread Start End List_Waiting_Threads}
+                % If the thread has done (End - Start) files, the list is returned
+                if Start == End+1 then List_Waiting_Threads
                 else
-                    case Stream_Port
-                    of H|T then
-                        {List.append H {Get_Nth_FirstElem_Port T Acc+1 N-1}}
+                    local File_Parsed File LineToParsed L P in
+                        % Launches a thread that will read and parse the file
+                        % After the work done, the thread will send the result to the port
+                        thread _ =
+                            File = {Reader.getFilename Start}
+                            % File = "tweets/custom.txt"
+                            LineToParsed = {Reader.read File}
+                            L=1
+                            {Wait L} 
+                            File_Parsed = {Parser.parses_AllLines LineToParsed}
+                            P=1
+                            {Send Port File_Parsed}
+                        end
+                        
+                        {Launch_OneThread Start+1 End P|List_Waiting_Threads}
                     end
                 end
             end
-        in
-            {Get_Nth_FirstElem_Port Stream_Port 1 N}
+            
+            %%%
+            % Allows to launch N threads and to get the list with the value of each thread :
+            %     Unbound if the thread has not finished its work
+            %     Bound if the thread has finished its work
+            %
+            % @param List_Waiting_Threads: a list initialized to nil
+            % @param Nber_Threads: the number of threads to launch
+            % @return: the list containing all the value unbound (until they have finished their work) of all threads.
+            fun {Launch_AllThreads List_Waiting_Threads Nber_Threads}
+                
+                % If all the threads have been launch and all the result list has been get, the list is returned
+                if Nber_Threads == 0 then List_Waiting_Threads
+                else
+                    local Current_Nber_Iter1 Start End in
+
+                        % Those formulas are used to split (= the best way) the work between threads.
+                        % Those formulas are complicated to find but the idea is here:
+                        % Example : if we have 6 threads and 23 files to read and process, the repartition will be [4 4 4 4 4 3].
+                        %           A naive version will do a repartition like this [3 3 3 3 3 8].
+                        %           This is a bad version because the last thread will slow down the program
+                        %%%
+                        if Rest_Nber_Iter - Nber_Threads >= 0 then
+                            Current_Nber_Iter1 = Basic_Nber_Iter + 1
+                            Start = (Nber_Threads - 1) * Current_Nber_Iter1 + 1
+                        else
+                            Current_Nber_Iter1 = Basic_Nber_Iter
+                            Start = Rest_Nber_Iter * (Current_Nber_Iter1 + 1) + (Nber_Threads - 1 - Rest_Nber_Iter) * Current_Nber_Iter1 + 1
+                        end
+        
+                        End = Start + Current_Nber_Iter1 - 1
+                        {Launch_AllThreads {Function.append_List {Launch_OneThread Start End nil} List_Waiting_Threads} Nber_Threads-1}
+                    end
+                end
+
+            end
+        in 
+            % Launch all the threads
+            % The parsing files are stocked in the Port
+            % The variables to Wait all the threads are stocked in List_Waiting_Threads
+
+            thread List_Waiting_Threads_1 = {Launch_AllThreads nil N} end
+
+            % To also parse the historic user files (Extension)
+            thread List_Waiting_Threads_2 = {Historic_user.launchThreads_HistoricUser} end
+            
+            % Wait for all the threads
+            % When a thread have finished, the value P associated to this thread
+            % is bind and the program can move on 
+            {ForAll {Function.append_List List_Waiting_Threads_1 List_Waiting_Threads_2} proc {$ P} {Wait P} end}
         end
     end
 
-    %%% Fetch Tweets Folder from CLI Arguments
-    %%% See the Makefile for an example of how it is called
-    fun {GetSentenceFolder}
-        Args = {Application.getArgs record('folder'(single type:string optional:false))}
+
+    %%%
+    % Get the arguments of the command line for the program and store them in global variables
+    % 
+    % @param: /
+    % @return: /
+    %%%
+    proc {Get_Arguments}
+
+        UserOptions = {Application.getArgs record('folder'(single type:string optional:false)
+                                                  'ext'(single type:string default:none optional:true)
+                                                  'idx_n_grams'(single type:int default:2 optional:true)
+                                                  'corr_word'(single type:int default:0 optional:true)
+                                                  'files_database'(single type:int default:0 optional:true)
+                                                  'auto_predict'(single type:int default:0 optional:true))}
     in
-        Args.'folder'
-    end
+        Variables.folder_Name = UserOptions.'folder'
+        local N_grams in
+            N_grams = UserOptions.'idx_n_grams'
+            if N_grams >= 1 then
+                Variables.idx_N_grams = N_grams
+            else
+                {System.show 'The value of idx_n_grams must be greater or equal than 1.'}
+                {Application.exit 0}
+            end
+        end
 
-    %%% Procedure principale qui cree la fenetre et appelle les differentes procedures et fonctions
-    proc {Main}
-        
-        TweetsFolder_Name = {GetSentenceFolder}
-        List_PathName_Tweets = {OS.getDir TweetsFolder_Name}
+        if UserOptions.'ext' == "all" then
+            Variables.correction_Words = 1
+            Variables.files_Database = 1
+            Variables.auto_Prediction = 1
+        else
+            if UserOptions.'corr_word' \= 1 then 
+                Variables.correction_Words = 0
+            else
+                Variables.correction_Words = 1
+            end
 
-        NberFiles = {List.length List_PathName_Tweets}
-        NbThreads = 5
+            if UserOptions.'files_database' \= 1 then 
+                Variables.files_Database = 0
+            else
+                Variables.files_Database = 1
+            end
 
-        local List_Port Basic_Tree Window Description SeparatedWordsStream SeparatedWordsPort in
-
-        {Property.put print foo(width:1000 depth:1000)}  % for stdout siz
-
-        % Création de l'interface graphique
-        Description=td(
-            title: "Text predictor"
-            lr(text(handle:InputText width:50 height:10 background:white foreground:black wrap:word) button(text:"Predict" width:15 action:CallPress))
-            text(handle:OutputText width:50 height:10 background:black foreground:white glue:w wrap:word)
-            action:proc{$} {Application.exit 0} end % Quitte le programme quand la fenetre est fermee
-            )
-        
-        % Création de la fenêtre
-        Window = {QTk.build Description}
-        {Window show}
-        
-        {InputText tk(insert 'end' "Loading... Please wait.")}
-        {InputText bind(event:"<Control-s>" action:CallPress)} % You can also bind events
-        {OutputText set("You must wait until the database is parsed.\nA message will notify you.\nDon't press the 'predict' button until the message appears!\n")}
-
-        %%% On créer le Port %%%
-        SeparatedWordsPort = {NewPort SeparatedWordsStream}
-        
-        %%% On lance les threads de lecture et de parsing %%%
-        {LaunchThreads SeparatedWordsPort NbThreads}
-
-        %%% On créer l'arbre principale avec tout les sous-arbres en valeur ***
-        List_Port = {Get_Nth_FirstElem_Port SeparatedWordsStream NberFiles}
-        
-        {OutputText tk(insert p(6 0) "Step 1 Over : Reading + Parsing\n")} % Pour la position, c'est du test essais-erreur
-
-        Basic_Tree = {Tree.createTree leaf List_Port}
-        Main_Tree = {Tree.traverseAndChange Basic_Tree Basic_Tree}
-        Tree_Over = true
-
-        {OutputText tk(insert p(7 0) "Step 2 Over : Stocking datas\n")} % Pour la position, c'est du test essais-erreur
-        {OutputText tk(insert p(9 0) "The database is now parsed.\nYou can write and predict!")} % Pour la position, c'est du test essais-erreur
-        {InputText set("")}
-
+            if UserOptions.'auto_predict' \= 1 then 
+                Variables.auto_Prediction = 0
+            else
+                Variables.auto_Prediction = 1
+            end
         end
     end
 
-    % Appelle la procedure principale
+
+    %%%
+    % Main procedure that creates the Qtk window and calls differents functions/procedures to make the program functional.
+    %
+    % This procedure creates a GUI window using the Qt toolkit and sets up event handlers to interact with user inputs.
+    % It then calls other functions/procedures to parse data files, build data structures, and make predictions based on user inputs.
+    %
+    % @param: /
+    % @return: /
+    %%%
+    proc {Main}
+
+        % Get the arguments of the command line and store them in global variables
+        {Get_Arguments}
+
+        % Reset the last prediction file (from the previous execution of the program)
+        {Automatic_prediction.reset_LastPrediction_File}
+
+        % Initialization of the global variables used in the program
+        Variables.nber_HistoricFiles = {Historic_user.get_Nber_HistoricFile}
+        Variables.list_PathName_Tweets = {OS.getDir Variables.folder_Name}
+        Variables.nberFiles = {Length Variables.list_PathName_Tweets}
+        Variables.nbThreads = Variables.nberFiles
+        Variables.port_Tree = {NewPort Variables.stream_Tree}
+        Variables.separatedWordsPort = {NewPort Variables.separatedWordsStream}
+        Variables.port_Auto_Corr_Threads = {NewPort Variables.stream_Auto_Corr_Threads}
+        {Send Variables.port_Auto_Corr_Threads 0}
+
+        {Property.put print foo(width:1000 depth:1000)}
+
+        % Description of the GUI
+        Variables.description = {Interface_improved.getDescriptionGUI proc{$} _={Press} end}
+
+        % Creation of the GUI
+        Variables.window = {QTk.build Variables.description}
+        {Variables.window show}
+        
+        % Writes some text in the GUI to inform the user
+        {Interface.insertText_Window Variables.inputText 0 0 'end' "Loading... Please wait."}
+        {Variables.inputText bind(event:"<Control-s>" action:proc {$} _ = {Press} end)} % You can also bind events
+        {Interface.insertText_Window Variables.outputText 0 0 'end' "You must wait until the database is parsed.\nA message will notify you.\nDon't press the 'predict' button until the message appears!\n"}
+
+        % Launch all threads to reads and parses the files
+        {LaunchThreads Variables.separatedWordsPort Variables.nbThreads}
+
+        % We retrieve the information (parsed lines of the files) from the port's stream
+        local List_Line_Parsed Main_Tree in
+            {Send Variables.separatedWordsPort nil}
+            List_Line_Parsed = {Function.get_ListFromPortStream}
+
+            % Writes some text in the GUI to inform the user
+            {Interface.insertText_Window Variables.outputText 6 0 none "Step 1 Over : Reading + Parsing\n"}
+
+            % Creation of the main binary tree (with all subtree as value)
+            Main_Tree = {Tree.create_Main_Tree {Tree.create_Basic_Tree List_Line_Parsed}}
+            {Send Variables.port_Tree Main_Tree}
+        end
+
+        % Writes some text in the GUI to inform the users
+        {Interface.insertText_Window Variables.outputText 7 0 none "Step 2 Over : Stocking datas\n"}
+        {Interface.insertText_Window Variables.outputText 9 0 none "The database is now parsed.\nYou can write and predict!"}
+        
+        % Delete the text "Loading... Please wait." from the GUI or all if the user add some text between or before the line : "Loading... Please wait."
+        if {Function.findPrefix_InList {Variables.inputText getText(p(1 0) 'end' $)} "Loading... Please wait."} then
+            % Remove the first 23 characters (= "Loading... Please wait.")
+            {Variables.inputText tk(delete p(1 0) p(1 23))}
+        else
+            % Remove all because the user add some texts between or before the line : "Loading... Please wait."
+            {Interface.setText_Window Variables.inputText ""}
+        end
+
+        % To see the message "The database is now parsed.\nYou can write and predict!" at the beginning of the program
+        % during 1.5 second.
+        {Time.delay 1500}
+        
+        % We bound the value 'Variables.tree_Over'
+        % => {Press} can work now because the structure is ready
+        Variables.tree_Over = true
+
+        if Variables.auto_Prediction == 1 then
+            % Launch one thread that will predict the next word every 0.5sec
+            % => The user can write and the words will be predicted at the same time!
+            thread {Automatic_prediction.automatic_Prediction 500} end
+        else skip end
+
+        %%ENDOFCODE%%
+    end
+
+    % Call the main procedure to start the program.
     {Main}
 end
