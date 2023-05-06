@@ -34,6 +34,7 @@ define
         from Open.file Open.text
     end
 
+
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %%% ====== IMPLEMENTATION OF BASIC FUNCTIONS TO MAKE THEM RECURSIVE TERMINAL : SECTION ====== %%%
     %%% ====== IMPLEMENTATION OF BASIC FUNCTIONS TO MAKE THEM RECURSIVE TERMINAL : SECTION ====== %%%
@@ -107,6 +108,7 @@ define
         end
     end
 
+
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %%% ==== IMPLEMENTATION OF USEFULL FUNCIONS : SECTION ==== %%%
     %%% ==== IMPLEMENTATION OF USEFULL FUNCIONS : SECTION ==== %%%
@@ -163,6 +165,7 @@ define
         end
     end
 
+
     %%%
     % Returns the part of the string after a specified delimiter character
     %
@@ -208,6 +211,7 @@ define
     end
 
 
+
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %%% ================= READING SECTION ================= %%%
     %%% ================= READING SECTION ================= %%%
@@ -243,6 +247,7 @@ define
             catch _ then {Application.exit} end
         end
     end
+
 
     %%%
     % Creates a filename by combining the name of a folder and the nth filename in a list of filenames
@@ -298,6 +303,7 @@ define
         end
     end
 
+
     %%%
     % Replaces special characters with spaces (== 32 in ASCII) and sets all letters to lowercase
     % Digits are left untouched
@@ -323,6 +329,7 @@ define
             {ParseLine_Aux Line nil}
         end
     end
+
 
     %%%
     % Applies a parsing function to each string in a list of strings
@@ -386,6 +393,7 @@ define
         end
     end
 
+
     %%%
     % Parses the input of the user to set all the upercase letters to its lowercase letters.
     %
@@ -409,6 +417,7 @@ define
             {ParseLine Str_Line fun {$ Char} {ParseCharUser Char} end}
         end
     end
+
 
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -447,6 +456,7 @@ define
         end
     end
 
+
     %%%
     % Inserts a value into a binary tree at the location of the given key
     % The value is inserted based on the lexicographical order of the keys
@@ -479,6 +489,7 @@ define
             tree(key:K value:V t_left:{Insert TLeft Key Value} t_right:TRight)
         end
     end
+
 
     %%%
     % Updates a list to increase the frequency of specified element
@@ -561,6 +572,7 @@ define
         end
     end
 
+
     %%%
     % Creates a bi-grams list from a list of words (representing the list of the main binary tree's keys)
     %
@@ -631,6 +643,7 @@ define
         end
     end
 
+
     %%%
     % Creates a binary subtree representing a value of the main binary tree,
     % given a list of Word#Frequency pairs
@@ -668,6 +681,7 @@ define
         end
     end
 
+
     %%%
     % Traverse a binary tree in a Pre-Order traversal to update the value of all keys
     % A function UpdaterTree_ChangerValue is used to update values
@@ -697,6 +711,7 @@ define
             {TraverseAndChange_Aux Tree Tree}
         end
     end
+
 
     %%%
     % Traverse a binary tree in Pre-Order traversal to get the following three items in a list:
@@ -777,6 +792,7 @@ define
     % end
 
 
+
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %%% ================= MAIN SECTION ================= %%%
     %%% ================= MAIN SECTION ================= %%%
@@ -799,6 +815,7 @@ define
             if Tree_Over == true then
 
                 ResultPress = {Press}
+                {Browse ResultPress}
                 ProbableWords = ResultPress.1
                 MaxFreq = ResultPress.2.1
 
