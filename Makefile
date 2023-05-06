@@ -49,6 +49,12 @@ all : $(ENTRY_POINT)
 
 # Compile all the files.
 main.ozf :
+
+	if [ ! -d "user_historic" ]; then mkdir user_historic; fi
+	if [ ! -d "user_historic/user_files" ]; then mkdir user_historic/user_files; fi
+	if [ ! -d "user_historic/last_prediction.txt" ]; then touch user_historic/last_prediction.txt; fi
+	if [ ! -d "user_historic/nber_historic_files.txt" ]; then touch user_historic/nber_historic_files.txt; fi
+
 	if [ ! -d "bin" ]; then mkdir bin; fi
 	$(OZC) -c src/variables.oz -o bin/variables.ozf
 	$(OZC) -c src/function.oz -o bin/function.ozf
@@ -78,20 +84,23 @@ run: bin/$(ENTRY_POINT)
 # Clean the user historic.
 clean_user_historic:
 	rm -f user_historic/user_files/*.txt
+	rm -f user_historic/*.txt
+	rmdir user_historic/user_files
+	rmdir user_historic
 
 # Help command
 help:
-	@echo \> 'make' : \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ to compile all project files
-	@echo \> 'make clean_user_historic' : to delete user history from last sessions
-	@echo \> 'make clean' : \ \ \ \ \ \ \ \ \ \ \ \ \ \ to delete all compiled binary files
-	@echo \> 'make run' : \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ to run the project with simple prediction function and no extensions activated
-	@echo \> 'make run [options]' : \ \ \ \ \ \ to run the project with a selection of extensions which are the following :
-	@echo \ \ \> 'idx_n_grams=[int]' : \ \ \ specifies the n-gram algorithm the program will use for predictions [must be \>= 1]
-	@echo \ \ \> 'corr_word=[int]' : \ \ \ \ \ activates word correction [1 = on \| 0 = off]
-	@echo \ \ \> 'files_database=[int]' : activates the ability to add samples in database [1 = on \| 0 = off]
-	@echo \ \ \> 'auto_predict=[int]' : \ \ activates auto-prediction and deactivates manual Predict button [1 = on \| 0 = off]
-	@echo \ \ \> 'folder=[string]' : \ \ \ \ \ specifies database folder [default folder is "tweets"]
-	@echo \ \ \> 'ext=all' : \ \ \ \ \ \ \ \ \ \ \ \ \ activates all extensions at once
+	@echo \> 'make' : \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ to compile all project files.
+	@echo \> 'make clean_user_historic' : to delete user history from last sessions.
+	@echo \> 'make clean' : \ \ \ \ \ \ \ \ \ \ \ \ \ \ to delete all compiled binary files.
+	@echo \> 'make run' : \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ to run the project with simple prediction function and no extensions activated.
+	@echo \> 'make run [options]' : \ \ \ \ \ \ to run the project with a selection of extensions which are the following:
+	@echo \ \ \> 'idx_n_grams=[int]' : \ \ \ specifies the n-gram algorithm the program will use for predictions [must be \>= 1 \| default: 2].
+	@echo \ \ \> 'corr_word=[int]' : \ \ \ \ \ activates word correction [1 = on \| default: 0 = off].
+	@echo \ \ \> 'files_database=[int]' : activates the ability to add samples in database [1 = on \| default: 0 = off].
+	@echo \ \ \> 'auto_predict=[int]' : \ \ activates auto-prediction and deactivates manual Predict button [1 = on \| default: 0 = off].
+	@echo \ \ \> 'folder=[string]' : \ \ \ \ \ specifies database folder [default folder: "tweets"].
+	@echo \ \ \> 'ext=all' : \ \ \ \ \ \ \ \ \ \ \ \ \ activates all extensions at once.
 
 # Clean the ./bin folder and all its content.
 clean:

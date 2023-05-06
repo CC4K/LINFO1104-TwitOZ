@@ -18,21 +18,21 @@ You just need to do the command make and that will automatically compile all the
 
 ### Running the app
 
-Les commandes que peut utiliser l'utilisateur :
+Commands that the user can use:
 
-    #Arguments optionnels :
-        - idx_n_grams=int [Si inférieur à 1 => Message d'erreur + Exit] (par défaut 2)
-        - corr_word=int [1 = extension activée] (par défaut 0 => pas activé)
-        - files_database=int [1 = extension activée] (par défaut 0 => pas activé)
-        - auto_predict=int [1 = extension activée] (par défaut 0 => pas activé)
+    #Optionnals arguments:
+        - idx_n_grams=int [If lower than 1 => Error + Exit] (Default: 2)
+        - corr_word=int [1 = extension activated] (Default: 0 => not activated)
+        - files_database=int [1 = extension activated] (Default: 0 => not activated)
+        - auto_predict=int [1 = extension activated] (Default: 0 => not activated)
     
-    #Arguments obligatoire :
-        - folder=string (par défaut "tweets") [Pas obligatoire en soit mais il faut alors impérativement avoir le fichier "tweets" présent dans son répértoire]
+    #Obligatory arguments:
+        - folder=string (Default: "tweets") [Not obligatory but, in this case, tou need to have the folder "tweets' present in your reposistory]
 
-    #Spécial argument :
-        - ext=all [active toutes les extensions] (par défaut none)
+    #Special arguments:
+        - ext=all [Activate all the extensions] (Default none => Do nothing)
 
-#Exemples :
+#Examples :
     make run folder="my_folder" idx_n_grams=4 ext=all
     make run folder="my_folder corr_word=1
     ,...
@@ -40,25 +40,5 @@ Les commandes que peut utiliser l'utilisateur :
 
 ## How to use
 
-Here is a detailed description of how each button works.
-
-    ### Predict
-
-    The predict button is used to predict the next word based on a database.
-    If there is no word, the programm will tell you.
-    As same as if you try to predict a word after less than N words before.
-    Example:
-        If you asks a tri-grammes and you write "i have" => 'Predict button pressed'
-        The programm will tell you that you need to write at least three words.
-
-    ### Correct a word
-
-    ### Load file from computer
-
-    ### Save on computer (as a file)
-
-    ### Load file into database
-
-    ### Save in database (input text)
-
-    ### Clean history
+A detailed description of how each button works can be found in the "TwitOZ_Rapport.pdf" file.
+The pdf has been written in French but you can easily translate it if you need.
