@@ -21,7 +21,6 @@ import
 
 define
 
-
     %%%
     % Displays to the output zone on the window the most likely prediction of the next word based on the N last entered words.
     % The value of N depends of the N-grams asked by the user.

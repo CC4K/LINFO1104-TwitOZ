@@ -37,8 +37,6 @@ define
     OutputText % The output text of the window
     CorrectText % The correct text of the window
 
-    Idx_N_grams % The n-grams index
-
     NberFiles % The number of files in the tweets folder
     NbThreads % The number of threads to use
     Nber_HistoricFiles % The number of historic files to parses
@@ -58,10 +56,10 @@ define
     Description % The description of the window
 
     % Arguments specified by the user
-    Folder_Name 
-    Idx_N_grams2 
-    Correction_Words
-    Files_Database 
-    Auto_Prediction
+    Folder_Name % The name of the folder where the tweets are stored
+    Idx_N_grams % The n-grams index
+    Correction_Words % integer to know if the user want to use the extension to correct the words or not
+    Files_Database % integer to know if the user want to use the extension to store the input's user in a database or not
+    Auto_Prediction % integer to know if the user want to use the extension to do the automatic prediction or not
 
 end

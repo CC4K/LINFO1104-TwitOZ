@@ -47,7 +47,7 @@ endif
 
 all : $(ENTRY_POINT)
 
-# Compile all the files.
+# Compile all the files (and create the necessary folders).
 main.ozf :
 
 	if [ ! -d "user_historic" ]; then mkdir user_historic; fi
@@ -84,7 +84,7 @@ main.ozf :
 run: bin/$(ENTRY_POINT)
 	$(OZENGINE) bin/$(ENTRY_POINT) --folder $(TWEETS_FOLDER) --idx_n_grams $(IDX_N_GRAMS) --ext $(EXT) --corr_word $(CORR_WORD) --files_database $(FILES_DATABASE) --auto_predict $(AUTO_PREDICT)
 
-# Clean the user historic.
+# Clean the user historic .txt files.
 # Not for user, only for dev (in the code).
 # The user can do the command 'make clean_historic' to clean all the folder.
 clean_user_historic:
@@ -95,7 +95,7 @@ help:
 	@echo \> 'make' : \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ to compile all project files.
 	@echo \> 'make clean_historic' : to delete user history from last sessions.
 	@echo \> 'make clean' : \ \ \ \ \ \ \ \ \ to delete all compiled binary files.
-	@echo \> 'make clean_all' : \ \ \ \ \ \ \ \ to delete all compiled binary files AND user history
+	@echo \> 'make clean_all' : \ \ \ \ \ to delete all compiled binary files AND user history
 	@echo \> 'make run' : \ \ \ \ \ \ \ \ \ \ \ to run the project with simple prediction function and no extensions activated.
 	@echo \> 'make run [options]' : \ to run the project with a selection of extensions which are the following:
 	@echo \ \ \> 'idx_n_grams=[int]' : \ \ \ specifies the n-gram algorithm the program will use for predictions [must be \>= 1 \| default: 2].
