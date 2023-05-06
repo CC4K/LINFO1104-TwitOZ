@@ -313,17 +313,17 @@ define
     % @param List: a list of strings
     % @return: a list of the parsed strings
     %%%
-    fun {ParseAllLines List Parser}
+    fun {ParseLines List Parser}
         local
-            fun {ParseAllLines_Aux List NewList}
+            fun {ParseLines_Aux List NewList}
                 case List
                 of nil then {Reverse NewList}
                 [] H|T then
-                    {ParseAllLines_Aux T {Parser H}|NewList}
+                    {ParseLines_Aux T {Parser H}|NewList}
                 end
             end
         in
-            {Cleaning_UnNecessary_Spaces {ParseAllLines_Aux List nil}}
+            {Cleaning_UnNecessary_Spaces {ParseLines_Aux List nil}}
         end
     end
 
@@ -385,7 +385,7 @@ define
                 end
             end
         in
-            {ParseAllLines Str_Line fun {$ Char} {ParseCharUser Char} end}
+            {ParseLines Str_Line fun {$ Char} {ParseCharUser Char} end}
         end
     end
 
@@ -644,20 +644,20 @@ define
     % @param UpdaterTree_ChangerValue: a function that takes as input a tree, a key and a value and update the value at the specified key
     % @return: a new binary tree where each of these value has been updated by UpdaterTree_ChangerValue
     %%%
-    fun {TraverseAndChange Tree UpdaterTree_ChangerValue}
+    fun {Change_Tree_Values Tree UpdaterTree_ChangerValue}
         local
-            fun {TraverseAndChange_Aux Tree UpdatedTree}
+            fun {Change_Tree_Values_Aux Tree UpdatedTree}
                 case Tree
                 of leaf then UpdatedTree
                 [] tree(key:Key value:Value t_left:TLeft t_right:TRight) then
                     local T1 in
-                        T1 = {TraverseAndChange_Aux TLeft {UpdaterTree_ChangerValue UpdatedTree Key Value}}
-                        _ = {TraverseAndChange_Aux TRight T1}
+                        T1 = {Change_Tree_Values_Aux TLeft {UpdaterTree_ChangerValue UpdatedTree Key Value}}
+                        _ = {Change_Tree_Values_Aux TRight T1}
                     end
                 end
             end
         in
-            {TraverseAndChange_Aux Tree Tree}
+            {Change_Tree_Values_Aux Tree Tree}
         end
     end
 
@@ -676,27 +676,23 @@ define
     % @param Tree: a binary tree
     % @return: a list of length 3 => [The sum of all keys      The greater key      The value associated to the greater key]
     %%%
-    fun {TraverseToGetProbability Tree}
+    fun {GetResultPrediction Tree}
         local
-            List
-            TotalFreq
-            MaxFreq
-            List_Word
-            Probability
-            fun {TraverseToGetProbability_Aux Tree TotalFreq MaxFreq ListWord}
+            List TotalFreq MaxFreq List_Word Probability
+            fun {GetResultPrediction_Aux Tree TotalFreq MaxFreq ListWord}
                 case Tree
                 of leaf then [TotalFreq MaxFreq ListWord]
                 [] tree(key:Key value:Value t_left:TLeft t_right:TRight) then
                     local T1 in
-                        T1 = {TraverseToGetProbability_Aux TLeft TotalFreq MaxFreq ListWord}
-                        _ = {TraverseToGetProbability_Aux TRight ({Length Value}*Key)+T1.1 Key Value}
+                        T1 = {GetResultPrediction_Aux TLeft TotalFreq MaxFreq ListWord}
+                        _ = {GetResultPrediction_Aux TRight ({Length Value}*Key)+T1.1 Key Value}
                     end
                 end
             end
         in
             if Tree == leaf then [[nil] 0.0]
             else
-                List = {TraverseToGetProbability_Aux Tree 0 0 nil}
+                List = {GetResultPrediction_Aux Tree 0 0 nil}
                 TotalFreq = List.1
                 MaxFreq = List.2.1
                 List_Word = List.2.2.1
@@ -705,41 +701,6 @@ define
             end
         end
     end
-
-
-    % fun {Get_Result_Prediction Tree Prefix_Value}
-    %     local
-    %         % Usefull variables to make it easier to understand the code
-    %         List_Result Total_Frequency Max_Frequency List_Words Probability
-
-    %         fun {Get_Result_Prediction_Aux Tree Total_Freq Max_Freq List_Words}
-    %             case Tree
-    %             of leaf then [Total_Freq Max_Freq List_Words]
-    %             [] tree(key:Key value:Value t_left:TLeft t_right:TRight) then
-    %                 local NewList_Value T1 in
-    %                     if Prefix_Value == none then
-    %                         T1 = {Get_Result_Prediction_Aux TLeft Total_Freq Max_Freq List_Words}
-    %                         _ = {Get_Result_Prediction_Aux TRight ({Length Value} * Key)+T1.1 Key Value}
-    %                     else
-    %                         T1 = {Get_Result_Prediction_Aux TLeft Total_Freq Max_Freq List_Words} % NewList_Value
-
-    %                         NewList_Value = {GetNewListValue Value Prefix_Value}
-    %                         if NewList_Value == nil then _ = {Get_Result_Prediction_Aux TRight ({Length Value} * Key)+Total_Freq Max_Freq List_Words}
-    %                         else _ = {Get_Result_Prediction_Aux TRight ({Length Value} * Key)+T1.1 Key NewList_Value} end
-    %                     end
-    %                 end
-    %             end
-    %         end
-    %     in
-    %         List_Result = {Get_Result_Prediction_Aux Tree 0 0 nil}
-    %         Total_Frequency = List_Result.1
-    %         Max_Frequency = List_Result.2.1
-    %         List_Words = List_Result.2.2.1
-    %         Probability = {Int.toFloat Max_Frequency} / {Int.toFloat Total_Frequency}
-    %         [List_Words Probability Max_Frequency] % Return all the necessary information that we need in {Press}
-    %     end
-    % end
-
 
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -768,14 +729,9 @@ define
                 ProbableWords = ResultPress.1
                 MaxFreq = ResultPress.2.1
 
-                if ProbableWords == [nil] then
-                    {SetText_Window OutputText "NO WORD FIND!"}
-                else
-                    {SetText_Window OutputText ProbableWords.1}
-                end
-            else
-                skip
-            end
+                if ProbableWords == [nil] then {SetText_Window OutputText "No word found."}
+                else {SetText_Window OutputText ProbableWords.1} end
+            else skip end
 		end
 	end
 
@@ -834,7 +790,7 @@ define
 		local SplittedText List_Words BeforeLast Last Key Parsed_Key Tree_Value in
 
             % Clean the input user and get the 2 last words
-            SplittedText = {Tokens_String {ParseAllLines {InputText getText(p(1 0) 'end' $)} fun {$ Char} {GetNewChar Char} end} 32}
+            SplittedText = {Tokens_String {ParseLines {InputText getText(p(1 0) 'end' $)} fun {$ Char} {GetNewChar Char} end} 32}
             List_Words = {Get_TwoLastWord SplittedText}
 
             if List_Words == nil then  [[nil] 0.0] % If the user did't write at least two words => return [[nil] 0.0]
@@ -850,7 +806,7 @@ define
                 if Tree_Value == notfound then
                     [[nil] 0.0]
                 else
-                    {TraverseToGetProbability Tree_Value}
+                    {GetResultPrediction Tree_Value}
                 end
             end
 		end
@@ -894,7 +850,7 @@ define
                             LineToParsed = {Read File}
                             L=1
                             {Wait L}
-                            File_Parsed = {ParseAllLines LineToParsed fun {$ Char} {GetNewChar Char} end}
+                            File_Parsed = {ParseLines LineToParsed fun {$ Char} {GetNewChar Char} end}
                             P=1
                         end
                     
@@ -1021,7 +977,7 @@ define
 
             % Creation of the main binary tree (with all subtree as value)
             UpdaterTree = fun {$ Tree Key Value} {Insert Tree Key {CreateSubtree Value}} end
-            Main_Tree = {TraverseAndChange {CreateTree List_Line_Parsed} UpdaterTree}
+            Main_Tree = {Change_Tree_Values {CreateTree List_Line_Parsed} UpdaterTree}
 
             % {Press} can be applied now because the structure is ready
             Tree_Over = true
