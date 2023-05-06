@@ -343,7 +343,7 @@ define
     %%%
     fun {ParseAllLines List}
         local
-            Parser = fun {$ Line} {ParseLine Line fun {$ Char} {GetNewChar Char} end} end
+            Parser = fun {$ Line} {Cleaning_UnNecessary_Spaces {ParseLine Line fun {$ Char} {GetNewChar Char} end}} end
             fun {ParseAllLines_Aux List NewList}
                 case List
                 of nil then NewList
@@ -352,7 +352,7 @@ define
                 end
             end
         in
-            {Cleaning_UnNecessary_Spaces {ParseAllLines_Aux List nil}}
+            {ParseAllLines_Aux List nil}
         end
     end
 
