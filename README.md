@@ -1,12 +1,15 @@
 # TwitOZ
 
+
 ## Description
 
 TwitOZ is a text predictor project developped in the Oz programming language as part of the course LINFO1104.
 The principle is to predict the user's next word based on a database of tweets (N-grams algorithm).
-The user can also try the prediction on their own database with the help of various extensions (Section #Extensions).
+
+The user can also try the predictions on their very own database with the help of various extensions (see `How to use`).
 
 This project was completed in two weeks.
+
 
 ## Authors
 
@@ -14,86 +17,128 @@ Mathis Delsart and Cedric Kheirallah.
 
 5 May 2023.
 
-### Commands
+
+## Running the app
 
 To compile:
-    make (automatically compile all the files .oz, including extension files)
+
+- `make` (compiles automatically all `.oz` files, including extensions)
 
 To clean:
-    - make clean (removes all binary files (.ozf files) from the ./bin folder)
-    - make clean_historic (removes all historic user data from the ./historic_user folder)
-    - make clean_all (removes both binary files and historic user data)
+
+- `make clean` (cleans the `/bin` folder that contains all the binary files (`.ozf` files))
+- `make clean_historic` (cleans the `/user_historic` folder that contains the history of the user)
+- `make clean_all` (cleans both)
 
 To run:
-    make run [option] (see option below in section 'Running the app')
+- `make run [option]` (see below section `Extensions`)
 
-To have help:
-    make help (provides information on how to compile and run the project)
+To list commands:
+- `make help` (writes all the commands and options in your terminal)
 
-### Running the app
+### Extensions
 
-The following commands are available to the user:
-
-    #Optionnals arguments:
-        - idx_n_grams=int [If lower than 1 => Error + Exit] (Default: 2)
-        - corr_word=int [1 = extension activated] (Default: 0 => not activated)
-        - files_database=int [1 = extension activated] (Default: 0 => not activated)
-        - auto_predict=int [1 = extension activated] (Default: 0 => not activated)
+Here are all the options you can use with `make run`:
+- Optionnal arguments:
+    - `idx_n_grams=[int]` [must be >= 1 | default: 2]
+    - `corr_word=[int]` [1 = on | default: 0 = off]
+    - `files_database=[int]` [1 = on | default: 0 = off]
+    - `auto_predict=[int]` [1 = on | default: 0 = off]
     
-    #Mandatory arguments:
-        - folder=string (Default: "tweets") [Not really mandatory but, in this case, tou need to have the folder "tweets' present in your reposistory]
+- Mandatory arguments:
+    - `folder=[string]` [default: "tweets"] (Not really mandatory but, in this case, you need to have the folder "tweets" present in your repository)
 
-    #Special arguments:
-        - ext=string [all = activate all the extensions] (Default none => do nothing)
+- Special arguments:
+    - `ext=all` [default: none = does nothing] (activate all the extensions)
 
-#Examples 1:
-    make run folder="my_folder" idx_n_grams=4 ext=all
-    
-#Examples 2:
-    make run folder="my_folder corr_word=1
-,...
+### Examples :
+```
+make run folder="my_folder" idx_n_grams=4 ext=all
+make run folder="my_folder" corr_word=1
+...
+```
+
 
 ## How to use
 
-A detailed description of how each button works can be found in the "TwitOZ_Rapport.pdf" file.
-Unfortunately, this file is only available in French, but we have provided a summary of the app's features in English below.
+<p align="center">
+    <img src="TwitOZ_apercu.png" width="652" height="389"/>
+</p>
+
+### Predict
+
+If you have the auto-predict extension off, this button is used to predict the next word in regard to your input at this time. The button must be pressed every time you need a new prediction.
+
+If the auto-predict extension in on, this button will be greyed out and the program will predict the next word on every update of your input.
+
+### Correct a word
+
+Write a word in the box next to "Correct a word" button to see what other words the program would predict instead for each occurrence of your input word. 
+
+If there is no match, the program will output "Correction : No words found."
+
+### Load file from computer
+
+Opens a window to select a .txt file on your computer wich content will be brought back to the program as an input.
+
+### Save on computer
+
+Opens a window to save your current input as a file anywhere on your computer.
+
+### Load file into database
+
+Opens a window to select a .txt file on your computer that will be added to the application database.
+
+The data from your file will be taken into account on your next prediction.
+
+### Save in database
+
+Saves your current input into the program at `user_historic/user_files/historic_partN.txt` so you can load it the next time you are using the application.
+
+All your saves in this folder are in chronological order with `historic_part1.txt` being the oldest save.
+
+### Clean history
+
+Deletes saved files in `user_historic/user_files`
+
 
 ## Implementation
 
-    Here are some things to know about the implementation of the project.
-    If you are not a developer and just want to try the project, feel free to skip this section.
+Here are some things to know about the implementation of the project.
+If you are not a developer and just want to try the project, feel free to skip this section.
 
-    Tree structure:
+- Tree structure:
 
-        The tree structure is created in two steps. First, we create the tree with lists of words and their frequencies (e.g., ['Word1'#Freq1 'Word2'#Freq2 ...]). Then, we traverse the tree and update the values to create a subtree with frequencies as keys and lists of words as values. This approach makes it easier to insert values and avoids the need to delete nodes from the subtrees, which would be more difficult with a single-step implementation.
+    The tree structure is created in two steps. First, we create the tree with lists of words and their frequencies (e.g., `['Word1'#Freq1 'Word2'#Freq2 ...]`). Then, we traverse the tree and update the values to create a subtree with frequencies as keys and lists of words as values. This approach makes it easier to insert values and avoids the need to delete nodes from the subtrees, which would be more difficult with a single-step implementation.
 
-    Auto-prediction:
+- Auto-prediction:
 
-        The automatic prediction is implemented using a thread as a background process. This is a recursive procedure that runs indefinitely, repeating itself every 0.5 seconds. When the user presses the button to correct a word, the thread is stopped for 4 seconds (to allow the result to be displayed on the screen). This is done using a Port structure.
+    The automatic prediction is implemented using a thread as a background process. This is a recursive procedure that runs indefinitely, repeating itself every 0.5 seconds. When the user presses the button to correct a word, the thread is stopped for 4 seconds (to allow the result to be displayed on the screen). This is done using a Port structure.
 
-    User's historic:
+- User's historic:
 
-        The "user_history" folder contains:
+    The `user_historic/` folder contains:
 
-            - The "user_files" folder
-                => Folder that contains all the historic .txt files of the user.
-                This allows for analyzing and parsing the data to use them for the next prediction.
+    - The `user_files/` folder
+            => Folder that contains all the historic `.txt` files of the user.
+            This allows for analyzing and parsing the data to use them for the next prediction.
 
-            - The last_prediction.txt file
-                => This allows for storing the last prediction to compare with the new one. It updates the prediction only if it is different, preventing a flash every 0.5 seconds. This is used for the auto-prediction extension.
+    - The `last_prediction.txt` file
+            => This allows for storing the last prediction to compare with the new one. It updates the prediction only if it is different, preventing a flash every 0.5 seconds. This is used for the auto-prediction extension.
 
-            The nber_historic_files.txt file
-                => This allows for storing the number of historic files. This is useful at the beginning of the program to know how many files there are to analyze and parse and to know their names "user_history/user_files/historic_partN.txt" where N is the number of the file.
-    
-    Extensions:
+    - The `nber_historic_files.txt` file
+            => This allows for storing the number of historic files. This is useful at the beginning of the program to know how many files there are to analyze and parse and to know their names `user_history/user_files/historic_partN.txt` where N is the number of the file.
 
-        The extensions are in a specified folder named "src/extensions". The reason for this is because, for our project, we need to easily distinguish the extension version from the basic one. If we didn't, we would probably put all the extension files into the other files, such as src/tree.oz, src/interface.oz, and src/function.oz.
+### Extensions:
 
-        The functions in the extension files are very long and not well separated. Therefore, the code is harder to read than the rest of the code. The only reason is the lack of time to totally clean all the files.
+The extensions are in a separate folder named `src/extensions`. The reason for this is because, for our project, we needed to easily distinguish the extension version from the basic one. If we didn't, we would probably put all the extension files into the other files, such as `src/tree.oz`, `src/interface.oz`, and `src/function.oz`.
+
+The functions in the extension files are very long and not well separated. Therefore, the code is harder to read than the rest of the code. The only reason is the lack of time to totally clean all the files.
 
 
 ## Problems
 
-If you are on a Mac and you have some problems to compile, you need to remove the image at Line 54 in the src/extensions/interface_improved file.
+If you are on MacOS and you are running into issues at compilation, you need to comment the image at Line 45 in `src/extensions/interface_improved`.
+In that is the case, you also may not be able to see the colors of the buttons.
 
-In this case, you may not be able to see the colors of the buttons or the image, but we didn't find the source of the problem.
+This issue might be due to the Mozart language being inconsistent between platforms and we are sorry for the inconvenience it may cause.
