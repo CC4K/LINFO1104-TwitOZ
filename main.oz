@@ -725,7 +725,6 @@ define
             if Tree_Over == true then
 
                 ResultPress = {Press}
-                {Browse ResultPress}
                 ProbableWords = ResultPress.1
                 MaxFreq = ResultPress.2.1
 
