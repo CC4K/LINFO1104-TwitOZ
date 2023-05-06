@@ -181,7 +181,6 @@ define
 
             end
         in 
-
             % Launch all the threads
             % The parsing files are stocked in the Port
             % The variables to Wait all the threads are stocked in List_Waiting_Threads

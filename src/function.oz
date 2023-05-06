@@ -162,6 +162,7 @@ define
         end
     end
 
+
     %%%
     % Removes the first Nth elements from a list
     %
@@ -338,6 +339,7 @@ define
         end
     end
 
+    
     %%%
     % Get the last version of the tree (the last updated one) from the stream associated with a port.
     % Note : the stream isn't ending with any element (=> _ = unbound element).

@@ -57,8 +57,8 @@ define
     Window % The window to display graphics and informations
     Description % The description of the window
 
-
-    Folder_Name
+    % Arguments specified by the user
+    Folder_Name 
     Idx_N_Grams2 
     Correction_Words
     Files_Database 

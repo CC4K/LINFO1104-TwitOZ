@@ -6,7 +6,6 @@ export
     N_Grams % Get the list of all the n-grams of the text.
 define
     
-
     %%%
     % Return the list of all the n-grams of the text.
     % The text is a list of words.
@@ -37,4 +36,5 @@ define
             {N_Grams_Aux List_N_Grams nil}
         end
     end
+    
 end

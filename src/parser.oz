@@ -51,7 +51,10 @@ define
                     else {Removes_All_SubString_Aux {Function.remove_List_FirstNthElements List Length_SubList} Replacer|NewList Length_List-Length_SubList} end
                 end
             end
-
+            
+            %%%
+            % Auxilliary function
+            %%%
             fun {Removes_All_SubString_Aux List NewList Length_List}
                 case List
                 of nil then NewList
@@ -270,4 +273,5 @@ define
             {Reverse {CleaningUserInput_Aux {Function.tokens_String Text_Line 32} nil}}
         end
     end
+    
 end

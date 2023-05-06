@@ -35,4 +35,5 @@ define
         % Delete all the text before and set the new text in the specified location
         {Location_Text set(Text)}
     end
+    
 end

@@ -398,4 +398,5 @@ define
             {GetNewListValue_Aux Value nil}
         end
     end
+    
 end

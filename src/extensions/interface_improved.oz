@@ -23,23 +23,14 @@ define
 
         local State_Correction State_Database State_Predict in
 
-            if Variables.auto_Prediction == 1 then
-                State_Predict = disabled
-            else
-                State_Predict = normal
-            end
+            if Variables.auto_Prediction == 1 then State_Predict = disabled
+            else State_Predict = normal end
 
-            if Variables.files_Database == 1 then
-                State_Database = normal
-            else
-                State_Database = disabled
-            end
+            if Variables.files_Database == 1 then State_Database = normal
+            else State_Database = disabled end
 
-            if Variables.correction_Words == 1 then
-                State_Correction = normal
-            else
-                State_Correction = disabled
-            end
+            if Variables.correction_Words == 1 then State_Correction = normal
+            else State_Correction = disabled end
 
             lr( title: "TwitOZ"
                 background:c(27 157 240)

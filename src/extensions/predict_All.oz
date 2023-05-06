@@ -42,8 +42,7 @@ define
                 {Automatic_Prediction.stockResultsInFile List_MostProbableWords Frequency Probability}
                 Str_Line
             else
-                Str_Line = {ProposeAllTheWords_Aux List_MostProbableWords "["}
-                Str_Line
+                {ProposeAllTheWords_Aux List_MostProbableWords "["}
             end
         end
     end
