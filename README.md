@@ -100,7 +100,7 @@ The historical data serves as a secondary database, and the information from you
 
 ### Save in database
 
-This function loads the user's input into the historical records, similar to the 'Load file into database' option.
+This function loads the user's input into the historical records, similar to the `Load file into database` option.
 
 ### Clean history
 
@@ -147,4 +147,4 @@ In that is the case, you also may not be able to see the colors of the buttons.
 
 This issue might be due to the Oz programming language being inconsistent between platforms and we are sorry for the inconvenience it may cause.
 
-In any case, you can see the expected result in the 'image' folder.
+In any case, you can see the expected result in the `image` folder.
